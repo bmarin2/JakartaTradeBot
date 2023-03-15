@@ -1,5 +1,6 @@
 package com.tradebot.model;
 
+import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,13 +10,9 @@ public class OrderTracker {
 	
 	private long id;
 
-	private String symbol;
+	private Integer side;
 
-	private String side;
+	private LocalDateTime createdDate;
 
-	private long quoteOrderQty;
-
-	private long timestamp;
-
-	private long orderId;	
+	private long orderId;
 }
