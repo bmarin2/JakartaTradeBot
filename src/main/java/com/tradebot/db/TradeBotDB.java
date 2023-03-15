@@ -6,6 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class TradeBotDB {
@@ -19,6 +21,7 @@ public class TradeBotDB {
 			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query);
+			
 			ps.setString(1, bot.getSymbol());
 			ps.setTimestamp(2, Timestamp.valueOf(bot.getCreatedDate()));
 			ps.setString(3, bot.getTaskId());
@@ -31,6 +34,7 @@ public class TradeBotDB {
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			
 			ps.executeUpdate();
+			
 		} catch (SQLException e) {
 			System.err.println(e);
 		} finally {
@@ -69,6 +73,98 @@ public class TradeBotDB {
 		} catch (SQLException e) {
 			System.err.println(e);
 			return null;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+	
+	public static List<TradeBot> getAllTradeBots() throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "SELECT * FROM TRADE_BOT";
+		try {
+			ps = connection.prepareStatement(query);
+			rs = ps.executeQuery();
+			List<TradeBot> bots = new ArrayList<>();
+			while (rs.next()) {
+				TradeBot bot = new TradeBot();
+				bot.setId(rs.getLong("id"));
+				bot.setSymbol(rs.getString("symbol"));
+				bot.setCreatedDate(rs.getTimestamp("createdDate").toLocalDateTime());
+				bot.setTaskId(rs.getString("taskId"));
+				bot.setQuoteOrderQty(rs.getInt("quoteOrderQty"));
+				bot.setCycleMaxOrders(rs.getInt("cycleMaxOrders"));
+				bot.setOrderStep(rs.getDouble("orderStep"));
+				bot.setDescription(rs.getString("description"));
+				bot.setInitialDelay(rs.getLong("initialDelay"));
+				bot.setDelay(rs.getLong("delay"));
+				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
+				bots.add(bot);
+			}
+			return bots;
+		} catch (SQLException e) {
+			System.err.println(e);
+			return null;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+	
+	public static void updateTradeBot(TradeBot bot) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?"
+			+ "description=?, initialDelay=?, delay=?, timeUnit=? WHERE id = ?";
+
+		try {
+			ps = connection.prepareStatement(query);
+			
+			ps.setString(1, bot.getSymbol());
+			ps.setTimestamp(2, Timestamp.valueOf(bot.getCreatedDate()));
+			ps.setString(3, bot.getTaskId());
+			ps.setInt(4, bot.getQuoteOrderQty());
+			ps.setInt(5, bot.getCycleMaxOrders());
+			ps.setDouble(6, bot.getOrderStep());
+			ps.setString(7, bot.getDescription());
+			ps.setLong(8, bot.getInitialDelay());
+			ps.setLong(9, bot.getDelay());
+			ps.setInt(10, bot.getTimeUnit().ordinal());
+			ps.setLong(11, bot.getId());
+			
+			ps.executeUpdate();
+
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+	
+	public static void deleteTradeBot(int id) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "DELETE FROM TRADE_BOT WHERE id = ?";
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setInt(1, id);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			System.err.println(e);
 		} finally {
 			DBUtil.closeResultSet(rs);
 			DBUtil.closePreparedStatement(ps);
