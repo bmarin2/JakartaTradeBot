@@ -29,8 +29,8 @@ public class TradeBotDB {
 			ps.setInt(5, bot.getCycleMaxOrders());
 			ps.setDouble(6, bot.getOrderStep());
 			ps.setString(7, bot.getDescription());
-			ps.setLong(8, bot.getInitialDelay());
-			ps.setLong(9, bot.getDelay());
+			ps.setInt(8, bot.getInitialDelay());
+			ps.setInt(9, bot.getDelay());
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			
 			ps.executeUpdate();
@@ -65,8 +65,8 @@ public class TradeBotDB {
 				bot.setCycleMaxOrders(rs.getInt("cycleMaxOrders"));
 				bot.setOrderStep(rs.getDouble("orderStep"));
 				bot.setDescription(rs.getString("description"));
-				bot.setInitialDelay(rs.getLong("initialDelay"));
-				bot.setDelay(rs.getLong("delay"));
+				bot.setInitialDelay(rs.getInt("initialDelay"));
+				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 			}
 			return bot;
@@ -101,8 +101,8 @@ public class TradeBotDB {
 				bot.setCycleMaxOrders(rs.getInt("cycleMaxOrders"));
 				bot.setOrderStep(rs.getDouble("orderStep"));
 				bot.setDescription(rs.getString("description"));
-				bot.setInitialDelay(rs.getLong("initialDelay"));
-				bot.setDelay(rs.getLong("delay"));
+				bot.setInitialDelay(rs.getInt("initialDelay"));
+				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bots.add(bot);
 			}
@@ -136,8 +136,8 @@ public class TradeBotDB {
 			ps.setInt(5, bot.getCycleMaxOrders());
 			ps.setDouble(6, bot.getOrderStep());
 			ps.setString(7, bot.getDescription());
-			ps.setLong(8, bot.getInitialDelay());
-			ps.setLong(9, bot.getDelay());
+			ps.setInt(8, bot.getInitialDelay());
+			ps.setInt(9, bot.getDelay());
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			ps.setLong(11, bot.getId());
 			
