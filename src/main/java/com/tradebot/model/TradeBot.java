@@ -26,9 +26,9 @@ public class TradeBot {
 	
 	private String description;
 	
-	private long initialDelay = 1;
+	private Integer initialDelay = 1;
 		
-	private long delay = 5;
+	private Integer delay = 5;
 	
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
 }
