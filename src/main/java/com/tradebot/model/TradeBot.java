@@ -1,0 +1,34 @@
+package com.tradebot.model;
+
+import com.tradebot.util.TaskCodeGeneratorService;
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+public class TradeBot {
+	
+	private long id;
+
+	private String symbol;
+	
+	private LocalDateTime createdDate = LocalDateTime.now();
+	
+	private String taskId = TaskCodeGeneratorService.generateRandomString();
+	
+	private Integer quoteOrderQty = 10;
+	
+	private Integer cycleMaxOrders = 5;
+	
+	private Double orderStep = 0.6;
+	
+	private String description;
+	
+	private long initialDelay = 1;
+		
+	private long delay = 5;
+	
+	private TimeUnit timeUnit = TimeUnit.MINUTES;
+}
