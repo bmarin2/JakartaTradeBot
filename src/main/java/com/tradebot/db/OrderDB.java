@@ -17,13 +17,14 @@ public class OrderDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "INSERT INTO ORDER_TRACKER (side, createdDate, orderId) VALUES (?, ?, ?)";
+		String query = "INSERT INTO ORDER_TRACKER (side, createdDate, orderId, tradebot_id) VALUES (?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query);
 			
 			ps.setInt(1, order.getSide());
 			ps.setDate(2, Date.valueOf(order.getCreatedDate().toLocalDate()));
 			ps.setLong(3, order.getOrderId());
+			ps.setLong(4, order.getTradebot_id());
 			
 			ps.executeUpdate();
 			

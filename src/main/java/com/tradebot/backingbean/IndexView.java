@@ -1,6 +1,9 @@
 package com.tradebot.backingbean;
 
+import com.tradebot.db.OrderDB;
 import com.tradebot.db.TradeBotDB;
+import com.tradebot.model.OrderSide;
+import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import com.tradebot.service.Task;
 import com.tradebot.service.TaskService;
@@ -9,8 +12,11 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import lombok.Data;
 import org.primefaces.PrimeFaces;
 
@@ -29,11 +35,11 @@ public class IndexView implements Serializable {
 	@PostConstruct
 	private void init() {
 		selectedTradeBot = new TradeBot();
-		bots = getAllBots();
-	}
-	
-	private List<TradeBot> getAllBots() {
-		return null;
+		try {
+			bots = TradeBotDB.getAllTradeBots();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	public void updateBot() {
@@ -46,10 +52,29 @@ public class IndexView implements Serializable {
 				selectedTradeBot.getDelay(),
 				selectedTradeBot.getTimeUnit());
 
-//		tradeBotRepository.saveAndFlush(selectedTradeBot);
+		try {
+			TradeBotDB.addBot(selectedTradeBot);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 		System.out.println(selectedTradeBot);
 		PrimeFaces.current().executeScript("PF('manageBot').hide()");
-//		PrimeFaces.current().ajax().update("form:messages", "form:dt-releases");
+	}
+	
+	
+	public void createOrder() {
+		OrderTracker orderTracker = new OrderTracker();
+		
+		
+		orderTracker.setSide(OrderSide.BUY.ordinal());
+		orderTracker.setTradebot_id(1);
+		orderTracker.setCreatedDate(LocalDateTime.now());
+		orderTracker.setOrderId(123456789);
+		try {
+			OrderDB.addOrder(orderTracker);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	public void newBot() {

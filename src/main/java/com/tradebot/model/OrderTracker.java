@@ -15,4 +15,6 @@ public class OrderTracker {
 	private LocalDateTime createdDate;
 
 	private long orderId;
+	
+	private long tradebot_id;
 }
