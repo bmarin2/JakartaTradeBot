@@ -2,6 +2,7 @@ package com.tradebot.db;
 
 import com.tradebot.model.TradeBot;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,7 +24,7 @@ public class TradeBotDB {
 			ps = connection.prepareStatement(query);
 			
 			ps.setString(1, bot.getSymbol());
-			ps.setTimestamp(2, Timestamp.valueOf(bot.getCreatedDate()));
+			ps.setDate(2, Date.valueOf(bot.getCreatedDate().toLocalDate()));
 			ps.setString(3, bot.getTaskId());
 			ps.setInt(4, bot.getQuoteOrderQty());
 			ps.setInt(5, bot.getCycleMaxOrders());
@@ -130,7 +131,7 @@ public class TradeBotDB {
 			ps = connection.prepareStatement(query);
 			
 			ps.setString(1, bot.getSymbol());
-			ps.setTimestamp(2, Timestamp.valueOf(bot.getCreatedDate()));
+			ps.setDate(2, Date.valueOf(bot.getCreatedDate().toLocalDate()));
 			ps.setString(3, bot.getTaskId());
 			ps.setInt(4, bot.getQuoteOrderQty());
 			ps.setInt(5, bot.getCycleMaxOrders());
