@@ -1,6 +1,7 @@
 package com.tradebot.model;
 
 import com.tradebot.util.TaskCodeGeneratorService;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class TradeBot {
+public class TradeBot implements Serializable {
 	
 	private long id;
 

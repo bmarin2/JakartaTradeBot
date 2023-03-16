@@ -4,134 +4,134 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:p="http://primefaces.org/ui">
-    <h:head>
-        <title>Index</title>
-        <style>
-            .ui-widget {
-                font-size: 13px !important;
-            }
-            
-            .ui-panelgrid-cell {
-                padding: 3px !important;
-            }
-            
-            .center-it{
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .ui-card {
-                border: 1px solid !important;
-                border-color: darkgray !important;
-            }
-            
-        </style>
-    </h:head>
-    <h:body>
-        <div style="margin:0 auto;width:70%;">
-        
-            
+	<h:head>
+		<title>Index</title>
+		<style>
+			.ui-widget {
+				font-size: 13px !important;
+			}
 
+			.ui-panelgrid-cell {
+				padding: 3px !important;
+			}
 
-                <p:commandButton value="Create Bot" styleClass="ui-button-success" update="dialogs:manage-bot" onclick="PF('manageBot').show()" action="#{indexView.newBot()}">
-                    <p:resetInput target="dialogs:manage-bot" />
-                </p:commandButton>
-            
-                <p:commandButton value="Create Order" styleClass="ui-button-success" action="#{indexView.createOrder()}" />
+			.center-it{
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
 
-            
-        <h:form id="form1">
-                <p:repeat value="#{indexView.bots}" var="bot">
+			.ui-card {
+				border: 1px solid !important;
+				border-color: darkgray !important;
+			}
 
-                    <p:card style="width:25rem; margin:.5em; display:inline-block; border-color:background; padding: 0;">
-                        <f:facet name="title" >
-                            <span style="margin-top: -5px">#{bot.symbol}</span>
-                            <p:tag styleClass="mr-2" severity="success" style="float:right" value="Running" rendered="#{indexView.isBotRunning(bot.taskId)}"/>
-                            <p:tag styleClass="mr-2" severity="warning" style="float:right" value="Stopped" rendered="#{!indexView.isBotRunning(bot.taskId)}"/>
-                        </f:facet>
+		</style>
+	</h:head>
+	<h:body>
+		
+		<p:growl id="growl" showDetail="true" />
+		
+		<div style="margin:0 auto;width:70%;">            
+			<div>                
+				<p:commandButton value="Create Bot" styleClass="ui-button-success" icon="pi pi-plus-circle"
+						 onclick="PF('manageBot').show()" action="#{indexView.newBot()}">
+					<p:resetInput target="manageBotForm:manage-bot" />
+				</p:commandButton>                
+				<p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
+				<hr style="margin-bottom:10px;margin-top:15px"></hr>
+			</div>
 
-                        <f:facet name="subtitle">
-                            Subtitle
-                        </f:facet>
+			<h:form id="form1">
+				<p:repeat value="#{indexView.bots}" var="bot">
+					<p:card style="width:25rem;margin:.5em;display:inline-block;border-color:background;background-color:#F0F0F0;padding:0;width:32%">
+						<f:facet name="title" >
+							<span style="margin-top: -5px">#{bot.symbol}</span>
+							<p:tag styleClass="mr-2" severity="success" rounded="true" icon="pi pi-check" style="float:right" value="Running" rendered="#{indexView.isBotRunning(bot.taskId)}"/>
+							<p:tag styleClass="mr-2" severity="warning" rounded="true" icon="pi pi-times-circle" style="float:right" value="Stopped" rendered="#{!indexView.isBotRunning(bot.taskId)}"/>
+						</f:facet>
 
-                        <f:facet name="footer">
-                            <p:commandButton icon="pi pi-check" value="Details" oncomplete="PF('botDetails').show()" update="dialogs:manage-bot-details">
-                                <f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
-                            </p:commandButton>
-                        </f:facet>
+						<f:facet name="subtitle">
+							#{bot.taskId}
+						</f:facet>
 
-                    </p:card>
+						<f:facet name="footer">
+							<p:commandButton icon="pi pi-list" value="Details" oncomplete="PF('botDetails').show()" update="detailsForm">
+								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
+							</p:commandButton>
+						</f:facet>
+					</p:card>
+				</p:repeat>
+			</h:form>    
 
-                </p:repeat>
-            
-        </h:form>    
-        
-        <h:form id="dialogs">
-            <p:dialog header="Add new Bot" widgetVar="manageBot" height="300" width="40%" showEffect="fade" modal="true">
-                    <p:panelGrid id="manage-bot" columns="4" style="width: 100%" styleClass="ui-noborder center-it">
-                            <p:outputLabel for="input1" value="Symbol"/>
-                            <p:inputText id="input1" value="#{indexView.selectedTradeBot.symbol}" />
-                            
-                            <p:outputLabel for="select2" value="Time Unit"/>
-                            <p:selectOneMenu value="#{indexView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">
-                                <f:selectItems value="#{indexView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
-                            </p:selectOneMenu>
-                            
-                            <p:outputLabel for="input4" value="TaskId"/>
-                            <p:inputText id="input4" value="#{indexView.selectedTradeBot.taskId}"/>
+			<h:form id="manageBotForm">
+				<p:dialog header="Add new Bot" widgetVar="manageBot" height="300" width="40%" showEffect="fade" modal="true">
+					<p:panelGrid id="manage-bot" columns="4" style="width: 100%" styleClass="ui-noborder center-it">
+						<p:outputLabel for="input1" value="Symbol"/>
+						<p:inputText id="input1" value="#{indexView.selectedTradeBot.symbol}" />
 
-                            <p:outputLabel for="input2" value="Initial Delay"/>
-                            <p:inputText id="input2" value="#{indexView.selectedTradeBot.initialDelay}" />
+						<p:outputLabel for="select2" value="Time Unit"/>
+						<p:selectOneMenu value="#{indexView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">
+							<f:selectItems value="#{indexView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
+						</p:selectOneMenu>
 
-                            <p:outputLabel for="input3" value="Delay"/>
-                            <p:inputText id="input3" value="#{indexView.selectedTradeBot.delay}" />
-                            
-                            <p:outputLabel for="input5" value="Quote Order Qty"/>
-                            <p:inputText id="input5" value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
-                            
-                            <p:outputLabel for="input6" value="Max Orders per Cycle"/>
-                            <p:inputText id="input6" value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>
-                            
-                            <p:outputLabel for="input7" value="Order Step in %"/>
-                            <p:inputText id="input7" value="#{indexView.selectedTradeBot.orderStep}"/>
+						<p:outputLabel for="input4" value="TaskId"/>
+						<p:inputText id="input4" value="#{indexView.selectedTradeBot.taskId}"/>
 
-                            <p:outputLabel for="input8" value="Date Created"/>
-                            <p:datePicker id="input8" showTime="true" value="#{indexView.selectedTradeBot.createdDate}" />
+						<p:outputLabel for="input2" value="Initial Delay"/>
+						<p:inputText id="input2" value="#{indexView.selectedTradeBot.initialDelay}" />
 
-                            <p:outputLabel for="input9" value="Description"/>
-                            <p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
-                    </p:panelGrid>
-                    <f:facet name="footer">
-                        <div style="padding-top:15px;">
-                            <p:commandButton value="Save" icon="pi pi-check" action="#{indexView.updateBot}" />
-                            <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageBot').hide()"
-                                             class="ui-button-secondary" type="button" />
-                        </div>
-                    </f:facet>
-            </p:dialog>
-            
-            <p:dialog header="Bot Details" widgetVar="botDetails" height="250" width="40%" showEffect="fade" modal="true">
-                <p:outputPanel id="manage-bot-details" >
-                    <p:panelGrid columns="4" style="width: 100%" styleClass="ui-noborder center-it">
-                        #{indexView.selectedTradeBot.symbol}
-                    </p:panelGrid>
-                </p:outputPanel>
-                    <f:facet name="footer">
-                        <p:growl id="message" showDetail="true"/>
-                        <div style="padding-top:15px;">
-                            <p:commandButton value="Stop Bot" action="#{indexView.confirmStop}" update="message" styleClass="ui-button-warning">
-                                <p:confirm header="Confirmation" message="Are you sure you want disable this bot #{indexView.selectedTradeBot.symbol}"  />
-                            </p:commandButton>
-                            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
-                                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
-                                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" />
-                            </p:confirmDialog>
-                        </div>
-                    </f:facet>
-                
-            </p:dialog>
-        </h:form>
-        </div>
-    </h:body>
+						<p:outputLabel for="input3" value="Delay"/>
+						<p:inputText id="input3" value="#{indexView.selectedTradeBot.delay}" />
+
+						<p:outputLabel for="input5" value="Quote Order Qty"/>
+						<p:inputText id="input5" value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
+
+						<p:outputLabel for="input6" value="Max Orders per Cycle"/>
+						<p:inputText id="input6" value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>
+
+						<p:outputLabel for="input7" value="Order Step in %"/>
+						<p:inputText id="input7" value="#{indexView.selectedTradeBot.orderStep}"/>
+
+						<p:outputLabel for="input8" value="Date Created"/>
+						<p:datePicker id="input8" showTime="true" value="#{indexView.selectedTradeBot.createdDate}" />
+
+						<p:outputLabel for="input9" value="Description"/>
+						<p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
+					</p:panelGrid>
+					<f:facet name="footer">
+						<div style="padding-top:15px;">
+							<p:commandButton value="Save" icon="pi pi-check" action="#{indexView.updateBot}" update="growl" />
+							<p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageBot').hide()"
+									 class="ui-button-secondary" type="button" />
+						</div>
+					</f:facet>
+				</p:dialog>
+			</h:form>
+			
+			<h:form id="detailsForm">
+			<p:dialog header="Bot Details" widgetVar="botDetails" height="250" width="40%" showEffect="fade" modal="true">
+				<p:outputPanel id="manage-bot-details" >
+					<p:panelGrid columns="4" style="width: 100%" styleClass="ui-noborder center-it">
+						#{indexView.selectedTradeBot.symbol}
+						#{indexView.selectedTradeBot.taskId}
+					</p:panelGrid>
+				</p:outputPanel>
+				<f:facet name="footer">
+					<div style="padding-top:15px;">
+						#{indexView.selectedTradeBot.taskId}
+						#{indexView.isBotRunning(selectedTradeBot.taskId)}
+						
+						<p:commandButton id="runId" update="runId stopId growl numberId" value="Run Bot" styleClass="ui-button-success" action="#{indexView.addTask}" style="float:left"
+								     disabled="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
+						<p:commandButton id="stopId" update="stopId runId growl numberId" value="Stop Bot" styleClass="ui-button-warning" action="#{indexView.removeTask}" style="float:left"
+								     disabled="#{not indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
+						<p:commandButton value="Close" styleClass="ui-button-secondary" onclick="PF('botDetails').hide()"
+								     class="ui-button-secondary" type="button" />
+					</div>
+				</f:facet>
+			</p:dialog>
+			</h:form>
+		</div>
+	</h:body>
 </html>

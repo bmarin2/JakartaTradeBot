@@ -8,12 +8,16 @@ import com.tradebot.model.TradeBot;
 import com.tradebot.service.Task;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,71 +29,87 @@ import org.primefaces.PrimeFaces;
 @Data
 public class IndexView implements Serializable {
 
-	@Inject
-	private TaskService taskService;
-	
-	private List<TradeBot> bots;
+	  @Inject
+	  private TaskService taskService;
 
-	private TradeBot selectedTradeBot;
+	  private List<TradeBot> bots;
 
-	@PostConstruct
-	private void init() {
-		selectedTradeBot = new TradeBot();
-		try {
-			bots = TradeBotDB.getAllTradeBots();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	public void updateBot() {
-		Task task = new Task();
-		task.setTradeBot(selectedTradeBot);
-		
-		taskService.addTask(selectedTradeBot.getTaskId(),
-				task, 
+	  private TradeBot selectedTradeBot;
+
+	  private TradeBot secondTradeBot;
+
+	  @PostConstruct
+	  private void init() {
+		    selectedTradeBot = new TradeBot();
+		    try {
+				bots = TradeBotDB.getAllTradeBots();
+		    } catch (Exception ex) {
+				ex.printStackTrace();
+		    }
+	  }
+
+	  public void updateBot() {
+		    try {
+				TradeBotDB.addBot(selectedTradeBot);
+		    } catch (Exception ex) {
+				ex.printStackTrace();
+		    }
+		    addMessage("Info", "Trade bot created taskId: ");
+		    System.out.println("AFTER ADDMESSAGE");
+		    addTask();
+		    PrimeFaces.current().executeScript("PF('manageBot').hide()");
+	  }
+
+	  public void createOrder() {
+		    OrderTracker orderTracker = new OrderTracker();
+
+		    orderTracker.setSide(OrderSide.BUY.ordinal());
+		    orderTracker.setTradebot_id(1);
+		    orderTracker.setCreatedDate(LocalDateTime.now());
+		    orderTracker.setOrderId(123456789);
+		    try {
+				OrderDB.addOrder(orderTracker);
+		    } catch (Exception ex) {
+				ex.printStackTrace();
+		    }
+	  }
+
+	  public int getRunningTasksNumber() {
+		    return taskService.getScheduledTasks().size();
+	  }
+
+	  public void newBot() {
+		    selectedTradeBot = new TradeBot();
+	  }
+
+	  public boolean isBotRunning(String taskId) {
+		    return taskService.getScheduledTasks().containsKey(taskId);
+	  }
+
+	  public TimeUnit[] getUnits() {
+		    return TimeUnit.values();
+	  }
+
+	  public void removeTask() {
+		    taskService.removeTask(selectedTradeBot.getTaskId());
+		    addMessage("Info", "Task removed for bot " + selectedTradeBot.getTaskId());
+	  }
+
+	  public void addTask() {
+		    Task task = new Task();
+		    task.setTradeBot(selectedTradeBot);
+
+		    taskService.addTask(selectedTradeBot.getTaskId(),
+				task,
 				selectedTradeBot.getInitialDelay(),
 				selectedTradeBot.getDelay(),
-				selectedTradeBot.getTimeUnit());
+				selectedTradeBot.getTimeUnit()
+		    );
+		    addMessage("Info", "Task added for bot " + selectedTradeBot.getTaskId());
+	  }
 
-		try {
-			TradeBotDB.addBot(selectedTradeBot);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		System.out.println(selectedTradeBot);
-		PrimeFaces.current().executeScript("PF('manageBot').hide()");
-	}
-	
-	
-	public void createOrder() {
-		OrderTracker orderTracker = new OrderTracker();
-		
-		
-		orderTracker.setSide(OrderSide.BUY.ordinal());
-		orderTracker.setTradebot_id(1);
-		orderTracker.setCreatedDate(LocalDateTime.now());
-		orderTracker.setOrderId(123456789);
-		try {
-			OrderDB.addOrder(orderTracker);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	public void newBot() {
-		selectedTradeBot = new TradeBot();
-	}
-	
-	public boolean isBotRunning(String taskId) {
-		return taskService.getScheduledTasks().containsKey(taskId);
-	}
-
-	public TimeUnit[] getUnits() {
-		return TimeUnit.values();
-	}
-
-	public void confirmStop(){
-		System.out.println("BOT STOPPED");
-	}
+	  private void addMessage(String summary, String msg) {
+		    FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, msg);
+		    FacesContext.getCurrentInstance().addMessage(null, message);
+	  }
 }
