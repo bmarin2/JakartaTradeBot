@@ -56,7 +56,11 @@
 						</f:facet>
 
 						<f:facet name="footer">
-							<p:commandButton icon="pi pi-list" value="Details" oncomplete="PF('botDetails').show()" update="detailsForm">
+							<p:commandButton icon="pi pi-list" value="Details" oncomplete="PF('botDetails').show()" update="detailsForm" style="margin-right:5px;">
+								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
+							</p:commandButton>
+							
+							<p:commandButton icon="pi pi-file" value="Edit" oncomplete="PF('manageBot').show()" update="manageBotForm" disabled="#{indexView.isBotRunning(bot.taskId)}" >
 								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
 							</p:commandButton>
 						</f:facet>

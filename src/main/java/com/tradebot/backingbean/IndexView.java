@@ -50,12 +50,18 @@ public class IndexView implements Serializable {
 
 	  public void updateBot() {
 		    try {
-				TradeBotDB.addBot(selectedTradeBot);
+				TradeBot tb = TradeBotDB.getOneTradeBot(selectedTradeBot.getId());
+				System.out.println(tb);
+				if(tb != null) {
+					  TradeBotDB.updateTradeBot(selectedTradeBot);
+					  addMessage("Updated", "Trade bot has been updated!");
+				} else {
+					  TradeBotDB.addBot(selectedTradeBot);
+					  addMessage("New added", "Trade bot has been created!");
+				}
 		    } catch (Exception ex) {
 				ex.printStackTrace();
 		    }
-		    addMessage("Info", "Trade bot created taskId: ");
-		    System.out.println("AFTER ADDMESSAGE");
 		    addTask();
 		    PrimeFaces.current().executeScript("PF('manageBot').hide()");
 	  }

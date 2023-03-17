@@ -44,7 +44,7 @@ public class TradeBotDB {
 		}
 	}
 	
-	public static TradeBot getOneTradeBot(int id) throws Exception {
+	public static TradeBot getOneTradeBot(long id) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
@@ -53,7 +53,7 @@ public class TradeBotDB {
 		String query = "SELECT * FROM TRADE_BOT where id=?";
 		try {
 			ps = connection.prepareStatement(query);
-			ps.setInt(1, id);
+			ps.setLong(1, id);
 			rs = ps.executeQuery();
 			TradeBot bot = new TradeBot();
 			while (rs.next()) {
@@ -123,8 +123,7 @@ public class TradeBotDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?"
-			+ "description=?, initialDelay=?, delay=?, timeUnit=? WHERE id = ?";
+		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?, description=?, initialDelay=?, delay=?, timeUnit=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
