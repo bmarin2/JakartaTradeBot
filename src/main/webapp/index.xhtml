@@ -28,14 +28,6 @@
 
 		</style>
 
-		<script>
-
-			function reloadPage() {
-				setTimeout(location.reload(), 5000);
-			}
-
-		</script>
-
 	</h:head>
 	<h:body>
 
@@ -69,7 +61,7 @@
 								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
 							</p:commandButton>
 
-							<p:commandButton icon="pi pi-file" value="Edit" oncomplete="PF('manageBot').show()" update="manageBotForm" disabled="#{indexView.isBotRunning(bot.taskId)}" >
+							<p:commandButton icon="pi pi-file" value="Edit" oncomplete="PF('manageBot').show()" update="manageBotForm" disabled="#{indexView.isBotRunning(bot.taskId)}" action="#{indexView.editBot()}">
 								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
 							</p:commandButton>
 						</f:facet>
@@ -135,9 +127,9 @@
 							#{indexView.selectedTradeBot.taskId}
 							#{indexView.isBotRunning(selectedTradeBot.taskId)}
 
-							<p:commandButton id="runId" update="runId stopId growl headerForm:numberId" value="Run Bot" styleClass="ui-button-success" action="#{indexView.addTask}" style="float:left"
+							<p:commandButton id="runId" update="runId stopId growl headerForm:numberId botListForm" value="Run Bot" styleClass="ui-button-success" action="#{indexView.addTask}" style="float:left"
 										  disabled="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
-							<p:commandButton id="stopId" update="stopId runId growl headerForm:numberId" value="Stop Bot" styleClass="ui-button-warning" action="#{indexView.removeTask}" style="float:left"
+							<p:commandButton id="stopId" update="stopId runId growl headerForm:numberId botListForm" value="Stop Bot" styleClass="ui-button-warning" action="#{indexView.removeTask}" style="float:left"
 										  disabled="#{not indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
 							<p:commandButton value="Close" styleClass="ui-button-secondary" onclick="PF('botDetails').hide()"
 										  class="ui-button-secondary" type="button" />

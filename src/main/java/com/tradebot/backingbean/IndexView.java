@@ -15,12 +15,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import lombok.Data;
 import org.primefaces.PrimeFaces;
 
@@ -29,93 +25,102 @@ import org.primefaces.PrimeFaces;
 @Data
 public class IndexView implements Serializable {
 
-	  @Inject
-	  private TaskService taskService;
+	@Inject
+	private TaskService taskService;
 
-	  private List<TradeBot> bots;
+	private List<TradeBot> bots;
 
-	  private TradeBot selectedTradeBot;
+	private TradeBot selectedTradeBot;
 
-	  private TradeBot secondTradeBot;
+	private TradeBot secondTradeBot;
 
-	  @PostConstruct
-	  private void init() {
-		    selectedTradeBot = new TradeBot();
-		    try {
-				bots = TradeBotDB.getAllTradeBots();
-		    } catch (Exception ex) {
-				ex.printStackTrace();
-		    }
-	  }
+	private boolean shouldEditBot;
 
-	  public void updateBot() {
-		    try {
-				TradeBot tb = TradeBotDB.getOneTradeBot(selectedTradeBot.getId());
-				System.out.println(tb);
-				if(tb != null) {
-					  TradeBotDB.updateTradeBot(selectedTradeBot);
-					  addMessage("Updated", "Trade bot has been updated!");
-				} else {
-					  TradeBotDB.addBot(selectedTradeBot);
-					  addMessage("New added", "Trade bot has been created!");
-				}
-		    } catch (Exception ex) {
-				ex.printStackTrace();
-		    }
-		    addTask();
-		    PrimeFaces.current().executeScript("PF('manageBot').hide()");
-	  }
+	@PostConstruct
+	private void init() {
+		selectedTradeBot = new TradeBot();
+		try {
+			bots = TradeBotDB.getAllTradeBots();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
 
-	  public void createOrder() {
-		    OrderTracker orderTracker = new OrderTracker();
+	public void updateBot() {
+		try {
 
-		    orderTracker.setSide(OrderSide.BUY.ordinal());
-		    orderTracker.setTradebot_id(1);
-		    orderTracker.setCreatedDate(LocalDateTime.now());
-		    orderTracker.setOrderId(123456789);
-		    try {
-				OrderDB.addOrder(orderTracker);
-		    } catch (Exception ex) {
-				ex.printStackTrace();
-		    }
-	  }
+			if (shouldEditBot) {
+				TradeBotDB.updateTradeBot(selectedTradeBot);
+				addMessage("Bot Updated", "");
+			} else {
+				TradeBotDB.addBot(selectedTradeBot);
+				addMessage("New bot added", "");
+				addTask();
+			}
 
-	  public int getRunningTasksNumber() {
-		    return taskService.getScheduledTasks().size();
-	  }
+			bots = TradeBotDB.getAllTradeBots();
 
-	  public void newBot() {
-		    selectedTradeBot = new TradeBot();
-	  }
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		PrimeFaces.current().executeScript("PF('manageBot').hide()");
+	}
 
-	  public boolean isBotRunning(String taskId) {
-		    return taskService.getScheduledTasks().containsKey(taskId);
-	  }
+	public void createOrder() {
+		OrderTracker orderTracker = new OrderTracker();
 
-	  public TimeUnit[] getUnits() {
-		    return TimeUnit.values();
-	  }
+		orderTracker.setSide(OrderSide.BUY.ordinal());
+		orderTracker.setTradebot_id(1);
+		orderTracker.setCreatedDate(LocalDateTime.now());
+		orderTracker.setOrderId(123456789);
+		try {
+			OrderDB.addOrder(orderTracker);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
 
-	  public void removeTask() {
-		    taskService.removeTask(selectedTradeBot.getTaskId());
-		    addMessage("Info", "Task removed for bot " + selectedTradeBot.getTaskId());
-	  }
+	public int getRunningTasksNumber() {
+		return taskService.getScheduledTasks().size();
+	}
 
-	  public void addTask() {
-		    Task task = new Task();
-		    task.setTradeBot(selectedTradeBot);
+	public void newBot() {
+		shouldEditBot = false;
+		selectedTradeBot = new TradeBot();
+	}
 
-		    taskService.addTask(selectedTradeBot.getTaskId(),
-				task,
-				selectedTradeBot.getInitialDelay(),
-				selectedTradeBot.getDelay(),
-				selectedTradeBot.getTimeUnit()
-		    );
-		    addMessage("Info", "Task added for bot " + selectedTradeBot.getTaskId());
-	  }
+	public void editBot() {
+		shouldEditBot = true;
+	}
 
-	  private void addMessage(String summary, String msg) {
-		    FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, msg);
-		    FacesContext.getCurrentInstance().addMessage(null, message);
-	  }
+	public boolean isBotRunning(String taskId) {
+		return taskService.getScheduledTasks().containsKey(taskId);
+	}
+
+	public TimeUnit[] getUnits() {
+		return TimeUnit.values();
+	}
+
+	public void removeTask() {
+		taskService.removeTask(selectedTradeBot.getTaskId());
+		addMessage("Task remover", "For bot " + selectedTradeBot.getTaskId());
+	}
+
+	public void addTask() {
+		Task task = new Task();
+		task.setTradeBot(selectedTradeBot);
+
+		taskService.addTask(selectedTradeBot.getTaskId(),
+			   task,
+			   selectedTradeBot.getInitialDelay(),
+			   selectedTradeBot.getDelay(),
+			   selectedTradeBot.getTimeUnit()
+		);
+		addMessage("Task added", "For bot " + selectedTradeBot.getTaskId());
+	}
+
+	private void addMessage(String summary, String msg) {
+		FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, msg);
+		FacesContext.getCurrentInstance().addMessage(null, message);
+	}
 }
