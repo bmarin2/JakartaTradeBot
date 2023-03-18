@@ -103,7 +103,7 @@ public class IndexView implements Serializable {
 
 	public void removeTask() {
 		taskService.removeTask(selectedTradeBot.getTaskId());
-		addMessage("Task remover", "For bot " + selectedTradeBot.getTaskId());
+		addMessage("Task removed", "Bot " + selectedTradeBot.getTaskId());
 	}
 
 	public void addTask() {
@@ -116,7 +116,7 @@ public class IndexView implements Serializable {
 			   selectedTradeBot.getDelay(),
 			   selectedTradeBot.getTimeUnit()
 		);
-		addMessage("Task added", "For bot " + selectedTradeBot.getTaskId());
+		addMessage("Task added", "Bot " + selectedTradeBot.getTaskId());
 	}
 
 	private void addMessage(String summary, String msg) {
