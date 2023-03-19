@@ -5,19 +5,14 @@ import com.binance.connector.client.exceptions.BinanceConnectorException;
 import com.binance.connector.client.impl.SpotClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.configuration.OrdersParams;
-import com.tradebot.db.TradeBotDB;
 import com.tradebot.model.TradeBot;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.LinkedList;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,7 +46,7 @@ public class Task implements Runnable {
 			
 			BigDecimal newPosition = new BigDecimal(jsonObject.getString("price"));
 			
-			System.out.println("Checking the price for " + tradeBot.getSymbol() + " at the price of: " + newPosition.setScale(2, RoundingMode.DOWN));
+			System.out.println("Checking the price for " + tradeBot.getSymbol() + " at the price of: " + newPosition.setScale(2, RoundingMode.HALF_DOWN) + "  " + LocalDateTime.now());
 			
 			if(positions.isEmpty()) {
 				positions.add(newPosition);
@@ -81,24 +76,23 @@ public class Task implements Runnable {
 				}					
 			}
 			
-			if (comparison > 0 && !positions.isEmpty()) {
+			else if (comparison > 0 && !positions.isEmpty()) {
 				BigDecimal increasedPosition = lastAddedPosition.add(positionPercentage);
 				int comparisonIncreased = newPosition.compareTo(increasedPosition);
-				
-				if (comparisonIncreased > 0) {
-					System.out.println("-- In multiple check --");
-					List<BigDecimal> list = positions.stream().collect(Collectors.toList());
-					ListIterator<BigDecimal> iterator = list.listIterator(list.size()); // reverse order
-					while (iterator.hasPrevious()) {
-						BigDecimal previousPosition = iterator.previous();
-						BigDecimal increasedPreviousPosition = previousPosition.add(positionPercentage);						
+				if (comparisonIncreased > 0) {					
+					LinkedList<BigDecimal> list = new LinkedList<>(positions);
+					Iterator<BigDecimal> iterator = list.descendingIterator();
+					System.out.println("In multi-check");
+					while (iterator.hasNext()) {
+						BigDecimal position = iterator.next();
+						BigDecimal increasedPreviousPosition = position.add(positionPercentage);						
 						int comparisonIncreasedPosition = newPosition.compareTo(increasedPreviousPosition);
 						if (comparisonIncreasedPosition > 0) {
 							System.out.println("---------------------------");
 							System.out.println("SELLING!");
-							System.out.println("Old Price: " + previousPosition.setScale(2, RoundingMode.DOWN));
+							System.out.println("Old Price: " + position.setScale(2, RoundingMode.DOWN));
 							System.out.println("New Price: " + newPosition.setScale(2, RoundingMode.DOWN));
-							positions.remove(previousPosition);
+							positions.remove(position);
 							System.out.println(tradeBot.getSymbol() + " Position it removed, Set size is now: " + positions.size());
 						}
 					}
