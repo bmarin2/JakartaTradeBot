@@ -66,20 +66,6 @@ public class IndexView implements Serializable {
 		PrimeFaces.current().executeScript("PF('manageBot').hide()");
 	}
 
-	public void createOrder() {
-		OrderTracker orderTracker = new OrderTracker();
-
-		orderTracker.setSide(OrderSide.BUY.ordinal());
-		orderTracker.setTradebot_id(1);
-		orderTracker.setCreatedDate(LocalDateTime.now());
-		orderTracker.setOrderId(123456789);
-		try {
-			OrderDB.addOrder(orderTracker);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
 	public int getRunningTasksNumber() {
 		return taskService.getScheduledTasks().size();
 	}

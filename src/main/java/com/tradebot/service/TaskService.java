@@ -25,7 +25,7 @@ public class TaskService {
 
     @PostConstruct
     public void init() {
-        executorService = Executors.newScheduledThreadPool(4); // creates a thread pool with 5 threads
+        executorService = Executors.newScheduledThreadPool(8); // creates a thread pool with 5 threads
     }
 
     public void addTask(String taskId, Runnable task, long initialDelay, long delay, TimeUnit unit) {

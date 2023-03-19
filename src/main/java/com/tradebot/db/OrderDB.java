@@ -6,27 +6,41 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDB {
 	
-	public static void addOrder(OrderTracker order) throws Exception {
+	public static long addOrder(OrderTracker order) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		long order_id = 0;
 
-		String query = "INSERT INTO ORDER_TRACKER (side, createdDate, orderId, tradebot_id) VALUES (?, ?, ?, ?)";
+		String query = "INSERT INTO ORDER_TRACKER (buy, sell, buyPrice, sellPrice, profit, buyDate, sellDate, buyOrderId, sellOrderId, tradebot_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
-			ps = connection.prepareStatement(query);
+			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
-			ps.setInt(1, order.getSide());
-			ps.setDate(2, Date.valueOf(order.getCreatedDate().toLocalDate()));
-			ps.setLong(3, order.getOrderId());
-			ps.setLong(4, order.getTradebot_id());
+			ps.setBoolean(1, order.getBuy());
+			ps.setBoolean(2, order.getSell());
+			ps.setBigDecimal(3, order.getBuyPrice());
+			ps.setBigDecimal(4, order.getSellPrice());
+			ps.setBigDecimal(5, order.getProfit());
+			ps.setDate(6, Date.valueOf(order.getBuyDate().toLocalDate()));
+			ps.setDate(7, Date.valueOf(order.getSellDate().toLocalDate()));
+			ps.setLong(8, order.getBuyOrderId());
+			ps.setLong(9, order.getSellOrderId());
+			ps.setLong(10, order.getTradebot_id());
 			
 			ps.executeUpdate();
+			
+			rs = ps.getGeneratedKeys();
+
+			if (rs.next()) {
+				order_id = rs.getLong(1);
+			}
 			
 		} catch (SQLException e) {
 			System.err.println(e);
@@ -35,10 +49,11 @@ public class OrderDB {
 			DBUtil.closePreparedStatement(ps);
 			pool.freeConnection(connection);
 		}
+		return order_id;
 	}
 	
 	
-	public static OrderTracker getOneOrder(int id) throws Exception {
+	public static OrderTracker getOneOrder(long id) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
@@ -47,14 +62,21 @@ public class OrderDB {
 		String query = "SELECT * FROM ORDER_TRACKER where id=?";
 		try {
 			ps = connection.prepareStatement(query);
-			ps.setInt(1, id);
+			ps.setLong(1, id);
 			rs = ps.executeQuery();
 			OrderTracker order = new OrderTracker();
 			while (rs.next()) {
 				order.setId(rs.getLong("id"));
-				order.setSide(rs.getInt("side"));
-				order.setCreatedDate(rs.getTimestamp("createdDate").toLocalDateTime());
-				order.setOrderId(rs.getLong("orderId"));
+				order.setBuy(rs.getBoolean("buy"));
+				order.setSell(rs.getBoolean("sell"));
+				order.setBuyPrice(rs.getBigDecimal("buyPrice"));
+				order.setSellPrice(rs.getBigDecimal("sellPrice"));
+				order.setProfit(rs.getBigDecimal("profit"));
+				order.setBuyDate(rs.getTimestamp("buyDate").toLocalDateTime());
+				order.setSellDate(rs.getTimestamp("sellDate").toLocalDateTime());
+				order.setBuyOrderId(rs.getLong("buyOrderId"));
+				order.setSellOrderId(rs.getLong("sellOrderId"));
+				order.setTradebot_id(rs.getLong("tradebot_id"));
 			}
 			return order;
 		} catch (SQLException e) {
@@ -80,10 +102,16 @@ public class OrderDB {
 			List<OrderTracker> orders = new ArrayList<>();
 			while (rs.next()) {
 				OrderTracker order = new OrderTracker();
-				order.setId(rs.getLong("id"));
-				order.setSide(rs.getInt("side"));
-				order.setCreatedDate(rs.getTimestamp("createdDate").toLocalDateTime());
-				order.setOrderId(rs.getLong("orderId"));
+				ps.setBoolean(1, order.getBuy());
+				ps.setBoolean(2, order.getSell());
+				ps.setBigDecimal(3, order.getBuyPrice());
+				ps.setBigDecimal(4, order.getSellPrice());
+				ps.setBigDecimal(5, order.getProfit());
+				ps.setDate(6, Date.valueOf(order.getBuyDate().toLocalDate()));
+				ps.setDate(7, Date.valueOf(order.getSellDate().toLocalDate()));
+				ps.setLong(8, order.getBuyOrderId());
+				ps.setLong(9, order.getSellOrderId());
+				ps.setLong(10, order.getTradebot_id());
 				orders.add(order);
 			}
 			return orders;

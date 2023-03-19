@@ -1,5 +1,6 @@
 package com.tradebot.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,11 +11,23 @@ public class OrderTracker {
 	
 	private long id;
 
-	private Integer side;
+	private Boolean buy = true;
+	
+	private Boolean sell = false;
+	
+	private BigDecimal buyPrice;
+	
+	private BigDecimal sellPrice;
+	
+	private BigDecimal profit;
 
-	private LocalDateTime createdDate;
+	private LocalDateTime buyDate = LocalDateTime.now();
+	
+	private LocalDateTime sellDate;	
 
-	private long orderId;
+	private long buyOrderId;
+	
+	private long sellOrderId;
 	
 	private long tradebot_id;
 }
