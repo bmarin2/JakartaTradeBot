@@ -85,8 +85,8 @@ public class Task implements Runnable {
 					System.out.println("In multi-check");
 					while (iterator.hasNext()) {
 						BigDecimal position = iterator.next();
-						BigDecimal increasedPreviousPosition = position.add(positionPercentage);						
-						int comparisonIncreasedPosition = newPosition.compareTo(increasedPreviousPosition);
+						BigDecimal increasedPositionLoop = position.add(positionPercentage);
+						int comparisonIncreasedPosition = newPosition.compareTo(increasedPositionLoop);
 						if (comparisonIncreasedPosition > 0) {
 							System.out.println("---------------------------");
 							System.out.println("SELLING!");
@@ -94,6 +94,8 @@ public class Task implements Runnable {
 							System.out.println("New Price: " + newPosition.setScale(2, RoundingMode.DOWN));
 							positions.remove(position);
 							System.out.println(tradeBot.getSymbol() + " Position it removed, Set size is now: " + positions.size());
+						} else {
+							return;
 						}
 					}
 				}
