@@ -11,19 +11,12 @@ import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,11 +31,13 @@ public class Task implements Runnable {
 	@Getter @Setter
 	private SpotClientImpl spotClientImpl;
 	
-	public Task(){
+	public Task(TradeBot tradeBot) throws Exception{
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
+		this.tradeBot = tradeBot;
+		positions = convertOrdersToMap(tradeBot);
 	}
 	
-	Map<Long, BigDecimal> positions = new LinkedHashMap<>();
+	Map<Long, BigDecimal> positions;
 	
 	@Override
 	public void run() {
@@ -55,11 +50,11 @@ public class Task implements Runnable {
 			
 			BigDecimal newPosition = new BigDecimal(jsonObject.getString("price"));
 			
-			System.out.println("Checking the price for " + tradeBot.getSymbol() + " at the price of: " + newPosition.setScale(2, RoundingMode.HALF_DOWN) + "  " + LocalDateTime.now());
+			System.out.println("Price check: " + tradeBot.getSymbol() + " at the price of: " + newPosition.setScale(2, RoundingMode.HALF_DOWN) + "  " + LocalDateTime.now());
 			
 			if (positions.isEmpty()) {
 				createBuyOrder(newPosition);
-				System.out.println("First position added for " + tradeBot.getSymbol() + " added at the price: " + newPosition.setScale(2, RoundingMode.HALF_DOWN));
+				System.out.println("First position added for " + tradeBot.getSymbol() + " at the price: " + newPosition.setScale(2, RoundingMode.HALF_DOWN));
 				return;
 			}
 			
@@ -109,14 +104,15 @@ public class Task implements Runnable {
 						
 						JSONObject orderResultJson = new JSONObject(orderResult);
 						
-						// update orders in DB
+						// update orders in DB and remove from map
 						for (Long id : tempOrders) {
 							OrderTracker order = OrderDB.getOneOrder(id);
 							order.setSell(true);
 							order.setSellPrice(newPosition);
 							order.setSellDate(LocalDateTime.now());
 							order.setSellOrderId(orderResultJson.getLong("orderId"));
-							// update method...
+							OrderDB.updateOrder(order);
+							positions.remove(id);
 						}						
 					}
 				}
@@ -146,8 +142,16 @@ public class Task implements Runnable {
 		order.setBuyPrice(newPosition);
 		order.setTradebot_id(tradeBot.getId());
 		order.setBuyOrderId(orderResultJson.getLong("orderId"));
-
 		long order_id = OrderDB.addOrder(order);
 		positions.put(order_id, newPosition);
+	}
+
+	private Map<Long, BigDecimal> convertOrdersToMap(TradeBot bot) throws Exception {
+		List<OrderTracker> orders = OrderDB.getOrdersFromBot(bot.getId());
+		Map<Long, BigDecimal> map = new LinkedHashMap<>();
+		for (OrderTracker order : orders) {
+			map.put(order.getId(), order.getBuyPrice());
+		}
+		return map;
 	}
 }

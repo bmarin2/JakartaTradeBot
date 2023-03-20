@@ -92,9 +92,8 @@ public class IndexView implements Serializable {
 		addMessage("Task removed", "Bot " + selectedTradeBot.getTaskId());
 	}
 
-	public void addTask() {
-		Task task = new Task();
-		task.setTradeBot(selectedTradeBot);
+	public void addTask() throws Exception {
+		Task task = new Task(selectedTradeBot);
 
 		taskService.addTask(selectedTradeBot.getTaskId(),
 			   task,
