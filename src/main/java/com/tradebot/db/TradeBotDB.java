@@ -2,7 +2,6 @@ package com.tradebot.db;
 
 import com.tradebot.model.TradeBot;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,7 +24,7 @@ public class TradeBotDB {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
 			ps.setString(1, bot.getSymbol());
-			ps.setDate(2, Date.valueOf(bot.getCreatedDate().toLocalDate()));
+			ps.setDate(2, new java.sql.Date(bot.getCreatedDate().getTime()));
 			ps.setString(3, bot.getTaskId());
 			ps.setInt(4, bot.getQuoteOrderQty());
 			ps.setInt(5, bot.getCycleMaxOrders());
@@ -68,7 +67,7 @@ public class TradeBotDB {
 			while (rs.next()) {
 				bot.setId(rs.getLong("id"));
 				bot.setSymbol(rs.getString("symbol"));
-				bot.setCreatedDate(rs.getTimestamp("createdDate").toLocalDateTime());
+				bot.setCreatedDate(rs.getDate("createdDate"));
 				bot.setTaskId(rs.getString("taskId"));
 				bot.setQuoteOrderQty(rs.getInt("quoteOrderQty"));
 				bot.setCycleMaxOrders(rs.getInt("cycleMaxOrders"));
@@ -104,7 +103,7 @@ public class TradeBotDB {
 				TradeBot bot = new TradeBot();
 				bot.setId(rs.getLong("id"));
 				bot.setSymbol(rs.getString("symbol"));
-				bot.setCreatedDate(rs.getTimestamp("createdDate").toLocalDateTime());
+				bot.setCreatedDate(rs.getDate("createdDate"));
 				bot.setTaskId(rs.getString("taskId"));
 				bot.setQuoteOrderQty(rs.getInt("quoteOrderQty"));
 				bot.setCycleMaxOrders(rs.getInt("cycleMaxOrders"));
@@ -138,7 +137,7 @@ public class TradeBotDB {
 			ps = connection.prepareStatement(query);
 			
 			ps.setString(1, bot.getSymbol());
-			ps.setDate(2, Date.valueOf(bot.getCreatedDate().toLocalDate()));
+			ps.setDate(2, new java.sql.Date(bot.getCreatedDate().getTime()));
 			ps.setString(3, bot.getTaskId());
 			ps.setInt(4, bot.getQuoteOrderQty());
 			ps.setInt(5, bot.getCycleMaxOrders());

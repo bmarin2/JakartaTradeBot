@@ -2,11 +2,11 @@ package com.tradebot.db;
 
 import com.tradebot.model.OrderTracker;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,8 +28,8 @@ public class OrderDB {
 			ps.setBigDecimal(3, order.getBuyPrice());
 			ps.setBigDecimal(4, order.getSellPrice());
 			ps.setBigDecimal(5, order.getProfit());
-			ps.setDate(6, Date.valueOf(order.getBuyDate().toLocalDate()));
-			ps.setDate(7, order.getSellDate() != null ? Date.valueOf(order.getSellDate().toLocalDate()) : null);
+			ps.setTimestamp(6, Timestamp.valueOf(order.getBuyDate()));
+			ps.setTimestamp(7, order.getSellDate() != null ? Timestamp.valueOf(order.getSellDate()) : null);
 			ps.setLong(8, order.getBuyOrderId());
 			ps.setLong(9, order.getSellOrderId());
 			ps.setLong(10, order.getTradebot_id());
@@ -67,8 +67,8 @@ public class OrderDB {
 			ps.setBigDecimal(3, order.getBuyPrice());
 			ps.setBigDecimal(4, order.getSellPrice());
 			ps.setBigDecimal(5, order.getProfit());
-			ps.setDate(6, Date.valueOf(order.getBuyDate().toLocalDate()));
-			ps.setDate(7, Date.valueOf(order.getSellDate().toLocalDate()));
+			ps.setTimestamp(6, Timestamp.valueOf(order.getBuyDate()));
+			ps.setTimestamp(7, order.getSellDate() != null ? Timestamp.valueOf(order.getSellDate()) : null);
 			ps.setLong(8, order.getBuyOrderId());
 			ps.setLong(9, order.getSellOrderId());
 			ps.setLong(10, order.getTradebot_id());
