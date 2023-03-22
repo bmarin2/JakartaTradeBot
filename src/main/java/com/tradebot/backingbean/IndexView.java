@@ -1,8 +1,10 @@
 package com.tradebot.backingbean;
 
+import com.binance.connector.client.impl.SpotClientImpl;
+import com.tradebot.binance.SpotClientConfig;
+import com.tradebot.configuration.OrdersParams;
 import com.tradebot.db.OrderDB;
 import com.tradebot.db.TradeBotDB;
-import com.tradebot.model.OrderSide;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import com.tradebot.service.Task;
@@ -14,10 +16,12 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
+import org.json.JSONObject;
 import org.primefaces.PrimeFaces;
 
 @Named
@@ -29,12 +33,18 @@ public class IndexView implements Serializable {
 	private TaskService taskService;
 
 	private List<TradeBot> bots;
-
+	
+	private List<OrderTracker> botOrders;
+	
 	private TradeBot selectedTradeBot;
 
 	private TradeBot secondTradeBot;
 
 	private boolean shouldEditBot;
+	
+	private SpotClientImpl spotClientImpl;
+	
+	private List<String> orderJsonString;
 
 	@PostConstruct
 	private void init() {
@@ -44,26 +54,42 @@ public class IndexView implements Serializable {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		spotClientImpl = SpotClientConfig.spotClientSignTest();
+	}
+	
+	public void getOrderDetails(String symbol, long orderId) {
+		String temp = spotClientImpl.createTrade().getOrder(OrdersParams.getOrder(symbol, orderId));		
+		JSONObject json = new JSONObject(temp);		
+		Iterator<String> keys = json.keys();		
+		List<String> list = new ArrayList<>();		
+		while (keys.hasNext()) {
+			String key = keys.next();
+			Object value = json.get(key);
+			list.add(key + " : " + value);
+		}
+		orderJsonString = list;
 	}
 
 	public void updateBot() {
 		try {
-
 			if (shouldEditBot) {
 				TradeBotDB.updateTradeBot(selectedTradeBot);
 				addMessage("Bot Updated", "");
 			} else {
-				TradeBotDB.addBot(selectedTradeBot);
+				long bot_id = TradeBotDB.addBot(selectedTradeBot);
+				selectedTradeBot.setId(bot_id);
 				addMessage("New bot added", "");
 				addTask();
 			}
-
 			bots = TradeBotDB.getAllTradeBots();
-
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		PrimeFaces.current().executeScript("PF('manageBot').hide()");
+	}
+	
+	public void getBotOrders(long botId) throws Exception {
+		botOrders = OrderDB.getOrdersFromBot(true, botId);
 	}
 
 	public int getRunningTasksNumber() {
