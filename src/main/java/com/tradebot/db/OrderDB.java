@@ -29,7 +29,7 @@ public class OrderDB {
 			ps.setBigDecimal(4, order.getSellPrice());
 			ps.setBigDecimal(5, order.getProfit());
 			ps.setDate(6, Date.valueOf(order.getBuyDate().toLocalDate()));
-			ps.setDate(7, Date.valueOf(order.getSellDate().toLocalDate()));
+			ps.setDate(7, order.getSellDate() != null ? Date.valueOf(order.getSellDate().toLocalDate()) : null);
 			ps.setLong(8, order.getBuyOrderId());
 			ps.setLong(9, order.getSellOrderId());
 			ps.setLong(10, order.getTradebot_id());
@@ -72,6 +72,7 @@ public class OrderDB {
 			ps.setLong(8, order.getBuyOrderId());
 			ps.setLong(9, order.getSellOrderId());
 			ps.setLong(10, order.getTradebot_id());
+			ps.setLong(11, order.getId());
 			
 			ps.executeUpdate();
 			
@@ -104,7 +105,7 @@ public class OrderDB {
 				order.setSellPrice(rs.getBigDecimal("sellPrice"));
 				order.setProfit(rs.getBigDecimal("profit"));
 				order.setBuyDate(rs.getTimestamp("buyDate").toLocalDateTime());
-				order.setSellDate(rs.getTimestamp("sellDate").toLocalDateTime());
+				order.setSellDate(rs.getTimestamp("sellDate") != null ? rs.getTimestamp("sellDate").toLocalDateTime() : null);
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
@@ -120,19 +121,26 @@ public class OrderDB {
 		}
 	}
 	
-	public static List<OrderTracker> getOrdersFromBot(long botId) throws Exception {
+	public static List<OrderTracker> getOrdersFromBot(boolean all, long botId) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		String query = "SELECT * FROM ORDER_TRACKER WHERE tradebot_id=? AND buy=? AND sell=? ORDER BY buyDate";
+		String queryAll = "SELECT * FROM ORDER_TRACKER WHERE tradebot_id=? ORDER BY buyDate";
+		
 		try {
-			ps = connection.prepareStatement(query);
 			
-			ps.setLong(1, botId);
-			ps.setBoolean(2, true);
-			ps.setBoolean(3, false);
+			ps = connection.prepareStatement(all == true ? queryAll : query);
+			
+			if(all) {
+				ps.setLong(1, botId);
+			} else {
+				ps.setLong(1, botId);
+				ps.setBoolean(2, true);
+				ps.setBoolean(3, false);
+			}			
 			
 			rs = ps.executeQuery();
 			
@@ -146,7 +154,7 @@ public class OrderDB {
 				order.setSellPrice(rs.getBigDecimal("sellPrice"));
 				order.setProfit(rs.getBigDecimal("profit"));
 				order.setBuyDate(rs.getTimestamp("buyDate").toLocalDateTime());
-				order.setSellDate(rs.getTimestamp("sellDate").toLocalDateTime());
+				order.setSellDate(rs.getTimestamp("sellDate") != null ? rs.getTimestamp("sellDate").toLocalDateTime() : null);
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
