@@ -2,7 +2,7 @@ package com.tradebot.model;
 
 import com.tradebot.util.TaskCodeGeneratorService;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +15,7 @@ public class TradeBot implements Serializable {
 
 	private String symbol;
 	
-	private LocalDateTime createdDate = LocalDateTime.now();
+	private Date createdDate = new Date();
 	
 	private String taskId = TaskCodeGeneratorService.generateRandomString();
 	
