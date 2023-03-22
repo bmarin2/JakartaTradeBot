@@ -8,7 +8,7 @@
 		<title>Index</title>
 		<style>
 			.ui-widget {
-				font-size: 13px !important;
+				font-size: 12px !important;
 			}
 
 			.ui-panelgrid-cell {
@@ -25,12 +25,19 @@
 				border: 1px solid !important;
 				border-color: darkgray !important;
 			}
-
+			
+			.ui-datatable table {
+				font-size: 10px;
+			}
+			
+			.ui-datatable td {
+				padding: 1px;
+			}
 		</style>
 
 	</h:head>
 	<h:body>
-
+		
 		<p:growl id="growl" showDetail="true" />
 
 		<div style="margin:0 auto;width:70%;">            
@@ -38,7 +45,10 @@
 				<p:commandButton value="Create Bot" styleClass="ui-button-success" icon="pi pi-plus-circle"
 							  oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
 					<p:resetInput target="manageBotForm:manage-bot" />
-				</p:commandButton>                
+				</p:commandButton>
+				<p:commandButton value="Test Order" action="#{indexView.createOrder()}"/>
+				<p:commandButton value="Update Order" action="#{indexView.updateOrder()}"/>
+				<p:commandButton value="Get All Orders" action="#{indexView.getAllOrders()}"/>
 				<p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
 				<hr style="margin-bottom:10px;margin-top:15px"></hr>
 			</h:form>
@@ -57,7 +67,7 @@
 						</f:facet>
 
 						<f:facet name="footer">
-							<p:commandButton icon="pi pi-list" value="Details" oncomplete="PF('botDetails').show()" update="detailsForm" style="margin-right:5px;">
+							<p:commandButton icon="pi pi-list" value="Details" oncomplete="PF('botDetails').show()" update="detailsForm" style="margin-right:5px;" action="#{indexView.getBotOrders(indexView.selectedTradeBot.id)}">
 								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
 							</p:commandButton>
 
@@ -67,10 +77,10 @@
 						</f:facet>
 					</p:card>
 				</p:repeat>
-			</h:form>    
-
+			</h:form>   
+			
 			<h:form id="manageBotForm">
-				<p:dialog widgetVar="manageBot" height="250" width="40%" showEffect="fade" modal="true">
+				<p:dialog widgetVar="manageBot" height="auto" width="40%" showEffect="fade" modal="true">
 					<f:facet name="header">
 						<h:outputText id="outputId" value="#{indexView.shouldEditBot ? 'Edit Bot' : 'Create New Bot'}" />
 					</f:facet>
@@ -118,44 +128,90 @@
 			</h:form>
 
 			<h:form id="detailsForm">
-				<p:dialog closable="false" widgetVar="botDetails" height="250" width="40%" showEffect="fade" modal="true" >
+				<p:dialog closable="false" widgetVar="botDetails" height="400" width="75%" showEffect="fade" modal="true" >
 					<f:facet name="header">
 						#{indexView.selectedTradeBot.symbol}
 						<h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />
 					</f:facet>
+					
 					<p:panelGrid columns="2" style="display:inline-block;margin-right:10px;">
 						<h:outputText value="Symbol"/>
 						<h:outputText value="#{indexView.selectedTradeBot.symbol}"/>
-						<h:outputText value="TaskId"/>
-						<h:outputText value="#{indexView.selectedTradeBot.taskId}"/>
-						<h:outputText value="Description"/>
-						<h:outputText value="#{indexView.selectedTradeBot.description}"/>
-						
-						<h:outputText value="QuoteOrderQty"/>
-						<h:outputText value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
-						<h:outputText value="CycleMaxOrders"/>
-						<h:outputText value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>
-					</p:panelGrid>
-					<p:panelGrid columns="2" style="display:inline-block">
-						<h:outputText value="Order Step"/>
-						<h:outputText value="#{indexView.selectedTradeBot.orderStep}"/>
-						
-						<h:outputText value="Initial Delay"/>
-						<h:outputText value="#{indexView.selectedTradeBot.initialDelay}"/>
 						<h:outputText value="Delay"/>
 						<h:outputText value="#{indexView.selectedTradeBot.delay}"/>
+						<h:outputText value="Initial Delay"/>
+						<h:outputText value="#{indexView.selectedTradeBot.initialDelay}"/>
+						<h:outputText value="CycleMaxOrders"/>
+						<h:outputText value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>						
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="display:inline-block;margin-right:10px">
+						<h:outputText value="QuoteOrderQty"/>
+						<h:outputText value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
+						<h:outputText value="Order Step"/>
+						<h:outputText value="#{indexView.selectedTradeBot.orderStep}"/>
 						<h:outputText value="Time Unit"/>
-						<h:outputText value="#{indexView.selectedTradeBot.timeUnit}"/>						
-
+						<h:outputText value="#{indexView.selectedTradeBot.timeUnit}"/>
+						<h:outputText value="TaskId"/>
+						<h:outputText value="#{indexView.selectedTradeBot.taskId}"/>
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="display:inline-block;">
+						<h:outputText value="Description"/>
+						<h:outputText value="#{indexView.selectedTradeBot.description}"/>
 						<h:outputText value="Created Date"/>						
 						<h:outputText value="#{indexView.selectedTradeBot.createdDate}" >
 							<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
-						</h:outputText>
-						
-						
+						</h:outputText>						
 					</p:panelGrid>
-					<f:facet name="footer">
+					
+					<hr style="margin-top:20px"></hr>
+					
+					<p:dataTable id="botsTable" var="order" value="#{indexView.botOrders}"
+							   sortMode="single" >
+						<p:column sortBy="#{order.id}" headerText="Id">
+							<h:outputText value="#{order.id}" />
+						</p:column>
+						<p:column sortBy="#{order.buy}" headerText="Bought">
+							<p:button style="width:30px;height:30px;" icon="pi pi-check" styleClass="rounded-button" rendered="#{order.buy}"/>
+						</p:column>
+						<p:column sortBy="#{order.sell}" headerText="Sold">
+							<p:button style="width:30px;height:30px;" icon="pi pi-check" styleClass="rounded-button ui-button-success" rendered="#{order.sell}"/>
+						</p:column>
+						<p:column sortBy="#{order.buyPrice}" headerText="Buy Price">
+							<p:outputLabel value="#{order.buyPrice}">
+								<f:convertNumber pattern="#0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column sortBy="#{order.sellPrice}" headerText="Sell Price">
+							<p:outputLabel value="#{order.sellPrice}">
+								<f:convertNumber pattern="#0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column sortBy="#{order.profit}" headerText="Profit">
+							<h:outputText value="#{order.profit}" />
+						</p:column>
+						<p:column sortBy="#{order.buyDate}" headerText="Buy Date">
+							<h:outputText value="#{order.buyDate}" >
+								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy" />
+							</h:outputText>
+						</p:column>						
+						<p:column sortBy="#{order.sellDate}" headerText="Sell Date">
+							<h:outputText value="#{order.sellDate}" >
+								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Buy Id">
+							<p:commandButton value="#{order.buyOrderId}" styleClass="ui-button-outlined ui-button-info" icon="pi pi-cloud-download" rendered="#{order.buyOrderId gt 0}"
+										action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.buyOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
+						</p:column>
+						<p:column headerText="Sell Id">
+							<p:commandButton value="#{order.sellOrderId}" styleClass="ui-button-outlined ui-button-info" icon="pi pi-cloud-download" rendered="#{order.sellOrderId gt 0}"
+										action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.sellOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
+						</p:column>
+					</p:dataTable>
+					
+					<f:facet name="footer">						
 						<div style="padding-top:15px;">
+							<hr style="margin-bottom:15px"></hr>
 							<p:commandButton id="runId" update="txtId runId stopId growl headerForm:numberId botListForm" value="Run Bot" styleClass="ui-button-success" action="#{indexView.addTask}" style="float:left"
 										  disabled="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
 							<p:commandButton id="stopId" update="txtId stopId runId growl headerForm:numberId botListForm" value="Stop Bot" styleClass="ui-button-warning" action="#{indexView.removeTask}" style="float:left"
@@ -165,6 +221,15 @@
 						</div>
 					</f:facet>
 				</p:dialog>
+				
+				<p:dialog header="Order details" id="jsonDialog" widgetVar="orderDetails" height="auto" width="auti" showEffect="fade" modal="false" >
+					
+					<p:repeat value="#{indexView.orderJsonString}" var="line">
+						<h:outputText value="#{line}"/><br></br>
+					</p:repeat>					
+				</p:dialog>
+				
+				
 			</h:form>
 		</div>
 	</h:body>
