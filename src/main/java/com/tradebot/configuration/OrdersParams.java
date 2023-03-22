@@ -21,4 +21,11 @@ public class OrdersParams {
 		parameters.put("symbol", symbol);
 		return parameters;
 	}
+	
+	public static LinkedHashMap<String, Object> getOrder(String symbol, long orderId) {
+		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
+		parameters.put("symbol", symbol);
+		parameters.put("orderId", orderId);
+		return parameters;
+	}
 }
