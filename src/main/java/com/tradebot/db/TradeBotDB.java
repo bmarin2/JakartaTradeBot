@@ -6,21 +6,23 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class TradeBotDB {
-	public static void addBot(TradeBot bot) throws Exception {
+	public static long addBot(TradeBot bot) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		long order_id = 0;
 
 		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quoteOrderQty, cycleMaxOrders, orderStep, description, initialDelay, delay, timeUnit) "
 			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
-			ps = connection.prepareStatement(query);
+			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
 			ps.setString(1, bot.getSymbol());
 			ps.setDate(2, Date.valueOf(bot.getCreatedDate().toLocalDate()));
@@ -35,6 +37,12 @@ public class TradeBotDB {
 			
 			ps.executeUpdate();
 			
+			rs = ps.getGeneratedKeys();
+
+			if (rs.next()) {
+				order_id = rs.getLong(1);
+			}
+			
 		} catch (SQLException e) {
 			System.err.println(e);
 		} finally {
@@ -42,6 +50,7 @@ public class TradeBotDB {
 			DBUtil.closePreparedStatement(ps);
 			pool.freeConnection(connection);
 		}
+		return order_id;
 	}
 	
 	public static TradeBot getOneTradeBot(long id) throws Exception {
