@@ -8,7 +8,7 @@
 		<title>Index</title>
 		<style>
 			.ui-widget {
-				font-size: 12px !important;
+				font-size: 11px !important;
 			}
 
 			.ui-panelgrid-cell {
@@ -112,7 +112,7 @@
 						<p:inputText id="input7" value="#{indexView.selectedTradeBot.orderStep}"/>
 
 						<p:outputLabel for="input8" value="Date Created"/>
-						<p:datePicker id="input8" showTime="true" value="#{indexView.selectedTradeBot.createdDate}" />
+						<p:datePicker id="input8" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 
 						<p:outputLabel for="input9" value="Description"/>
 						<p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
@@ -128,7 +128,7 @@
 			</h:form>
 
 			<h:form id="detailsForm">
-				<p:dialog closable="false" widgetVar="botDetails" height="400" width="75%" showEffect="fade" modal="true" >
+				<p:dialog closable="false" widgetVar="botDetails" height="400" width="60%" showEffect="fade" modal="true" >
 					<f:facet name="header">
 						#{indexView.selectedTradeBot.symbol}
 						<h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />
@@ -157,24 +157,21 @@
 					<p:panelGrid columns="2" style="display:inline-block;">
 						<h:outputText value="Description"/>
 						<h:outputText value="#{indexView.selectedTradeBot.description}"/>
-						<h:outputText value="Created Date"/>						
-						<h:outputText value="#{indexView.selectedTradeBot.createdDate}" >
-							<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
-						</h:outputText>						
+						<h:outputText value="Created Date"/>
+						<h:outputText value="#{indexView.selectedTradeBot.createdDate}"/>
 					</p:panelGrid>
 					
 					<hr style="margin-top:20px"></hr>
 					
-					<p:dataTable id="botsTable" var="order" value="#{indexView.botOrders}"
-							   sortMode="single" >
+					<p:dataTable id="botsTable" var="order" value="#{indexView.botOrders}" sortMode="single" >
 						<p:column sortBy="#{order.id}" headerText="Id">
 							<h:outputText value="#{order.id}" />
 						</p:column>
 						<p:column sortBy="#{order.buy}" headerText="Bought">
-							<p:button style="width:30px;height:30px;" icon="pi pi-check" styleClass="rounded-button" rendered="#{order.buy}"/>
+							<p:button style="width:20px;height:20px;" icon="pi pi-check" styleClass="rounded-button" rendered="#{order.buy}"/>
 						</p:column>
 						<p:column sortBy="#{order.sell}" headerText="Sold">
-							<p:button style="width:30px;height:30px;" icon="pi pi-check" styleClass="rounded-button ui-button-success" rendered="#{order.sell}"/>
+							<p:button style="width:20px;height:20px;" icon="pi pi-check" styleClass="rounded-button ui-button-success" rendered="#{order.sell}"/>
 						</p:column>
 						<p:column sortBy="#{order.buyPrice}" headerText="Buy Price">
 							<p:outputLabel value="#{order.buyPrice}">
@@ -191,20 +188,20 @@
 						</p:column>
 						<p:column sortBy="#{order.buyDate}" headerText="Buy Date">
 							<h:outputText value="#{order.buyDate}" >
-								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy" />
+								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
 							</h:outputText>
 						</p:column>						
 						<p:column sortBy="#{order.sellDate}" headerText="Sell Date">
 							<h:outputText value="#{order.sellDate}" >
-								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy" />
+								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
 							</h:outputText>
 						</p:column>
 						<p:column headerText="Buy Id">
-							<p:commandButton value="#{order.buyOrderId}" styleClass="ui-button-outlined ui-button-info" icon="pi pi-cloud-download" rendered="#{order.buyOrderId gt 0}"
+							<p:commandLink value="#{order.buyOrderId}" styleClass="ui-button-outlined ui-button-info" rendered="#{order.buyOrderId gt 0}"
 										action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.buyOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
 						</p:column>
 						<p:column headerText="Sell Id">
-							<p:commandButton value="#{order.sellOrderId}" styleClass="ui-button-outlined ui-button-info" icon="pi pi-cloud-download" rendered="#{order.sellOrderId gt 0}"
+							<p:commandLink value="#{order.sellOrderId}" styleClass="ui-button-outlined ui-button-info" rendered="#{order.sellOrderId gt 0}"
 										action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.sellOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
 						</p:column>
 					</p:dataTable>
@@ -228,7 +225,6 @@
 						<h:outputText value="#{line}"/><br></br>
 					</p:repeat>					
 				</p:dialog>
-				
 				
 			</h:form>
 		</div>
