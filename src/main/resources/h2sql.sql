@@ -33,3 +33,12 @@ CREATE TABLE ORDER_TRACKER (
     tradebot_id BIGINT,
     FOREIGN KEY (tradebot_id) REFERENCES TRADE_BOT(id)
 );
+
+CREATE TABLE ERROR_TRACKER (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    errorTimestamp TIMESTAMP,
+    errorMessage VARCHAR(255),
+    acknowledged BOOLEAN,
+    tradebot_id BIGINT,
+    FOREIGN KEY (tradebot_id) REFERENCES TRADE_BOT(id)
+);

@@ -40,7 +40,7 @@
 		
 		<p:growl id="growl" showDetail="true" />
 
-		<div style="margin:0 auto;width:70%;">            
+		<div style="margin:0 auto;width:65%;">            
 			<h:form id="headerForm">
 				<p:commandButton value="Create Bot" styleClass="ui-button-success" icon="pi pi-plus-circle"
 							  oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
@@ -57,13 +57,13 @@
 				<p:repeat value="#{indexView.bots}" var="bot">
 					<p:card style="margin:.5em;display:inline-block;border-color:background;background-color:#F0F0F0;padding:0;width:32%;">
 						<f:facet name="title" >
-							<span style="margin-top: -5px">#{bot.symbol}</span>
+							<span style="margin-top: -5px">#{bot.symbol}</span><span style="font-size:13px;margin-right:12px;margin-left:15px;">#{bot.taskId}</span><span style="font-size:13px">#{bot.createdDate}</span>
 							<p:tag styleClass="mr-2" severity="success" rounded="true" icon="pi pi-check" style="float:right" value="Running" rendered="#{indexView.isBotRunning(bot.taskId)}"/>
 							<p:tag styleClass="mr-2" severity="warning" rounded="true" icon="pi pi-times-circle" style="float:right" value="Stopped" rendered="#{!indexView.isBotRunning(bot.taskId)}"/>
 						</f:facet>
 
 						<f:facet name="subtitle">
-							#{bot.taskId}
+							message
 						</f:facet>
 
 						<f:facet name="footer">
