@@ -63,15 +63,17 @@ public class ErrorTrackerDB {
 		}
 	}
 
-	public static List<ErrorTracker> getTradeBotErrors(long botId) throws Exception {
+	public static List<ErrorTracker> getTradeBotErrors(long botId, boolean onlyUnacknowledged) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-
+		
 		String query = "SELECT * FROM ERROR_TRACKER where tradebot_id=?";
+		String queryOnlyUnacknowledged = "SELECT * FROM ERROR_TRACKER where tradebot_id=? AND acknowledged=false";
+		
 		try {
-			ps = connection.prepareStatement(query);
+			ps = connection.prepareStatement(onlyUnacknowledged ? queryOnlyUnacknowledged : query);
 			ps.setLong(1, botId);
 			rs = ps.executeQuery();
 			

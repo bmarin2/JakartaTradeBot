@@ -40,40 +40,43 @@
 		
 		<p:growl id="growl" showDetail="true" />
 
-		<div style="margin:0 auto;width:65%;">            
+		<div style="margin:0 auto;width:65%;">
 			<h:form id="headerForm">
 				<p:commandButton value="Create Bot" styleClass="ui-button-success" icon="pi pi-plus-circle"
 							  oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
 					<p:resetInput target="manageBotForm:manage-bot" />
 				</p:commandButton>
-				<p:commandButton value="Test Order" action="#{indexView.createOrder()}"/>
-				<p:commandButton value="Update Order" action="#{indexView.updateOrder()}"/>
-				<p:commandButton value="Get All Orders" action="#{indexView.getAllOrders()}"/>
 				<p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
 				<hr style="margin-bottom:10px;margin-top:15px"></hr>
 			</h:form>
 
 			<h:form id="botListForm">
 				<p:repeat value="#{indexView.bots}" var="bot">
-					<p:card style="margin:.5em;display:inline-block;border-color:background;background-color:#F0F0F0;padding:0;width:32%;">
-						<f:facet name="title" >
-							<span style="margin-top: -5px">#{bot.symbol}</span><span style="font-size:13px;margin-right:12px;margin-left:15px;">#{bot.taskId}</span><span style="font-size:13px">#{bot.createdDate}</span>
+					<p:card style="margin:.5em;display:inline-block;border-color:background;background-color:#F0F0F0;padding:0;width:32%">
+						<f:facet name="title">
+							<span style="font-size:70%;">#{bot.symbol}</span><span style="font-size:55%;margin-left:8px;margin-right:8px">#{bot.taskId}</span>
 							<p:tag styleClass="mr-2" severity="success" rounded="true" icon="pi pi-check" style="float:right" value="Running" rendered="#{indexView.isBotRunning(bot.taskId)}"/>
 							<p:tag styleClass="mr-2" severity="warning" rounded="true" icon="pi pi-times-circle" style="float:right" value="Stopped" rendered="#{!indexView.isBotRunning(bot.taskId)}"/>
 						</f:facet>
-
-						<f:facet name="subtitle">
-							message
-						</f:facet>
+						
+						<div style="float:right">
+							Created:
+							<p:outputLabel value="#{bot.createdDate}">
+								<f:convertDateTime timeZone="CET" pattern="dd.MM.yyyy" />
+							</p:outputLabel>														
+						</div>						
 
 						<f:facet name="footer">
 							<p:commandButton icon="pi pi-list" value="Details" oncomplete="PF('botDetails').show()" update="detailsForm" style="margin-right:5px;" action="#{indexView.getBotOrders(indexView.selectedTradeBot.id)}">
 								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
 							</p:commandButton>
 
-							<p:commandButton icon="pi pi-file" value="Edit" oncomplete="PF('manageBot').show()" update="manageBotForm" disabled="#{indexView.isBotRunning(bot.taskId)}" action="#{indexView.editBot()}">
+							<p:commandButton icon="pi pi-file" value="Edit" oncomplete="PF('manageBot').show()" update="manageBotForm" style="margin-right:5px;" disabled="#{indexView.isBotRunning(bot.taskId)}" action="#{indexView.editBot()}">
 								<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
 							</p:commandButton>
+							
+							<p:commandButton icon="pi pi-exclamation-triangle" rendered="#{indexView.getErrorsSize(bot.id) > 0}" oncomplete="PF('manageErrors').show()" update="errorsForm" action="#{indexView.getBotErrors(bot.id)}"
+									value="Errors #{indexView.getErrorsSize(bot.id)}" styleClass="ui-button-danger" />
 						</f:facet>
 					</p:card>
 				</p:repeat>
@@ -227,6 +230,27 @@
 				</p:dialog>
 				
 			</h:form>
+			
+			<h:form id="errorsForm">
+				<p:dialog widgetVar="manageErrors" height="auto" width="80%" showEffect="fade" modal="true" >
+					<f:facet name="header">
+						Errors
+					</f:facet>
+					<p:outputPanel id="errorPanel">
+					<p:repeat value="#{indexView.errors}" var="error">
+						<p:panelGrid columns="4" id="panelId">
+							<p:outputLabel value="#{error.id}" />
+							<p:outputLabel value="#{error.errorTimestamp}">
+								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
+							</p:outputLabel>
+							<p:outputLabel value="#{error.errorMessage}" />
+							<p:commandButton value="Acknowlege" action="#{indexView.acknowledgeError(error)}" update=":errorsForm:errorPanel botListForm"/>
+						</p:panelGrid>						
+					</p:repeat>
+					</p:outputPanel>
+				</p:dialog>
+			</h:form>
+			
 		</div>
 	</h:body>
 </html>

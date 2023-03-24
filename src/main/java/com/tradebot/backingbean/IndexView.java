@@ -3,8 +3,10 @@ package com.tradebot.backingbean;
 import com.binance.connector.client.impl.SpotClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.configuration.OrdersParams;
+import com.tradebot.db.ErrorTrackerDB;
 import com.tradebot.db.OrderDB;
 import com.tradebot.db.TradeBotDB;
+import com.tradebot.model.ErrorTracker;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import com.tradebot.service.Task;
@@ -45,6 +47,8 @@ public class IndexView implements Serializable {
 	private SpotClientImpl spotClientImpl;
 	
 	private List<String> orderJsonString;
+	
+	private List<ErrorTracker> errors;
 
 	@PostConstruct
 	private void init() {
@@ -86,6 +90,20 @@ public class IndexView implements Serializable {
 			ex.printStackTrace();
 		}
 		PrimeFaces.current().executeScript("PF('manageBot').hide()");
+	}
+	
+	public void getBotErrors(long botId) throws Exception {
+		errors = ErrorTrackerDB.getTradeBotErrors(botId, true);
+	}
+	
+	public int getErrorsSize(long botId) throws Exception {
+		List<ErrorTracker> errorsTmp = ErrorTrackerDB.getTradeBotErrors(botId, true);
+		return errorsTmp.size();
+	}
+	
+	public void acknowledgeError(ErrorTracker err) throws Exception {
+		ErrorTrackerDB.updateError(err);
+		getBotErrors(err.getTradebot_id());
 	}
 	
 	public void getBotOrders(long botId) throws Exception {
