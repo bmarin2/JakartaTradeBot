@@ -47,6 +47,8 @@
 					<p:resetInput target="manageBotForm:manage-bot" />
 				</p:commandButton>
 				<p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
+				<p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfo()}"
+							style="float:right;margin-right:20px;" update="accountForm:accountPanel"/>
 				<hr style="margin-bottom:10px;margin-top:15px"></hr>
 			</h:form>
 
@@ -131,7 +133,7 @@
 			</h:form>
 
 			<h:form id="detailsForm">
-				<p:dialog closable="false" widgetVar="botDetails" height="400" width="60%" showEffect="fade" modal="true" >
+				<p:dialog widgetVar="botDetails" height="400" width="60%" showEffect="fade" modal="true" >
 					<f:facet name="header">
 						#{indexView.selectedTradeBot.symbol}
 						<h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />
@@ -161,7 +163,9 @@
 						<h:outputText value="Description"/>
 						<h:outputText value="#{indexView.selectedTradeBot.description}"/>
 						<h:outputText value="Created Date"/>
-						<h:outputText value="#{indexView.selectedTradeBot.createdDate}"/>
+						<p:outputLabel value="#{bot.createdDate}">
+							<f:convertDateTime timeZone="CET" pattern="dd.MM.yyyy" />
+						</p:outputLabel>
 					</p:panelGrid>
 					
 					<hr style="margin-top:20px"></hr>
@@ -209,7 +213,7 @@
 						</p:column>
 					</p:dataTable>
 					
-					<f:facet name="footer">						
+					<f:facet name="footer">
 						<div style="padding-top:15px;">
 							<hr style="margin-bottom:15px"></hr>
 							<p:commandButton id="runId" update="txtId runId stopId growl headerForm:numberId botListForm" value="Run Bot" styleClass="ui-button-success" action="#{indexView.addTask}" style="float:left"
@@ -222,13 +226,13 @@
 					</f:facet>
 				</p:dialog>
 				
-				<p:dialog header="Order details" id="jsonDialog" widgetVar="orderDetails" height="auto" width="auti" showEffect="fade" modal="false" >
+				<p:dialog header="Order details" id="jsonDialog" widgetVar="orderDetails" height="auto" width="auto" showEffect="fade" modal="false" >
 					
 					<p:repeat value="#{indexView.orderJsonString}" var="line">
 						<h:outputText value="#{line}"/><br></br>
 					</p:repeat>					
 				</p:dialog>
-				
+					
 			</h:form>
 			
 			<h:form id="errorsForm">
@@ -236,18 +240,35 @@
 					<f:facet name="header">
 						Errors
 					</f:facet>
-					<p:outputPanel id="errorPanel">
-					<p:repeat value="#{indexView.errors}" var="error">
-						<p:panelGrid columns="4" id="panelId">
-							<p:outputLabel value="#{error.id}" />
-							<p:outputLabel value="#{error.errorTimestamp}">
-								<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
-							</p:outputLabel>
-							<p:outputLabel value="#{error.errorMessage}" />
-							<p:commandButton value="Acknowlege" action="#{indexView.acknowledgeError(error)}" update=":errorsForm:errorPanel botListForm"/>
-						</p:panelGrid>						
-					</p:repeat>
-					</p:outputPanel>
+					<div style="height:400px; overflow-y: auto;">
+						<p:outputPanel id="errorPanel">
+						<p:repeat value="#{indexView.errors}" var="error">
+							<p:panelGrid columns="4" id="panelId">
+								<p:outputLabel value="#{error.id}" />
+								<p:outputLabel value="#{error.errorTimestamp}">
+									<f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
+								</p:outputLabel>
+								<p:outputLabel value="#{error.errorMessage}" />
+								<p:commandButton value="Acknowlege" action="#{indexView.acknowledgeError(error)}" update=":errorsForm:errorPanel botListForm"/>
+							</p:panelGrid>						
+						</p:repeat>
+						</p:outputPanel>
+					</div>
+				</p:dialog>
+			</h:form>
+			
+			<h:form id="accountForm">
+				<p:dialog widgetVar="accountDetails" height="auto" width="25%" showEffect="fade" modal="true" >
+					<f:facet name="header">
+						Account Info
+					</f:facet>
+					<div style="height:400px; overflow-y: auto;">
+						<p:outputPanel id="accountPanel">
+							<p:repeat value="#{indexView.accountInfoJsonString}" var="jsonString">
+								<h:outputText value="#{jsonString}"/><br/>
+							</p:repeat>
+						</p:outputPanel>
+					</div>					
 				</p:dialog>
 			</h:form>
 			

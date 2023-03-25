@@ -19,7 +19,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
@@ -48,6 +49,8 @@ public class IndexView implements Serializable {
 	
 	private List<String> orderJsonString;
 	
+	private List<String> accountInfoJsonString;
+	
 	private List<ErrorTracker> errors;
 
 	@PostConstruct
@@ -62,16 +65,25 @@ public class IndexView implements Serializable {
 	}
 	
 	public void getOrderDetails(String symbol, long orderId) {
-		String temp = spotClientImpl.createTrade().getOrder(OrdersParams.getOrder(symbol, orderId));		
+		long timeStamp = System.currentTimeMillis();
+		String temp = spotClientImpl.createTrade().getOrder(OrdersParams.getOrder(symbol, orderId, timeStamp));		
 		JSONObject json = new JSONObject(temp);		
-		Iterator<String> keys = json.keys();		
-		List<String> list = new ArrayList<>();		
-		while (keys.hasNext()) {
-			String key = keys.next();
-			Object value = json.get(key);
-			list.add(key + " : " + value);
-		}
+		List<String> list = new ArrayList<>();
+		String[] lines = json.toString(2).split("\\r?\\n");
+		list.addAll(Arrays.asList(lines));
 		orderJsonString = list;
+	}
+	
+	public void getAccountInfo() {
+		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
+		parameters.put("timestamp", System.currentTimeMillis());
+		
+		String temp = spotClientImpl.createTrade().account(parameters);
+		JSONObject json = new JSONObject(temp);		
+		List<String> list = new ArrayList<>();
+		String[] lines = json.toString(2).split("\\r?\\n");
+		list.addAll(Arrays.asList(lines));
+		accountInfoJsonString = list;
 	}
 
 	public void updateBot() {
