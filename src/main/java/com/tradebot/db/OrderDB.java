@@ -164,4 +164,32 @@ public class OrderDB {
 			pool.freeConnection(connection);
 		}
 	}
+	
+	public static int getOrderCount(long botId, boolean unsold) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		int count = 0;
+
+		String query = "SELECT COUNT(*) FROM ORDER_TRACKER WHERE tradeBot_id=? AND sell=" + unsold;
+		
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setLong(1, botId);			
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				count = rs.getInt(1);
+			}
+			return count;
+		} catch (SQLException e) {
+			System.err.println(e);
+			return 0;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}	
 }
