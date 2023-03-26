@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 public class OrderTracker {
 	
 	private long id;
-
-	private Boolean buy = true;
 	
 	private Boolean sell = false;
 	

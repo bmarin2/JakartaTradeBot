@@ -124,7 +124,7 @@ public class Task implements Runnable {
 							order.setSellDate(LocalDateTime.now());
 							order.setSellOrderId(orderResultJson.getLong("orderId"));
 							OrderDB.updateOrder(order);
-							System.out.println("Order in DB created: " + order.getId());
+							System.out.println("Updated Order: " + order.getId());
 							positions.remove(id);
 							System.out.println("Positions size: " + positions.size());
 						}						
@@ -161,7 +161,7 @@ public class Task implements Runnable {
 		order.setTradebot_id(tradeBot.getId());
 		order.setBuyOrderId(orderResultJson.getLong("orderId"));
 		long order_id = OrderDB.addOrder(order);
-		System.out.println("Order DB: " + order_id);
+		System.out.println("Created Order: " + order_id);
 		positions.put(order_id, newPosition);
 	}
 

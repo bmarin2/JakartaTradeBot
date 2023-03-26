@@ -19,20 +19,19 @@ public class OrderDB {
 		ResultSet rs = null;
 		long order_id = 0;
 
-		String query = "INSERT INTO ORDER_TRACKER (buy, sell, buyPrice, sellPrice, profit, buyDate, sellDate, buyOrderId, sellOrderId, tradebot_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String query = "INSERT INTO ORDER_TRACKER (sell, buyPrice, sellPrice, profit, buyDate, sellDate, buyOrderId, sellOrderId, tradebot_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
-			ps.setBoolean(1, order.getBuy());
-			ps.setBoolean(2, order.getSell());
-			ps.setBigDecimal(3, order.getBuyPrice());
-			ps.setBigDecimal(4, order.getSellPrice());
-			ps.setBigDecimal(5, order.getProfit());
-			ps.setTimestamp(6, Timestamp.valueOf(order.getBuyDate()));
-			ps.setTimestamp(7, order.getSellDate() != null ? Timestamp.valueOf(order.getSellDate()) : null);
-			ps.setLong(8, order.getBuyOrderId());
-			ps.setLong(9, order.getSellOrderId());
-			ps.setLong(10, order.getTradebot_id());
+			ps.setBoolean(1, order.getSell());
+			ps.setBigDecimal(2, order.getBuyPrice());
+			ps.setBigDecimal(3, order.getSellPrice());
+			ps.setBigDecimal(4, order.getProfit());
+			ps.setTimestamp(5, Timestamp.valueOf(order.getBuyDate()));
+			ps.setTimestamp(6, order.getSellDate() != null ? Timestamp.valueOf(order.getSellDate()) : null);
+			ps.setLong(7, order.getBuyOrderId());
+			ps.setLong(8, order.getSellOrderId());
+			ps.setLong(9, order.getTradebot_id());
 			
 			ps.executeUpdate();
 			
@@ -58,21 +57,20 @@ public class OrderDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "UPDATE ORDER_TRACKER SET buy=?, sell=?, buyPrice=?, sellPrice=?, profit=?, buyDate=?, sellDate=?, buyOrderId=?, sellOrderId=?, tradebot_id=? WHERE id = ?";
+		String query = "UPDATE ORDER_TRACKER SET sell=?, buyPrice=?, sellPrice=?, profit=?, buyDate=?, sellDate=?, buyOrderId=?, sellOrderId=?, tradebot_id=? WHERE id = ?";
 		try {
 			ps = connection.prepareStatement(query);
 			
-			ps.setBoolean(1, order.getBuy());
-			ps.setBoolean(2, order.getSell());
-			ps.setBigDecimal(3, order.getBuyPrice());
-			ps.setBigDecimal(4, order.getSellPrice());
-			ps.setBigDecimal(5, order.getProfit());
-			ps.setTimestamp(6, Timestamp.valueOf(order.getBuyDate()));
-			ps.setTimestamp(7, order.getSellDate() != null ? Timestamp.valueOf(order.getSellDate()) : null);
-			ps.setLong(8, order.getBuyOrderId());
-			ps.setLong(9, order.getSellOrderId());
-			ps.setLong(10, order.getTradebot_id());
-			ps.setLong(11, order.getId());
+			ps.setBoolean(1, order.getSell());
+			ps.setBigDecimal(2, order.getBuyPrice());
+			ps.setBigDecimal(3, order.getSellPrice());
+			ps.setBigDecimal(4, order.getProfit());
+			ps.setTimestamp(5, Timestamp.valueOf(order.getBuyDate()));
+			ps.setTimestamp(6, order.getSellDate() != null ? Timestamp.valueOf(order.getSellDate()) : null);
+			ps.setLong(7, order.getBuyOrderId());
+			ps.setLong(8, order.getSellOrderId());
+			ps.setLong(9, order.getTradebot_id());
+			ps.setLong(10, order.getId());
 			
 			ps.executeUpdate();
 			
@@ -99,7 +97,6 @@ public class OrderDB {
 			OrderTracker order = new OrderTracker();
 			while (rs.next()) {
 				order.setId(rs.getLong("id"));
-				order.setBuy(rs.getBoolean("buy"));
 				order.setSell(rs.getBoolean("sell"));
 				order.setBuyPrice(rs.getBigDecimal("buyPrice"));
 				order.setSellPrice(rs.getBigDecimal("sellPrice"));
@@ -127,19 +124,17 @@ public class OrderDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "SELECT * FROM ORDER_TRACKER WHERE tradebot_id=? AND buy=? AND sell=? ORDER BY buyDate";
+		String query = "SELECT * FROM ORDER_TRACKER WHERE tradebot_id=? AND sell=? ORDER BY buyDate";
 		String queryAll = "SELECT * FROM ORDER_TRACKER WHERE tradebot_id=? ORDER BY buyDate";
 		
 		try {
 			
 			ps = connection.prepareStatement(all == true ? queryAll : query);
 			
-			if(all) {
-				ps.setLong(1, botId);
-			} else {
-				ps.setLong(1, botId);
-				ps.setBoolean(2, true);
-				ps.setBoolean(3, false);
+			ps.setLong(1, botId);
+			
+			if(!all) {
+				ps.setBoolean(2, false);
 			}			
 			
 			rs = ps.executeQuery();
@@ -148,7 +143,6 @@ public class OrderDB {
 			while (rs.next()) {
 				OrderTracker order = new OrderTracker();
 				order.setId(rs.getLong("id"));
-				order.setBuy(rs.getBoolean("buy"));
 				order.setSell(rs.getBoolean("sell"));
 				order.setBuyPrice(rs.getBigDecimal("buyPrice"));
 				order.setSellPrice(rs.getBigDecimal("sellPrice"));

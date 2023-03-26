@@ -174,9 +174,6 @@
 						<p:column sortBy="#{order.id}" headerText="Id">
 							<h:outputText value="#{order.id}" />
 						</p:column>
-						<p:column sortBy="#{order.buy}" headerText="Bought">
-							<p:button style="width:20px;height:20px;" icon="pi pi-check" styleClass="rounded-button" rendered="#{order.buy}"/>
-						</p:column>
 						<p:column sortBy="#{order.sell}" headerText="Sold">
 							<p:button style="width:20px;height:20px;" icon="pi pi-check" styleClass="rounded-button ui-button-success" rendered="#{order.sell}"/>
 						</p:column>
