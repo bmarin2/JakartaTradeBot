@@ -18,6 +18,8 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -52,7 +54,7 @@ public class IndexView implements Serializable {
 	private List<String> accountInfoJsonString;
 	
 	private List<ErrorTracker> errors;
-
+	
 	@PostConstruct
 	private void init() {
 		selectedTradeBot = new TradeBot();
@@ -72,6 +74,23 @@ public class IndexView implements Serializable {
 		String[] lines = json.toString(2).split("\\r?\\n");
 		list.addAll(Arrays.asList(lines));
 		orderJsonString = list;
+	}
+	
+	public int queryTotalOrdersCount(long botId) throws Exception {
+		return OrderDB.getOrderCount(botId, true, true);
+	}
+	
+	public int querySoldOrdersCount(long botId) throws Exception {
+		return OrderDB.getOrderCount(botId, false, true);
+	}
+	
+	public int queryUnsoldOrdersCount(long botId) throws Exception {
+		return OrderDB.getOrderCount(botId, false, false);
+	}
+	
+	public BigDecimal getBotProfit(long botId) throws Exception {
+		BigDecimal temp = OrderDB.getTadeBotProfits(botId);
+		return temp.setScale(2, RoundingMode.HALF_DOWN);
 	}
 	
 	public void getAccountInfo() {

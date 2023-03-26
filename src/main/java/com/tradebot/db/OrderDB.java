@@ -1,6 +1,7 @@
 package com.tradebot.db;
 
 import com.tradebot.model.OrderTracker;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -164,19 +165,20 @@ public class OrderDB {
 			pool.freeConnection(connection);
 		}
 	}
-	
-	public static int getOrderCount(long botId, boolean unsold) throws Exception {
+
+	public static int getOrderCount(long botId, boolean all, boolean sold) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		int count = 0;
-
-		String query = "SELECT COUNT(*) FROM ORDER_TRACKER WHERE tradeBot_id=? AND sell=" + unsold;
+		
+		String queryAll = "SELECT COUNT(*) FROM ORDER_TRACKER WHERE tradeBot_id=?";
+		String query = "SELECT COUNT(*) FROM ORDER_TRACKER WHERE tradeBot_id=? AND sell=" + sold;
 		
 		try {
-			ps = connection.prepareStatement(query);
-			ps.setLong(1, botId);			
+			ps = connection.prepareStatement(all == true ? queryAll : query);
+			ps.setLong(1, botId);
 			rs = ps.executeQuery();
 
 			while (rs.next()) {
@@ -191,5 +193,35 @@ public class OrderDB {
 			DBUtil.closePreparedStatement(ps);
 			pool.freeConnection(connection);
 		}
-	}	
+	}
+	
+	public static BigDecimal getTadeBotProfits(long botId) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		BigDecimal profits = null;
+		
+		String query = "SELECT SUM(profit) FROM ORDER_TRACKER WHERE tradeBot_id=?";
+		
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setLong(1, botId);
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				profits = rs.getBigDecimal(1);
+			}
+			
+			return profits;
+			
+		} catch (SQLException e) {
+			System.err.println(e);
+			return null;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
 }

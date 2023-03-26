@@ -123,6 +123,8 @@ public class Task implements Runnable {
 							order.setSellPrice(newPosition);
 							order.setSellDate(LocalDateTime.now());
 							order.setSellOrderId(orderResultJson.getLong("orderId"));
+							BigDecimal profits = newPosition.subtract(order.getBuyPrice());
+							order.setProfit(profits);
 							OrderDB.updateOrder(order);
 							System.out.println("Updated Order: " + order.getId());
 							positions.remove(id);
