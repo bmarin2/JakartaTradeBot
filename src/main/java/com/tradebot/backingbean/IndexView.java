@@ -90,7 +90,10 @@ public class IndexView implements Serializable {
 	
 	public BigDecimal getBotProfit(long botId) throws Exception {
 		BigDecimal temp = OrderDB.getTadeBotProfits(botId);
-		return temp.setScale(2, RoundingMode.HALF_DOWN);
+		if(temp != null){
+			return temp.setScale(2, RoundingMode.HALF_DOWN);
+		}
+		return BigDecimal.ZERO;
 	}
 	
 	public void getAccountInfo() {
