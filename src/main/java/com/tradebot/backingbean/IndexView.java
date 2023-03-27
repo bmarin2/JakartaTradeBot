@@ -88,12 +88,14 @@ public class IndexView implements Serializable {
 		return OrderDB.getOrderCount(botId, false, false);
 	}
 	
-	public BigDecimal getBotProfit(long botId) throws Exception {
+	public String getBotProfit(long botId) throws Exception {
 		BigDecimal temp = OrderDB.getTadeBotProfits(botId);
+		String val = "";
 		if(temp != null){
-			return temp.setScale(2, RoundingMode.HALF_DOWN);
+			val = temp.setScale(2, RoundingMode.HALF_DOWN).toString();
+			return "+"+val;
 		}
-		return BigDecimal.ZERO;
+		return "0";
 	}
 	
 	public void getAccountInfo() {

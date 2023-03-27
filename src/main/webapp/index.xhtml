@@ -79,7 +79,7 @@
 							<h:outputLabel value="Sold:"/>
 							<h:outputLabel value="#{indexView.querySoldOrdersCount(bot.id)}" style="color: green !important;font-weight: bold;" />
 							<h:outputLabel value="Profit:"/>							
-							<h:outputLabel value="#{indexView.getBotProfit(bot.id) > 0 ? '+'+indexView.getBotProfit(bot.id) : indexView.getBotProfit(bot.id)}" style="color: green !important;font-weight: bold;" />
+							<h:outputLabel value="#{indexView.getBotProfit(bot.id)}" style="color: green !important;font-weight: bold;" />
 						</p:panelGrid>
 
 						<f:facet name="footer">
