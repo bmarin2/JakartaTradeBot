@@ -123,8 +123,13 @@ public class Task implements Runnable {
 							order.setSellPrice(newPosition);
 							order.setSellDate(LocalDateTime.now());
 							order.setSellOrderId(orderResultJson.getLong("orderId"));
-							BigDecimal profits = newPosition.subtract(order.getBuyPrice());
-							order.setProfit(profits);
+							
+							BigDecimal difference = newPosition.subtract(order.getBuyPrice());
+							BigDecimal purchasedAmount = new BigDecimal(tradeBot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.HALF_DOWN);
+							BigDecimal earnings = difference.multiply(purchasedAmount);
+							System.out.println("EARNINGS: " + earnings);
+							
+							order.setProfit(earnings);							
 							OrderDB.updateOrder(order);
 							System.out.println("Updated Order: " + order.getId());
 							positions.remove(id);
