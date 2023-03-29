@@ -119,7 +119,7 @@ public class IndexView implements Serializable {
 				long bot_id = TradeBotDB.addBot(selectedTradeBot);
 				selectedTradeBot.setId(bot_id);
 				addMessage("New bot added", "");
-				addTask();
+				// addTask();
 			}
 			bots = TradeBotDB.getAllTradeBots();
 		} catch (Exception ex) {
