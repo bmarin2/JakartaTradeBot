@@ -31,15 +31,18 @@ public class Task implements Runnable {
 	@Getter @Setter
 	private SpotClientImpl spotClientImpl;
 	
+	Map<Long, BigDecimal> positions;
+	
+	TelegramBot telegramBot;
+	
 	public Task(TradeBot tradeBot) throws Exception{
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
 		this.tradeBot = tradeBot;
 		System.out.println("CONNECTED TRADEBOT: " + this.tradeBot);
 		positions = convertOrdersToMap(tradeBot);
 		System.out.println("Initial positions size: " + positions.size());
-	}
-	
-	Map<Long, BigDecimal> positions;
+		telegramBot = new TelegramBot();
+	}	
 	
 	@Override
 	public void run() {
@@ -129,6 +132,9 @@ public class Task implements Runnable {
 							BigDecimal earnings = difference.multiply(purchasedAmount);
 							System.out.println("EARNINGS: " + earnings);
 							
+							telegramBot.sendMessage("Sell Order\n Bot: " + tradeBot.getSymbol() + " " + tradeBot.getTaskId() + "\n"+
+								   " buy price: " + order.getBuyPrice() + " Sell price: " + newPosition + " Profit: " + earnings);
+							
 							order.setProfit(earnings);							
 							OrderDB.updateOrder(order);
 							System.out.println("Updated Order: " + order.getId());
@@ -167,6 +173,7 @@ public class Task implements Runnable {
 		order.setBuyPrice(newPosition);
 		order.setTradebot_id(tradeBot.getId());
 		order.setBuyOrderId(orderResultJson.getLong("orderId"));
+		telegramBot.sendMessage("Buy Order\n Bot: " + tradeBot.getSymbol() + " " + tradeBot.getTaskId() + "\nBuy price: " + order.getBuyPrice());
 		long order_id = OrderDB.addOrder(order);
 		System.out.println("Created Order: " + order_id);
 		positions.put(order_id, newPosition);
