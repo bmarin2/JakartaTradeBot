@@ -38,9 +38,7 @@ public class Task implements Runnable {
 	public Task(TradeBot tradeBot) throws Exception{
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
 		this.tradeBot = tradeBot;
-		System.out.println("CONNECTED TRADEBOT: " + this.tradeBot);
 		positions = convertOrdersToMap(tradeBot);
-		System.out.println("Initial positions size: " + positions.size());
 		telegramBot = new TelegramBot();
 	}	
 	
@@ -52,15 +50,8 @@ public class Task implements Runnable {
 			JSONObject jsonObject = new JSONObject(result);			
 			BigDecimal newPosition = new BigDecimal(jsonObject.getString("price"));
 			
-			System.out.println(tradeBot.getSymbol() + " price check: " + newPosition.setScale(2, RoundingMode.HALF_DOWN) + "  " + LocalDateTime.now());
-			
 			if (positions.isEmpty()) {
-				System.out.println("----------------------------------------");
-				System.out.println("Creating FIRST BUY Order for: " + tradeBot.getSymbol());
-				System.out.println("Previous position: /");
-				System.out.println("New position:      " + newPosition);
 				createBuyOrder(newPosition);
-				System.out.println("Positions size: " + positions.size());
 				return;
 			}
 			
@@ -78,12 +69,7 @@ public class Task implements Runnable {
 				BigDecimal decreasedPosition = positions.get(lastAddedKey).subtract(positionPercentage);
 				int comparisonDecreaseed = newPosition.compareTo(decreasedPosition);
 				if(comparisonDecreaseed < 0) {
-					System.out.println("----------------------------------------");
-					System.out.println("Creating BUY Order " + tradeBot.getSymbol());
-					System.out.println("Previous position: " + positions.get(lastAddedKey));
-					System.out.println("New position:      " + newPosition);
 					createBuyOrder(newPosition);
-					System.out.println("Positions size: " + positions.size());
 				}					
 			}
 			
@@ -100,15 +86,16 @@ public class Task implements Runnable {
 						int comparisonIncreasedPosition = newPosition.compareTo(increasedPositionLoop);
 						if (comparisonIncreasedPosition > 0) {
 							tempOrders.add(position.getKey());
-							System.out.println("----------------------------------------");
-							System.out.println("Creating SELL Order " + tradeBot.getSymbol());
-							System.out.println("Buy  Price: " + position.getValue());
-							System.out.println("Sell Price: " + newPosition);
 						} else {
 							break;
 						}
 					}
-					System.out.println("tempOrders size: " + tempOrders.size());
+					
+					if(tempOrders.size() > 1) {
+						telegramBot.sendMessage("BINGO! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+							   + "Selling " + tempOrders.size() + " orders at once!");
+					}
+					
 					if(!tempOrders.isEmpty()) {
 						long timeStamp = System.currentTimeMillis();
 						String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
@@ -118,7 +105,7 @@ public class Task implements Runnable {
 								timeStamp));
 						
 						JSONObject orderResultJson = new JSONObject(orderResult);
-						System.out.println("Binance SELL Order received: " + orderResultJson.getLong("orderId"));
+
 						// update orders in DB and remove from map
 						for (Long id : tempOrders) {
 							OrderTracker order = OrderDB.getOneOrder(id);
@@ -129,17 +116,16 @@ public class Task implements Runnable {
 							
 							BigDecimal difference = newPosition.subtract(order.getBuyPrice());
 							BigDecimal purchasedAmount = new BigDecimal(tradeBot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.HALF_DOWN);
-							BigDecimal earnings = difference.multiply(purchasedAmount);
-							System.out.println("EARNINGS: " + earnings);
-							
-							telegramBot.sendMessage("Sell Order\n Bot: " + tradeBot.getSymbol() + " " + tradeBot.getTaskId() + "\n"+
-								   " buy price: " + order.getBuyPrice() + " Sell price: " + newPosition + " Profit: " + earnings);
-							
+							BigDecimal earnings = difference.multiply(purchasedAmount);							
 							order.setProfit(earnings);							
 							OrderDB.updateOrder(order);
-							System.out.println("Updated Order: " + order.getId());
 							positions.remove(id);
-							System.out.println("Positions size: " + positions.size());
+							
+							telegramBot.sendMessage("Sell\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+								   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
+								   + "\nbuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN)
+								   + "\nsell price: " + newPosition.setScale(2, RoundingMode.HALF_DOWN)
+								   + "\nProfit: " + earnings.setScale(2, RoundingMode.HALF_DOWN));
 						}						
 					}
 				}
@@ -152,6 +138,9 @@ public class Task implements Runnable {
 				errorTracker.setErrorMessage(ex.getMessage());
 				errorTracker.setTradebot_id(tradeBot.getId());
 				ErrorTrackerDB.addError(errorTracker);
+				
+				telegramBot.sendMessage("Error! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+					   + "\nMessage: " + ex.getMessage());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -167,16 +156,18 @@ public class Task implements Runnable {
 			   timeStamp));
 		
 		JSONObject orderResultJson = new JSONObject(orderResult);
-		System.out.println("Binance BUY Order received: " + orderResultJson.getLong("orderId"));
 		
 		OrderTracker order = new OrderTracker();
 		order.setBuyPrice(newPosition);
 		order.setTradebot_id(tradeBot.getId());
 		order.setBuyOrderId(orderResultJson.getLong("orderId"));
-		telegramBot.sendMessage("Buy Order\n Bot: " + tradeBot.getSymbol() + " " + tradeBot.getTaskId() + "\nBuy price: " + order.getBuyPrice());
 		long order_id = OrderDB.addOrder(order);
-		System.out.println("Created Order: " + order_id);
 		positions.put(order_id, newPosition);
+		
+		telegramBot.sendMessage("Buy\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+			   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
+			   + "\nBuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN));
+		
 	}
 
 	private Map<Long, BigDecimal> convertOrdersToMap(TradeBot bot) throws Exception {
