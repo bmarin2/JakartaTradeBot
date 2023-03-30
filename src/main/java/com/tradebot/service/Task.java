@@ -65,7 +65,7 @@ public class Task implements Runnable {
 			BigDecimal positionPercentage = positions.get(lastAddedKey).multiply(new BigDecimal(tradeBot.getOrderStep()/100));
 			
 			// BUY
-			if (comparison < 0 && (positions.size() <= tradeBot.getCycleMaxOrders())) {
+			if (comparison < 0 && (positions.size() < tradeBot.getCycleMaxOrders())) {
 				BigDecimal decreasedPosition = positions.get(lastAddedKey).subtract(positionPercentage);
 				int comparisonDecreaseed = newPosition.compareTo(decreasedPosition);
 				if(comparisonDecreaseed < 0) {
