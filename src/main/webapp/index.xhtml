@@ -202,7 +202,9 @@
 							</p:outputLabel>
 						</p:column>
 						<p:column sortBy="#{order.profit}" headerText="Profit">
-							<h:outputText value="#{order.profit}" />
+							<p:outputLabel value="#{order.profit}">
+								<f:convertNumber pattern="#0.00" />
+							</p:outputLabel>
 						</p:column>
 						<p:column sortBy="#{order.buyDate}" headerText="Buy Date">
 							<h:outputText value="#{order.buyDate}" >
