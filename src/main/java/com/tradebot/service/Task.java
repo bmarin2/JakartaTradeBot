@@ -5,6 +5,7 @@ import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.configuration.OrdersParams;
 import com.tradebot.db.ErrorTrackerDB;
 import com.tradebot.db.OrderDB;
+import com.tradebot.model.BotDTO;
 import com.tradebot.model.ErrorTracker;
 import com.tradebot.model.OrderSide;
 import com.tradebot.model.OrderTracker;
@@ -33,13 +34,12 @@ public class Task implements Runnable {
 	
 	Map<Long, BigDecimal> positions;
 	
-	TelegramBot telegramBot;
+	private boolean stopBotCycle;
 	
 	public Task(TradeBot tradeBot) throws Exception{
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
 		this.tradeBot = tradeBot;
 		positions = convertOrdersToMap(tradeBot);
-		telegramBot = new TelegramBot();
 	}	
 	
 	@Override
@@ -50,7 +50,17 @@ public class Task implements Runnable {
 			JSONObject jsonObject = new JSONObject(result);			
 			BigDecimal newPosition = new BigDecimal(jsonObject.getString("price"));
 			
-			if (positions.isEmpty()) {
+			if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
+				BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+				botDTO.setLastPrice(newPosition);
+				if(botDTO.isStopCycle()) {
+					stopBotCycle = true;
+				}
+				BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+			} else {
+				BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false));
+			}
+			if (positions.isEmpty() && !stopBotCycle) {
 				createBuyOrder(newPosition);
 				return;
 			}
@@ -65,7 +75,7 @@ public class Task implements Runnable {
 			BigDecimal positionPercentage = positions.get(lastAddedKey).multiply(new BigDecimal(tradeBot.getOrderStep()/100));
 			
 			// BUY
-			if (comparison < 0 && (positions.size() < tradeBot.getCycleMaxOrders())) {
+			if (comparison < 0 && (positions.size() < tradeBot.getCycleMaxOrders()) && !stopBotCycle) {
 				BigDecimal decreasedPosition = positions.get(lastAddedKey).subtract(positionPercentage);
 				int comparisonDecreaseed = newPosition.compareTo(decreasedPosition);
 				if(comparisonDecreaseed < 0) {
@@ -91,10 +101,10 @@ public class Task implements Runnable {
 						}
 					}
 					
-					if(tempOrders.size() > 1) {
-						telegramBot.sendMessage("BINGO! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-							   + "Selling " + tempOrders.size() + " orders at once!");
-					}
+//					if(tempOrders.size() > 1) {
+//						telegramBot.sendMessage("BINGO! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+//							   + "Selling " + tempOrders.size() + " orders at once!");
+//					}
 					
 					if(!tempOrders.isEmpty()) {
 						long timeStamp = System.currentTimeMillis();
@@ -121,17 +131,20 @@ public class Task implements Runnable {
 							OrderDB.updateOrder(order);
 							positions.remove(id);
 							
-							telegramBot.sendMessage("Sell\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-								   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
-								   + "\nbuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN)
-								   + "\nsell price: " + newPosition.setScale(2, RoundingMode.HALF_DOWN)
-								   + "\nProfit: " + earnings.setScale(2, RoundingMode.HALF_DOWN));
+//							telegramBot.sendMessage("Sell\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+//								   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
+//								   + "\nbuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN)
+//								   + "\nsell price: " + newPosition.setScale(2, RoundingMode.HALF_DOWN)
+//								   + "\nProfit: " + earnings.setScale(2, RoundingMode.HALF_DOWN));
 						}						
 					}
 				}
 			}
+			
+			stopBotCycle = false;
 
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			try {
 				ErrorTracker errorTracker = new ErrorTracker();
 				errorTracker.setErrorTimestamp(LocalDateTime.now());
@@ -139,8 +152,8 @@ public class Task implements Runnable {
 				errorTracker.setTradebot_id(tradeBot.getId());
 				ErrorTrackerDB.addError(errorTracker);
 				
-				telegramBot.sendMessage("Error! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-					   + "\nMessage: " + ex.getMessage());
+//				telegramBot.sendMessage("Error! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+//					   + "\nMessage: " + ex.getMessage());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -164,9 +177,9 @@ public class Task implements Runnable {
 		long order_id = OrderDB.addOrder(order);
 		positions.put(order_id, newPosition);
 		
-		telegramBot.sendMessage("Buy\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-			   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
-			   + "\nBuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN));
+//		telegramBot.sendMessage("Buy\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
+//			   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
+//			   + "\nBuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN));
 		
 	}
 
