@@ -88,6 +88,42 @@ public class TradeBotDB {
 		}
 	}
 	
+	public static TradeBot getOneTradeBot(String taskId) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "SELECT * FROM TRADE_BOT where taskId=?";
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setString(1, taskId);
+			rs = ps.executeQuery();
+			TradeBot bot = new TradeBot();
+			while (rs.next()) {
+				bot.setId(rs.getLong("id"));
+				bot.setSymbol(rs.getString("symbol"));
+				bot.setCreatedDate(rs.getDate("createdDate"));
+				bot.setTaskId(rs.getString("taskId"));
+				bot.setQuoteOrderQty(rs.getInt("quoteOrderQty"));
+				bot.setCycleMaxOrders(rs.getInt("cycleMaxOrders"));
+				bot.setOrderStep(rs.getDouble("orderStep"));
+				bot.setDescription(rs.getString("description"));
+				bot.setInitialDelay(rs.getInt("initialDelay"));
+				bot.setDelay(rs.getInt("delay"));
+				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
+			}
+			return bot;
+		} catch (SQLException e) {
+			System.err.println(e);
+			return null;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+	
 	public static List<TradeBot> getAllTradeBots() throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
