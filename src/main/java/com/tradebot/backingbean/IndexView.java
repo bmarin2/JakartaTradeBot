@@ -6,9 +6,11 @@ import com.tradebot.configuration.OrdersParams;
 import com.tradebot.db.ErrorTrackerDB;
 import com.tradebot.db.OrderDB;
 import com.tradebot.db.TradeBotDB;
+import com.tradebot.model.BotDTO;
 import com.tradebot.model.ErrorTracker;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
+import com.tradebot.service.BotExtraInfo;
 import com.tradebot.service.Task;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
@@ -22,12 +24,16 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.primefaces.PrimeFaces;
+import org.primefaces.context.PrimeRequestContext;
 
 @Named
 @ViewScoped
@@ -188,4 +194,92 @@ public class IndexView implements Serializable {
 		FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, msg);
 		FacesContext.getCurrentInstance().addMessage(null, message);
 	}
+	
+	public void prices() {
+		Map<String, String> pricesToReturn = new HashMap<>();
+		
+		for (Map.Entry<String, BotDTO> entry : BotExtraInfo.getMap().entrySet()) {
+			pricesToReturn.put(entry.getKey(), entry.getValue().getLastPrice().setScale(2, RoundingMode.HALF_DOWN).toString());
+		}
+		PrimeRequestContext.getCurrentInstance().getCallbackParams()
+			   .put("returnedValue", new JSONObject(pricesToReturn).toString());
+	}
+	
+	public void cycleStates() {
+		
+		//this is for receiving the map from js, don't need it for now
+		//Map<String, String[]> params = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterValuesMap();
+		//String[] paramValues = params.get("taskParam");
+		
+		Map<String, Boolean> mapToReturn = new HashMap<>();
+		
+		for (Map.Entry<String, BotDTO> entry : BotExtraInfo.getMap().entrySet()) {
+			mapToReturn.put(entry.getKey(), entry.getValue().isStopCycle());
+		}
+		
+		JSONObject jsonObject = new JSONObject(mapToReturn);
+		String jsonString = jsonObject.toString();
+
+		PrimeRequestContext.getCurrentInstance().getCallbackParams()
+			   .put("returnedValue", jsonString);		
+	}
+	
+	public void updateCycleState() {
+		String taskId = FacesContext.getCurrentInstance().
+			getExternalContext().getRequestParameterMap().get("taskId");
+		
+		String stopCycle = FacesContext.getCurrentInstance().
+			getExternalContext().getRequestParameterMap().get("stopCycle");
+		
+		if (BotExtraInfo.containsInfo(taskId)) {
+			BotDTO botDTO = BotExtraInfo.getInfo(taskId);
+			if(botDTO.isStopCycle() == true && Boolean.parseBoolean(stopCycle) == true) {
+				return;
+			}
+			botDTO.setStopCycle(Boolean.parseBoolean(stopCycle));
+			BotExtraInfo.putInfo(taskId, botDTO);
+			addMessage("Stop Cycle updated to " + Boolean.valueOf(stopCycle), "Bot " + taskId);
+		} else {			
+			BotExtraInfo.putInfo(taskId, new BotDTO(BigDecimal.ZERO, Boolean.parseBoolean(stopCycle)));
+			addMessage("Stop Cycle added and updated to " + Boolean.valueOf(stopCycle), "Bot " + taskId);
+		}
+		
+	}
+	
+	public void runningStates() {
+		List<String> listToReturn = new ArrayList<>();		
+		for (String key : taskService.getScheduledTasks().keySet()) {
+			listToReturn.add(key);
+		}
+		PrimeRequestContext.getCurrentInstance().getCallbackParams()
+			   .put("returnedValue", new JSONArray(listToReturn).toString());
+	}
+	
+	public void updateRunningState() throws Exception {
+		String taskId = FacesContext.getCurrentInstance().
+			getExternalContext().getRequestParameterMap().get("taskId");
+		
+		String runState = FacesContext.getCurrentInstance().
+			getExternalContext().getRequestParameterMap().get("runState");
+
+		if(Boolean.parseBoolean(runState)) {
+			if(taskService.getScheduledTasks().containsKey(taskId)){
+				return;
+			}
+			TradeBot bot = TradeBotDB.getOneTradeBot(taskId);
+			Task task = new Task(bot);
+			taskService.addTask(bot.getTaskId(),
+				   task,
+				   bot.getInitialDelay(),
+				   bot.getDelay(),
+				   bot.getTimeUnit()
+			);
+			addMessage("Task added", "Bot " + bot.getTaskId());
+		} else {
+			if(taskService.getScheduledTasks().containsKey(taskId)) {
+				taskService.removeTask(taskId);
+				addMessage("Task " + taskId + " removed", "");
+			}
+		}
+	}	
 }
