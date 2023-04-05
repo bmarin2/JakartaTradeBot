@@ -158,7 +158,7 @@
 						<span style="font-size:70%;">#{bot.symbol}</span><span style="font-size:55%;margin-left:8px;margin-right:8px">#{bot.taskId}</span>
 							<div style="float:right">
 								<p:toggleSwitch onchange="toggleSwitchRunning(this)">
-									<p:ajax update="editId" />
+									<p:ajax update="editId cycleId" />
 								</p:toggleSwitch>								
 							</div>
 					</f:facet>
@@ -190,7 +190,7 @@
 							<f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
 						</p:commandButton>
 						
-						<div style="display:inline-block;float:right"><p:toggleSwitch id="cycleId" styleClass="position" onchange="toggleSwitchCycles(this)"/></div>
+						<div style="display:inline-block;float:right"><p:toggleSwitch id="cycleId" styleClass="position" onchange="toggleSwitchCycles(this)" disabled="#{!indexView.isBotRunning(bot.taskId)}" /></div>
 						<p:outputLabel value="Stop Cycle" style="float:right;margin-right:3px;margin-top:8px;font-weight:bold"/>
 						
 						<p:commandButton icon="pi pi-exclamation-triangle" rendered="#{indexView.getErrorsSize(bot.id) > 0}" oncomplete="PF('manageErrors').show()" update="errorsForm" action="#{indexView.getBotErrors(bot.id)}"
