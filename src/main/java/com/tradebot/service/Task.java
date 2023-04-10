@@ -15,7 +15,6 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,16 +53,21 @@ public class Task implements Runnable {
 			if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
 				BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
 				botDTO.setLastPrice(newPosition);
-				if(botDTO.isStopCycle()) {
+				if(botDTO.isStopCycle() && !stopBotCycle) {
 					stopBotCycle = true;
+				} 
+				else if(!botDTO.isStopCycle() && stopBotCycle) {
+					stopBotCycle = false;
 				}
 				BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
 			} else {
 				BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false));
 			}
-			
-			if (positions.isEmpty() && !stopBotCycle) {
-				createBuyOrder(newPosition);
+
+			if (positions.isEmpty()) {
+				if(!stopBotCycle) {
+					createBuyOrder(newPosition);
+				}
 				return;
 			}
 			
@@ -108,42 +112,41 @@ public class Task implements Runnable {
 //							   + "Selling " + tempOrders.size() + " orders at once!");
 //					}
 					
-					if(!tempOrders.isEmpty()) {
-						long timeStamp = System.currentTimeMillis();
-						String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
-								tradeBot.getSymbol(),
-								OrderSide.SELL,
-								tradeBot.getQuoteOrderQty() * tempOrders.size(),
-								timeStamp));
-						
-						JSONObject orderResultJson = new JSONObject(orderResult);
+					long timeStamp = System.currentTimeMillis();
+					String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
+							tradeBot.getSymbol(),
+							OrderSide.SELL,
+							tradeBot.getQuoteOrderQty() * tempOrders.size(),
+							timeStamp));
 
-						// update orders in DB and remove from map
-						for (Long id : tempOrders) {
-							OrderTracker order = OrderDB.getOneOrder(id);
-							order.setSell(true);
-							order.setSellPrice(newPosition);
-							order.setSellDate(LocalDateTime.now());
-							order.setSellOrderId(orderResultJson.getLong("orderId"));
-							
-							BigDecimal difference = newPosition.subtract(order.getBuyPrice());
-							BigDecimal purchasedAmount = new BigDecimal(tradeBot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.HALF_DOWN);
-							BigDecimal earnings = difference.multiply(purchasedAmount);							
-							order.setProfit(earnings);							
-							OrderDB.updateOrder(order);
-							positions.remove(id);
-							
+					JSONObject orderResultJson = new JSONObject(orderResult);
+
+					// update orders in DB and remove from map
+					for (Long id : tempOrders) {
+						OrderTracker order = OrderDB.getOneOrder(id);
+						order.setSell(true);
+						order.setSellPrice(newPosition);
+						order.setSellDate(LocalDateTime.now());
+						order.setSellOrderId(orderResultJson.getLong("orderId"));
+
+						BigDecimal difference = newPosition.subtract(order.getBuyPrice());
+						BigDecimal purchasedAmount = new BigDecimal(tradeBot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.HALF_DOWN);
+						BigDecimal earnings = difference.multiply(purchasedAmount);							
+						order.setProfit(earnings);							
+						OrderDB.updateOrder(order);
+						positions.remove(id);
+
 //							telegramBot.sendMessage("Sell\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
 //								   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
 //								   + "\nbuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN)
 //								   + "\nsell price: " + newPosition.setScale(2, RoundingMode.HALF_DOWN)
 //								   + "\nProfit: " + earnings.setScale(2, RoundingMode.HALF_DOWN));
-						}						
+					}
+					if (positions.isEmpty() && !stopBotCycle) {
+						createBuyOrder(newPosition);
 					}
 				}
 			}
-			
-			stopBotCycle = false;
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
