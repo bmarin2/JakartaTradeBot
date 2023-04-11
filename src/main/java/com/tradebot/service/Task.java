@@ -15,6 +15,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,9 +60,10 @@ public class Task implements Runnable {
 				else if(!botDTO.isStopCycle() && stopBotCycle) {
 					stopBotCycle = false;
 				}
+				botDTO.setLastCheck(new Date());
 				BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
 			} else {
-				BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false));
+				BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false, new Date()));
 			}
 
 			if (positions.isEmpty()) {

@@ -84,10 +84,22 @@
 			});
 		};
 		
+		function handleChecks(xhr,status,args) {
+			var myMap = JSON.parse(args.returnedValue);
+			$('.ui-card').each(function() {
+				var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
+				console.log(task);
+				if (myMap.hasOwnProperty(task)) {
+					$(this).find('#lastCheckId').text(myMap[task]);
+				}
+			});
+		};
+		
 		$(document).ready(function() {
 			runningStates();
 			cycleStates();
 			prices();
+			lastChecks();
 //			this is for sending map params to Java don't need it for now
 //			var tasksArray = [];			
 //			$('.ui-card').each(function() {
@@ -129,6 +141,7 @@
 		<h:form id="headerForm">
 			
 			<p:remoteCommand name="prices" action="#{indexView.prices}" oncomplete="handlePrices(xhr,status,args)" />
+			<p:remoteCommand name="lastChecks" action="#{indexView.lastChecks}" oncomplete="handleChecks(xhr,status,args)" />
 			
 			<p:remoteCommand name="cycleStates" action="#{indexView.cycleStates}" oncomplete="handleComplete(xhr,status,args)" />
 			<p:remoteCommand name="updateCycleState" action="#{indexView.updateCycleState}" update="growl"/>
@@ -140,6 +153,7 @@
 						  oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
 				<p:resetInput target="manageBotForm:manage-bot" />
 			</p:commandButton>
+			<p:outputLabel value="USDT Balance: #{indexView.getBalanceUSDT()}" style="margin-left:10px"/>
 			<p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
 			<p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfo()}"
 						style="float:right;margin-right:20px;" update="accountForm:accountPanel"/>
@@ -158,22 +172,32 @@
 							</div>
 					</f:facet>
 
-					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;margin-right:10px;">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block">
 						<h:outputLabel value="Unsold:"/>
 						<h:outputLabel value="#{indexView.queryUnsoldOrdersCount(bot.id)}" style="color: blue !important;font-weight: bold;" />
 						<h:outputLabel value="Total:"/>
 						<h:outputLabel value="#{indexView.queryTotalOrdersCount(bot.id)}" style="font-weight: bold;" />
 					</p:panelGrid>						
-					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;margin-right:10px;" >
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;padding-right:3px;border-right:1px solid gray" >
 						<h:outputLabel value="Sold:"/>
 						<h:outputLabel value="#{indexView.querySoldOrdersCount(bot.id)}" style="color: green !important;font-weight: bold;" />
 						<h:outputLabel value="Profit:"/>							
 						<h:outputLabel value="#{indexView.getBotProfit(bot.id)}" style="color: green !important;font-weight: bold;" />
 					</p:panelGrid>
-					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;margin-left:15px;" >
-						<h:outputLabel value="Last Price:"/>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
+						<h:outputLabel value="Last Price"/>
 						<h:outputLabel value=""/>
 						<span id="priceId" style="font-weight:bold;"></span>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;" >
+						<h:outputLabel value="Balance"/>
+						<h:outputLabel value=""/>
+						<h:outputLabel value="#{indexView.getBalance(bot.symbol)}" style="font-weight:bold"/>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
+						<h:outputLabel value="Last check"/>
+						<h:outputLabel value=""/>
+						<span id="lastCheckId" style="font-weight:bold;"></span>
 					</p:panelGrid>
 
 					<f:facet name="footer">
@@ -377,7 +401,7 @@
 				</f:facet>
 				<div style="height:400px; overflow-y: auto;">
 					<p:outputPanel id="accountPanel">
-						<p:repeat value="#{indexView.accountInfoJsonString}" var="jsonString">
+						<p:repeat value="#{indexView.balances}" var="jsonString">
 							<h:outputText value="#{jsonString}"/><br/>
 						</p:repeat>
 					</p:outputPanel>

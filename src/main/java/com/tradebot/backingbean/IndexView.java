@@ -22,8 +22,10 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,7 +59,7 @@ public class IndexView implements Serializable {
 	
 	private List<String> orderJsonString;
 	
-	private List<String> accountInfoJsonString;
+	private JSONArray balances;
 	
 	private List<ErrorTracker> errors;
 	
@@ -70,6 +72,7 @@ public class IndexView implements Serializable {
 			ex.printStackTrace();
 		}
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
+		getAccountInfoAll();
 	}
 	
 	public void getOrderDetails(String symbol, long orderId) {
@@ -104,16 +107,42 @@ public class IndexView implements Serializable {
 		return "0";
 	}
 	
-	public void getAccountInfo() {
+	public void getAccountInfoAll() {
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
 		parameters.put("timestamp", System.currentTimeMillis());
 		
 		String temp = spotClientImpl.createTrade().account(parameters);
-		JSONObject json = new JSONObject(temp);		
-		List<String> list = new ArrayList<>();
-		String[] lines = json.toString(2).split("\\r?\\n");
-		list.addAll(Arrays.asList(lines));
-		accountInfoJsonString = list;
+		JSONObject jsonObj = new JSONObject(temp);
+		JSONArray balancesArray = jsonObj.getJSONArray("balances");
+		balances = balancesArray;
+	}
+	
+	public String getBalance(String symbol) {
+		String formattedNumber = null;
+		for (int i = 0; i < balances.length(); i++) {
+			JSONObject balance = balances.getJSONObject(i);
+			if (balance.getString("asset").equals(symbol.replace("USDT", ""))) {
+				String freeValue = balance.getString("free");
+				double number = Double.parseDouble(freeValue);
+				formattedNumber = String.format("%.2f", number);
+				break;
+			}
+		}
+		return formattedNumber;
+	}
+	
+	public String getBalanceUSDT() {
+		String formattedNumber = null;
+		for (int i = 0; i < balances.length(); i++) {
+			JSONObject balance = balances.getJSONObject(i);
+			if (balance.getString("asset").equals("USDT")) {
+				String freeValue = balance.getString("free");
+				double number = Double.parseDouble(freeValue);
+				formattedNumber = String.format("%.2f", number);
+				break;
+			}
+		}
+		return formattedNumber;
 	}
 
 	public void updateBot() {
@@ -205,6 +234,16 @@ public class IndexView implements Serializable {
 			   .put("returnedValue", new JSONObject(pricesToReturn).toString());
 	}
 	
+	public void lastChecks() {
+		Map<String, String> lastChecksToReturn = new HashMap<>();
+		SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+		for (Map.Entry<String, BotDTO> entry : BotExtraInfo.getMap().entrySet()) {
+			lastChecksToReturn.put(entry.getKey(), timeFormat.format(entry.getValue().getLastCheck()));
+		}
+		PrimeRequestContext.getCurrentInstance().getCallbackParams()
+			   .put("returnedValue", new JSONObject(lastChecksToReturn).toString());
+	}
+	
 	public void cycleStates() {
 		
 		//this is for receiving the map from js, don't need it for now
@@ -240,7 +279,7 @@ public class IndexView implements Serializable {
 			BotExtraInfo.putInfo(taskId, botDTO);
 			addMessage("Stop Cycle updated to " + Boolean.valueOf(stopCycle), "Bot " + taskId);
 		} else {			
-			BotExtraInfo.putInfo(taskId, new BotDTO(BigDecimal.ZERO, Boolean.parseBoolean(stopCycle)));
+			BotExtraInfo.putInfo(taskId, new BotDTO(BigDecimal.ZERO, Boolean.parseBoolean(stopCycle), new Date(0)));
 			addMessage("Stop Cycle added and updated to " + Boolean.valueOf(stopCycle), "Bot " + taskId);
 		}
 		
