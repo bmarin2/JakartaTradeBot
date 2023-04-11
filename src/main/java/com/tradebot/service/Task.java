@@ -113,12 +113,22 @@ public class Task implements Runnable {
 //						telegramBot.sendMessage("BINGO! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
 //							   + "Selling " + tempOrders.size() + " orders at once!");
 //					}
+
+					// should be able to choose profits in crypto or stable
+
+					BigDecimal quoteSum = BigDecimal.ZERO;
+
+					for (Long tempOrder : tempOrders) {
+						BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder), 8, RoundingMode.HALF_DOWN)).multiply(newPosition);
+						quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.HALF_DOWN));
+					}
 					
 					long timeStamp = System.currentTimeMillis();
-					String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
+					String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParamsSell(
 							tradeBot.getSymbol(),
 							OrderSide.SELL,
-							tradeBot.getQuoteOrderQty() * tempOrders.size(),
+							quoteSum,
+							//tradeBot.getQuoteOrderQty() * tempOrders.size(),
 							timeStamp));
 
 					JSONObject orderResultJson = new JSONObject(orderResult);
@@ -131,10 +141,13 @@ public class Task implements Runnable {
 						order.setSellDate(LocalDateTime.now());
 						order.setSellOrderId(orderResultJson.getLong("orderId"));
 
-						BigDecimal difference = newPosition.subtract(order.getBuyPrice());
-						BigDecimal purchasedAmount = new BigDecimal(tradeBot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.HALF_DOWN);
-						BigDecimal earnings = difference.multiply(purchasedAmount);							
-						order.setProfit(earnings);							
+//						BigDecimal difference = newPosition.subtract(order.getBuyPrice());
+//						BigDecimal purchasedAmount = new BigDecimal(tradeBot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.HALF_DOWN);
+//						BigDecimal earnings = difference.multiply(purchasedAmount);
+
+						BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(id), 8, RoundingMode.HALF_DOWN)).multiply(newPosition);
+						BigDecimal earnings = temp.subtract(new BigDecimal(tradeBot.getQuoteOrderQty()));
+						order.setProfit(earnings.setScale(8, RoundingMode.HALF_DOWN));
 						OrderDB.updateOrder(order);
 						positions.remove(id);
 
