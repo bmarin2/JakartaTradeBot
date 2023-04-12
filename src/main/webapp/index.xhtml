@@ -88,7 +88,6 @@
 			var myMap = JSON.parse(args.returnedValue);
 			$('.ui-card').each(function() {
 				var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
-				console.log(task);
 				if (myMap.hasOwnProperty(task)) {
 					$(this).find('#lastCheckId').text(myMap[task]);
 				}

@@ -19,28 +19,22 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import org.json.JSONObject;
 
-@Data
 public class Task implements Runnable {
 
-	@Getter @Setter
 	private TradeBot tradeBot;
 	
-	@Getter @Setter
 	private SpotClientImpl spotClientImpl;
 	
-	Map<Long, BigDecimal> positions;
+	private Map<Long, BigDecimal> positions;
 	
 	private boolean stopBotCycle;
 	
 	public Task(TradeBot tradeBot) throws Exception{
-		spotClientImpl = SpotClientConfig.spotClientSignTest();
+		this.spotClientImpl = SpotClientConfig.spotClientSignTest();
 		this.tradeBot = tradeBot;
-		positions = convertOrdersToMap(tradeBot);
+		this.positions = convertOrdersToMap(tradeBot);
 	}	
 	
 	@Override
@@ -108,14 +102,8 @@ public class Task implements Runnable {
 							break;
 						}
 					}
-					
-//					if(tempOrders.size() > 1) {
-//						telegramBot.sendMessage("BINGO! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-//							   + "Selling " + tempOrders.size() + " orders at once!");
-//					}
 
 					// should be able to choose profits in crypto or stable
-
 					BigDecimal quoteSum = BigDecimal.ZERO;
 
 					for (Long tempOrder : tempOrders) {
@@ -124,11 +112,10 @@ public class Task implements Runnable {
 					}
 					
 					long timeStamp = System.currentTimeMillis();
-					String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParamsSell(
+					String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
 							tradeBot.getSymbol(),
 							OrderSide.SELL,
 							quoteSum,
-							//tradeBot.getQuoteOrderQty() * tempOrders.size(),
 							timeStamp));
 
 					JSONObject orderResultJson = new JSONObject(orderResult);
@@ -140,22 +127,12 @@ public class Task implements Runnable {
 						order.setSellPrice(newPosition);
 						order.setSellDate(LocalDateTime.now());
 						order.setSellOrderId(orderResultJson.getLong("orderId"));
-
-//						BigDecimal difference = newPosition.subtract(order.getBuyPrice());
-//						BigDecimal purchasedAmount = new BigDecimal(tradeBot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.HALF_DOWN);
-//						BigDecimal earnings = difference.multiply(purchasedAmount);
-
 						BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(id), 8, RoundingMode.HALF_DOWN)).multiply(newPosition);
 						BigDecimal earnings = temp.subtract(new BigDecimal(tradeBot.getQuoteOrderQty()));
 						order.setProfit(earnings.setScale(8, RoundingMode.HALF_DOWN));
 						OrderDB.updateOrder(order);
 						positions.remove(id);
 
-//							telegramBot.sendMessage("Sell\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-//								   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
-//								   + "\nbuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN)
-//								   + "\nsell price: " + newPosition.setScale(2, RoundingMode.HALF_DOWN)
-//								   + "\nProfit: " + earnings.setScale(2, RoundingMode.HALF_DOWN));
 					}
 					if (positions.isEmpty() && !stopBotCycle) {
 						createBuyOrder(newPosition);
@@ -171,9 +148,7 @@ public class Task implements Runnable {
 				errorTracker.setErrorMessage(ex.getMessage());
 				errorTracker.setTradebot_id(tradeBot.getId());
 				ErrorTrackerDB.addError(errorTracker);
-				
-//				telegramBot.sendMessage("Error! " + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-//					   + "\nMessage: " + ex.getMessage());
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -185,7 +160,7 @@ public class Task implements Runnable {
 		String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
 			   tradeBot.getSymbol(),
 			   OrderSide.BUY,
-			   tradeBot.getQuoteOrderQty(),
+			   new BigDecimal(tradeBot.getQuoteOrderQty()),
 			   timeStamp));
 		
 		JSONObject orderResultJson = new JSONObject(orderResult);
@@ -195,12 +170,7 @@ public class Task implements Runnable {
 		order.setTradebot_id(tradeBot.getId());
 		order.setBuyOrderId(orderResultJson.getLong("orderId"));
 		long order_id = OrderDB.addOrder(order);
-		positions.put(order_id, newPosition);
-		
-//		telegramBot.sendMessage("Buy\n" + tradeBot.getSymbol() + " " + tradeBot.getTaskId()
-//			   + "\nquoteQty: " + tradeBot.getQuoteOrderQty()
-//			   + "\nBuy price: " + order.getBuyPrice().setScale(2, RoundingMode.HALF_DOWN));
-		
+		positions.put(order_id, newPosition);		
 	}
 
 	private Map<Long, BigDecimal> convertOrdersToMap(TradeBot bot) throws Exception {
