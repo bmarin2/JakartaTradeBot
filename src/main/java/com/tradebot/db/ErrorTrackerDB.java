@@ -62,6 +62,53 @@ public class ErrorTrackerDB {
 			pool.freeConnection(connection);
 		}
 	}
+        
+        public static void updateAllBotErrors(long botId) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "UPDATE ERROR_TRACKER SET acknowledged=? WHERE tradebot_id=?";
+
+		try {
+			ps = connection.prepareStatement(query);
+			
+			ps.setBoolean(1, true);
+			ps.setLong(2, botId);
+			
+			ps.executeUpdate();
+
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+        
+        public static void updateAllErrors() throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "UPDATE ERROR_TRACKER SET acknowledged=?";
+
+		try {
+			ps = connection.prepareStatement(query);			
+			ps.setBoolean(1, true);			
+			ps.executeUpdate();
+                        
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
 
 	public static List<ErrorTracker> getTradeBotErrors(long botId, boolean onlyUnacknowledged) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();

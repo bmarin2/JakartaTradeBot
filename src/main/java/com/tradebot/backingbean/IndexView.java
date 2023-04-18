@@ -63,6 +63,8 @@ public class IndexView implements Serializable {
 	private JSONArray balances;
 	
 	private List<ErrorTracker> errors;
+        
+        private long currentErrorBotId;
 	
 	@PostConstruct
 	private void init() {
@@ -175,6 +177,7 @@ public class IndexView implements Serializable {
 	}
 	
 	public void getBotErrors(long botId) throws Exception {
+                currentErrorBotId = botId;
 		errors = ErrorTrackerDB.getTradeBotErrors(botId, true);
 	}
 	
@@ -186,6 +189,11 @@ public class IndexView implements Serializable {
 	public void acknowledgeError(ErrorTracker err) throws Exception {
 		ErrorTrackerDB.updateError(err);
 		getBotErrors(err.getTradebot_id());
+	}
+        
+        public void acknowledgeAllBotErrors() throws Exception {
+		ErrorTrackerDB.updateAllBotErrors(currentErrorBotId);
+		getBotErrors(currentErrorBotId);
 	}
 	
 	public void getBotOrders(long botId) throws Exception {
