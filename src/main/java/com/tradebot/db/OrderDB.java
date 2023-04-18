@@ -224,4 +224,42 @@ public class OrderDB {
 			pool.freeConnection(connection);
 		}
 	}
+        
+        public static List<OrderTracker> getOrders24Hours() throws Exception {
+            	ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "SELECT * FROM ORDER_TRACKER WHERE BUYDATE >= DATEADD('HOUR', -48, NOW())";
+		
+		try {
+			
+			ps = connection.prepareStatement(query);
+			rs = ps.executeQuery();			
+			List<OrderTracker> orders = new ArrayList<>();
+			while (rs.next()) {
+				OrderTracker order = new OrderTracker();
+				order.setId(rs.getLong("id"));
+				order.setSell(rs.getBoolean("sell"));
+				order.setBuyPrice(rs.getBigDecimal("buyPrice"));
+				order.setSellPrice(rs.getBigDecimal("sellPrice"));
+				order.setProfit(rs.getBigDecimal("profit"));
+				order.setBuyDate(rs.getTimestamp("buyDate").toLocalDateTime());
+				order.setSellDate(rs.getTimestamp("sellDate") != null ? rs.getTimestamp("sellDate").toLocalDateTime() : null);
+				order.setBuyOrderId(rs.getLong("buyOrderId"));
+				order.setSellOrderId(rs.getLong("sellOrderId"));
+				order.setTradebot_id(rs.getLong("tradebot_id"));
+				orders.add(order);
+			}
+			return orders;
+		} catch (SQLException e) {
+			System.err.println(e);
+			return null;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+        }
 }

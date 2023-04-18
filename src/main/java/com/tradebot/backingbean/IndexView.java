@@ -11,6 +11,7 @@ import com.tradebot.model.ErrorTracker;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import com.tradebot.service.BotExtraInfo;
+import com.tradebot.service.ReportTask;
 import com.tradebot.service.Task;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
@@ -72,7 +73,17 @@ public class IndexView implements Serializable {
 			ex.printStackTrace();
 		}
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
+
 		getAccountInfoAll();
+
+                if(!isBotRunning("reportTask")){
+                    ReportTask reportTask = new ReportTask();
+                    taskService.addTask("reportTask", reportTask,
+                            1,
+                            24,
+                            TimeUnit.HOURS
+                    );
+                }
 	}
 	
 	public void getOrderDetails(String symbol, long orderId) {
