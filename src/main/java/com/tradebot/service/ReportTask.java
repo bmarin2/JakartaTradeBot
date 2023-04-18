@@ -19,7 +19,7 @@ public class ReportTask implements Runnable {
     
     public ReportTask() {
         this.telegramBot = new TelegramBot();
-        this.timeFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        this.timeFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     }
 
     @Override
@@ -30,7 +30,8 @@ public class ReportTask implements Runnable {
             
             StringBuilder sb = new StringBuilder();
             
-            sb.append("Daily Report ").append(timeFormat.format(new Date())).append("\n");
+            sb.append("Daily Report ").append("\n");
+            sb.append("(").append(timeFormat.format(new Date())).append(")").append("\n").append("\n");
             
             Map<Long, List<OrderTracker>> ordersByTradeBot = orders.stream()
                     .collect(Collectors.groupingBy(OrderTracker::getTradebot_id));
