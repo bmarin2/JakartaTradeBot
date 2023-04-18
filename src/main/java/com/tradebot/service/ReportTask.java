@@ -5,6 +5,8 @@ import com.tradebot.db.TradeBotDB;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,8 +15,11 @@ public class ReportTask implements Runnable {
     
     private final TelegramBot telegramBot;
 
+    SimpleDateFormat timeFormat;
+    
     public ReportTask() {
         this.telegramBot = new TelegramBot();
+        this.timeFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
     }
 
     @Override
@@ -24,6 +29,8 @@ public class ReportTask implements Runnable {
             List<OrderTracker> orders = OrderDB.getOrders24Hours();
             
             StringBuilder sb = new StringBuilder();
+            
+            sb.append("Daily Report ").append(timeFormat.format(new Date())).append("\n");
             
             Map<Long, List<OrderTracker>> ordersByTradeBot = orders.stream()
                     .collect(Collectors.groupingBy(OrderTracker::getTradebot_id));
