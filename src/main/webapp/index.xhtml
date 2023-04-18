@@ -268,7 +268,7 @@
 		</h:form>
 
 		<h:form id="detailsForm">
-			<p:dialog widgetVar="botDetails" height="400" width="60%" showEffect="fade" modal="true" >
+			<p:dialog widgetVar="botDetails" height="400" width="60%" modal="true" >
 				<f:facet name="header">
 					#{indexView.selectedTradeBot.symbol}
 					<h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />

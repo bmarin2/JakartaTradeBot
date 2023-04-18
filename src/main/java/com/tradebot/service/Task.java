@@ -1,5 +1,8 @@
 package com.tradebot.service;
 
+import com.binance.connector.client.exceptions.BinanceClientException;
+import com.binance.connector.client.exceptions.BinanceConnectorException;
+import com.binance.connector.client.exceptions.BinanceServerException;
 import com.binance.connector.client.impl.SpotClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.configuration.OrdersParams;
@@ -30,11 +33,14 @@ public class Task implements Runnable {
 	private Map<Long, BigDecimal> positions;
 	
 	private boolean stopBotCycle;
+        
+        private final TelegramBot telegramBot;
 	
 	public Task(TradeBot tradeBot) throws Exception{
 		this.spotClientImpl = SpotClientConfig.spotClientSignTest();
 		this.tradeBot = tradeBot;
 		this.positions = convertOrdersToMap(tradeBot);
+                this.telegramBot = new TelegramBot();
 	}	
 	
 	@Override
@@ -44,7 +50,7 @@ public class Task implements Runnable {
 			String result = spotClientImpl.createMarket().tickerSymbol(OrdersParams.getTickerSymbolParams(tradeBot.getSymbol()));
 			JSONObject jsonObject = new JSONObject(result);			
 			BigDecimal newPosition = new BigDecimal(jsonObject.getString("price"));
-			
+                        
 			if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
 				BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
 				botDTO.setLastPrice(newPosition);
@@ -131,8 +137,7 @@ public class Task implements Runnable {
 						BigDecimal earnings = temp.subtract(new BigDecimal(tradeBot.getQuoteOrderQty()));
 						order.setProfit(earnings.setScale(8, RoundingMode.HALF_DOWN));
 						OrderDB.updateOrder(order);
-						positions.remove(id);
-
+						positions.remove(id);                                                
 					}
 					if (positions.isEmpty() && !stopBotCycle) {
 						createBuyOrder(newPosition);
@@ -140,19 +145,38 @@ public class Task implements Runnable {
 				}
 			}
 
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			try {
-				ErrorTracker errorTracker = new ErrorTracker();
-				errorTracker.setErrorTimestamp(LocalDateTime.now());
-				errorTracker.setErrorMessage(ex.getMessage());
-				errorTracker.setTradebot_id(tradeBot.getId());
-				ErrorTrackerDB.addError(errorTracker);
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+            } catch (BinanceConnectorException e) {
+                e.printStackTrace();
+                try {
+                    addErrorMessage(e.getMessage(), tradeBot.getId());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } catch (BinanceClientException e) {
+                e.printStackTrace();
+                try {
+                    addErrorMessage(e.getErrMsg()+ " " + e.getErrorCode() + " " + e.getHttpStatusCode(), tradeBot.getId());
+                    telegramBot.sendMessage("Binance Client Exception\n" + e.getErrMsg()+ " " + e.getErrorCode() + " " + e.getHttpStatusCode());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } catch (BinanceServerException e) {
+                e.printStackTrace();
+                try {
+                    addErrorMessage(e.getMessage(), tradeBot.getId());
+                    telegramBot.sendMessage("Binance Server Exception\n" + e.getMessage());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    addErrorMessage(e.getMessage(), tradeBot.getId());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
 	}
 	
 	private void createBuyOrder(BigDecimal newPosition) throws Exception {
@@ -164,13 +188,13 @@ public class Task implements Runnable {
 			   timeStamp));
 		
 		JSONObject orderResultJson = new JSONObject(orderResult);
-		
+                
 		OrderTracker order = new OrderTracker();
 		order.setBuyPrice(newPosition);
 		order.setTradebot_id(tradeBot.getId());
 		order.setBuyOrderId(orderResultJson.getLong("orderId"));
 		long order_id = OrderDB.addOrder(order);
-		positions.put(order_id, newPosition);		
+		positions.put(order_id, newPosition);
 	}
 
 	private Map<Long, BigDecimal> convertOrdersToMap(TradeBot bot) throws Exception {
@@ -181,4 +205,12 @@ public class Task implements Runnable {
 		}
 		return map;
 	}
+        
+        private void addErrorMessage(String message, long tradeBotId ) throws Exception {
+            ErrorTracker errorTracker = new ErrorTracker();
+            errorTracker.setErrorTimestamp(LocalDateTime.now());
+            errorTracker.setErrorMessage(message);
+            errorTracker.setTradebot_id(tradeBotId);
+            ErrorTrackerDB.addError(errorTracker);
+        }
 }
