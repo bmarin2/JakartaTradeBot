@@ -154,7 +154,7 @@
                     </p:commandButton>
                     <p:outputLabel value="USDT Balance: #{indexView.getBalanceUSDT()}" style="margin-left:10px"/>
                     <p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
-                    <p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfo()}"
+                    <p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfoAll()}"
                                      style="float:right;margin-right:20px;" update="accountForm:accountPanel"/>
                     <hr style="margin-bottom:10px;margin-top:15px"></hr>
                </h:form>
