@@ -4,413 +4,413 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:p="http://primefaces.org/ui">
-    <h:head>
-        <title>Index</title>
-        <style>
-            .ui-widget {
-                font-size: 13px !important;
-            }
+     <h:head>
+          <title>Index</title>
+          <style>
+               .ui-widget {
+                    font-size: 13px !important;
+               }
 
-            .ui-panelgrid-cell {
-                padding: 3px !important;
-            }
+               .ui-panelgrid-cell {
+                    padding: 3px !important;
+               }
 
-            .center-it{
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+               .center-it{
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+               }
 
-            .ui-card {
-                border: 1px solid !important;
-                border-color: darkgray !important;
-            }
+               .ui-card {
+                    border: 1px solid !important;
+                    border-color: darkgray !important;
+               }
 
-            .ui-datatable table {
-                font-size: 10px;
-            }
+               .ui-datatable table {
+                    font-size: 10px;
+               }
 
-            .ui-datatable td {
-                padding: 1px;
-            }
+               .ui-datatable td {
+                    padding: 1px;
+               }
 
-            .ui-card-content {
-                padding: 0 !important;
-            }
+               .ui-card-content {
+                    padding: 0 !important;
+               }
 
-            .font-color-blue {
-                color: green !important;
-                font-weight: bold;
-            }
+               .font-color-blue {
+                    color: green !important;
+                    font-weight: bold;
+               }
 
-            #switchFloat {
-                float:right;
-            }
+               #switchFloat {
+                    float:right;
+               }
 
-        </style>
-        <script>
-            function handleComplete(xhr, status, args) {
-                var myMap = JSON.parse(args.returnedValue);
-                $('.ui-card').each(function () {
-                    var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
-                    if (myMap.hasOwnProperty(task)) {
-                        var bool = myMap[task];
-                        if (bool) {
-                            var toggle = $(this).find('.ui-card-body .ui-card-footer .ui-toggleswitch');
-                            toggle.addClass('ui-toggleswitch-checked');
-                        }
+          </style>
+          <script>
+               function handleComplete(xhr, status, args) {
+                    var myMap = JSON.parse(args.returnedValue);
+                    $('.ui-card').each(function () {
+                         var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
+                         if (myMap.hasOwnProperty(task)) {
+                              var bool = myMap[task];
+                              if (bool) {
+                                   var toggle = $(this).find('.ui-card-body .ui-card-footer .ui-toggleswitch');
+                                   toggle.addClass('ui-toggleswitch-checked');
+                              }
+                         }
+                    });
+               };
+
+               function handleCompleteRunning(xhr, status, args) {
+                    var myList = JSON.parse(args.returnedValue);
+                    $('.ui-card').each(function () {
+                         var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
+                         if (myList.includes(task)) {
+                              var toggle = $(this).find('.ui-card-body .ui-card-title .ui-toggleswitch');
+                              toggle.addClass('ui-toggleswitch-checked');
+                         }
+                    });
+               };
+
+               function handlePrices(xhr, status, args) {
+                    var myMap = JSON.parse(args.returnedValue);
+                    $('.ui-card').each(function () {
+                         var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
+                         if (myMap.hasOwnProperty(task)) {
+                              $(this).find('#priceId').text(myMap[task]);
+                         }
+                    });
+               };
+
+               function handleChecks(xhr, status, args) {
+                    var myMap = JSON.parse(args.returnedValue);
+                    $('.ui-card').each(function () {
+                         var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
+                         if (myMap.hasOwnProperty(task)) {
+                              $(this).find('#lastCheckId').text(myMap[task]);
+                         }
+                    });
+               };
+
+               $(document).ready(function () {
+                    runningStates();
+                    cycleStates();
+                    prices();
+                    lastChecks();
+  //			this is for sending map params to Java don't need it for now
+  //			var tasksArray = [];			
+  //			$('.ui-card').each(function() {
+  //				var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
+  //				tasksArray.push(task);
+  //			});			
+  //			
+  //			var params = tasksArray.map(function(value) {
+  //				return {name: 'taskParam', value: value};
+  //			});
+  //			cycleState(params);
+               });
+
+               function toggleSwitchCycles(element) {
+                    var isChecked = $(element).prop('checked');
+                    var title = $(element).parent().parent().parent().parent().siblings('.ui-card-title');
+                    var task = title.find('>span:nth-of-type(2)').text();
+                    updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: isChecked}]);
+               };
+
+               function toggleSwitchRunning(element) {
+                    var isChecked = $(element).prop('checked');
+                    var title = $(element).parent().parent().parent().parent();
+                    var task = title.find('>span:nth-of-type(2)').text();
+                    updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
+                    if (!isChecked) {
+                         updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: false}]);
+                         $(element).parent().parent().parent().parent().siblings('.ui-card-footer').find('.ui-toggleswitch').removeClass('ui-toggleswitch-checked');
                     }
-                });
-            };
+               };
 
-            function handleCompleteRunning(xhr, status, args) {
-                var myList = JSON.parse(args.returnedValue);
-                $('.ui-card').each(function () {
-                    var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
-                    if (myList.includes(task)) {
-                        var toggle = $(this).find('.ui-card-body .ui-card-title .ui-toggleswitch');
-                        toggle.addClass('ui-toggleswitch-checked');
-                    }
-                });
-            };
+          </script>
+     </h:head>
+     <h:body>
 
-            function handlePrices(xhr, status, args) {
-                var myMap = JSON.parse(args.returnedValue);
-                $('.ui-card').each(function () {
-                    var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
-                    if (myMap.hasOwnProperty(task)) {
-                        $(this).find('#priceId').text(myMap[task]);
-                    }
-                });
-            };
+          <p:growl id="growl" showDetail="true" />
 
-            function handleChecks(xhr, status, args) {
-                var myMap = JSON.parse(args.returnedValue);
-                $('.ui-card').each(function () {
-                    var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
-                    if (myMap.hasOwnProperty(task)) {
-                        $(this).find('#lastCheckId').text(myMap[task]);
-                    }
-                });
-            };
+          <div style="margin:0 auto;width:95%;">
+               <h:form id="headerForm">
 
-            $(document).ready(function () {
-                runningStates();
-                cycleStates();
-                prices();
-                lastChecks();
-//			this is for sending map params to Java don't need it for now
-//			var tasksArray = [];			
-//			$('.ui-card').each(function() {
-//				var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
-//				tasksArray.push(task);
-//			});			
-//			
-//			var params = tasksArray.map(function(value) {
-//				return {name: 'taskParam', value: value};
-//			});
-//			cycleState(params);
-            });
+                    <p:remoteCommand name="prices" action="#{indexView.prices}" oncomplete="handlePrices(xhr,status,args)" />
+                    <p:remoteCommand name="lastChecks" action="#{indexView.lastChecks}" oncomplete="handleChecks(xhr,status,args)" />
 
-            function toggleSwitchCycles(element) {
-                var isChecked = $(element).prop('checked');
-                var title = $(element).parent().parent().parent().parent().siblings('.ui-card-title');
-                var task = title.find('>span:nth-of-type(2)').text();
-                updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: isChecked}]);
-            };
+                    <p:remoteCommand name="cycleStates" action="#{indexView.cycleStates}" oncomplete="handleComplete(xhr,status,args)" />
+                    <p:remoteCommand name="updateCycleState" action="#{indexView.updateCycleState}" update="growl"/>
 
-            function toggleSwitchRunning(element) {
-                var isChecked = $(element).prop('checked');
-                var title = $(element).parent().parent().parent().parent();
-                var task = title.find('>span:nth-of-type(2)').text();
-                updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
-                if (!isChecked) {
-                    updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: false}]);
-                    $(element).parent().parent().parent().parent().siblings('.ui-card-footer').find('.ui-toggleswitch').removeClass('ui-toggleswitch-checked');
-                }
-            };
+                    <p:remoteCommand name="runningStates" action="#{indexView.runningStates}" oncomplete="handleCompleteRunning(xhr,status,args)" />
+                    <p:remoteCommand name="updateRunningState" action="#{indexView.updateRunningState}" update="growl headerForm:numberId" />
 
-        </script>
-    </h:head>
-    <h:body>
+                    <p:commandButton value="Create Bot" styleClass="ui-button-success" icon="pi pi-plus-circle"
+                                     oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
+                         <p:resetInput target="manageBotForm:manage-bot" />
+                    </p:commandButton>
+                    <p:outputLabel value="USDT Balance: #{indexView.getBalanceUSDT()}" style="margin-left:10px"/>
+                    <p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
+                    <p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfo()}"
+                                     style="float:right;margin-right:20px;" update="accountForm:accountPanel"/>
+                    <hr style="margin-bottom:10px;margin-top:15px"></hr>
+               </h:form>
 
-        <p:growl id="growl" showDetail="true" />
+               <h:form id="botListForm">
+                    <p:repeat value="#{indexView.bots}" var="bot">
+                         <p:card style="margin:.5em;display:inline-block;border-color:background;background-color:#F0F0F0;padding:0;width:32%">
+                              <f:facet name="title">
+                                   <span style="font-size:70%;">#{bot.symbol}</span><span style="font-size:55%;margin-left:8px;margin-right:8px">#{bot.taskId}</span>
+                                   <div style="float:right">
+                                        <p:toggleSwitch onchange="toggleSwitchRunning(this)">
+                                             <p:ajax update="editId" />
+                                        </p:toggleSwitch>								
+                                   </div>
+                              </f:facet>
 
-        <div style="margin:0 auto;width:95%;">
-            <h:form id="headerForm">
+                              <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block">
+                                   <h:outputLabel value="Unsold:"/>
+                                   <h:outputLabel value="#{indexView.queryUnsoldOrdersCount(bot.id)}" style="color: blue !important;font-weight: bold;" />
+                                   <h:outputLabel value="Total:"/>
+                                   <h:outputLabel value="#{indexView.queryTotalOrdersCount(bot.id)}" style="font-weight: bold;" />
+                              </p:panelGrid>						
+                              <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;padding-right:3px;border-right:1px solid gray" >
+                                   <h:outputLabel value="Sold:"/>
+                                   <h:outputLabel value="#{indexView.querySoldOrdersCount(bot.id)}" style="color: green !important;font-weight: bold;" />
+                                   <h:outputLabel value="Profit:"/>							
+                                   <h:outputLabel value="#{indexView.getBotProfit(bot.id)}" style="color: green !important;font-weight: bold;" />
+                              </p:panelGrid>
+                              <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
+                                   <h:outputLabel value="Last Price"/>
+                                   <h:outputLabel value=""/>
+                                   <span id="priceId" style="font-weight:bold;"></span>
+                              </p:panelGrid>
+                              <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;" >
+                                   <h:outputLabel value="Balance"/>
+                                   <h:outputLabel value=""/>
+                                   <h:outputLabel value="#{indexView.getBalance(bot.symbol)}" style="font-weight:bold"/>
+                              </p:panelGrid>
+                              <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
+                                   <h:outputLabel value="Last check"/>
+                                   <h:outputLabel value=""/>
+                                   <span id="lastCheckId" style="font-weight:bold;"></span>
+                              </p:panelGrid>
 
-                <p:remoteCommand name="prices" action="#{indexView.prices}" oncomplete="handlePrices(xhr,status,args)" />
-                <p:remoteCommand name="lastChecks" action="#{indexView.lastChecks}" oncomplete="handleChecks(xhr,status,args)" />
+                              <f:facet name="footer">
+                                   <p:commandButton icon="pi pi-list" oncomplete="PF('botDetails').show()" update="detailsForm" style="margin-right:5px;" action="#{indexView.getBotOrders(indexView.selectedTradeBot.id)}">
+                                        <f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
+                                   </p:commandButton>
 
-                <p:remoteCommand name="cycleStates" action="#{indexView.cycleStates}" oncomplete="handleComplete(xhr,status,args)" />
-                <p:remoteCommand name="updateCycleState" action="#{indexView.updateCycleState}" update="growl"/>
+                                   <p:commandButton id="editId" icon="pi pi-file" oncomplete="PF('manageBot').show()" update="manageBotForm" style="margin-right:5px;" disabled="#{indexView.isBotRunning(bot.taskId)}" action="#{indexView.editBot()}">
+                                        <f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
+                                   </p:commandButton>
 
-                <p:remoteCommand name="runningStates" action="#{indexView.runningStates}" oncomplete="handleCompleteRunning(xhr,status,args)" />
-                <p:remoteCommand name="updateRunningState" action="#{indexView.updateRunningState}" update="growl headerForm:numberId" />
+                                   <div style="display:inline-block;float:right"><p:toggleSwitch id="cycleId" onchange="toggleSwitchCycles(this)" disabled="#{!indexView.isBotRunning(bot.taskId)}" /></div>
+                                   <p:outputLabel value="Stop Cycle" style="float:right;margin-right:3px;margin-top:8px;font-weight:bold"/>
 
-                <p:commandButton value="Create Bot" styleClass="ui-button-success" icon="pi pi-plus-circle"
-                                 oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
-                    <p:resetInput target="manageBotForm:manage-bot" />
-                </p:commandButton>
-                <p:outputLabel value="USDT Balance: #{indexView.getBalanceUSDT()}" style="margin-left:10px"/>
-                <p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
-                <p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfo()}"
-                                 style="float:right;margin-right:20px;" update="accountForm:accountPanel"/>
-                <hr style="margin-bottom:10px;margin-top:15px"></hr>
-            </h:form>
+                                   <p:commandButton icon="pi pi-exclamation-triangle" rendered="#{indexView.getErrorsSize(bot.id) > 0}" oncomplete="PF('manageErrors').show()" update="errorsForm" action="#{indexView.getBotErrors(bot.id)}"
+                                                    value="#{indexView.getErrorsSize(bot.id)}" styleClass="ui-button-danger" />
+                              </f:facet>
+                         </p:card>
+                    </p:repeat>
+               </h:form>   
 
-            <h:form id="botListForm">
-                <p:repeat value="#{indexView.bots}" var="bot">
-                    <p:card style="margin:.5em;display:inline-block;border-color:background;background-color:#F0F0F0;padding:0;width:32%">
-                        <f:facet name="title">
-                            <span style="font-size:70%;">#{bot.symbol}</span><span style="font-size:55%;margin-left:8px;margin-right:8px">#{bot.taskId}</span>
-                            <div style="float:right">
-                                <p:toggleSwitch onchange="toggleSwitchRunning(this)">
-                                    <p:ajax update="editId" />
-                                </p:toggleSwitch>								
-                            </div>
-                        </f:facet>
+               <h:form id="manageBotForm">
+                    <p:dialog widgetVar="manageBot" height="auto" width="40%" modal="true">
+                         <f:facet name="header">
+                              <h:outputText id="outputId" value="#{indexView.shouldEditBot ? 'Edit Bot' : 'Create New Bot'}" />
+                         </f:facet>
+                         <p:panelGrid id="manage-bot" columns="4" style="width: 100%" styleClass="ui-noborder center-it">
+                              <p:outputLabel for="input1" value="Symbol"/>
+                              <p:inputText id="input1" value="#{indexView.selectedTradeBot.symbol}" />
 
-                        <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block">
-                            <h:outputLabel value="Unsold:"/>
-                            <h:outputLabel value="#{indexView.queryUnsoldOrdersCount(bot.id)}" style="color: blue !important;font-weight: bold;" />
-                            <h:outputLabel value="Total:"/>
-                            <h:outputLabel value="#{indexView.queryTotalOrdersCount(bot.id)}" style="font-weight: bold;" />
-                        </p:panelGrid>						
-                        <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;padding-right:3px;border-right:1px solid gray" >
-                            <h:outputLabel value="Sold:"/>
-                            <h:outputLabel value="#{indexView.querySoldOrdersCount(bot.id)}" style="color: green !important;font-weight: bold;" />
-                            <h:outputLabel value="Profit:"/>							
-                            <h:outputLabel value="#{indexView.getBotProfit(bot.id)}" style="color: green !important;font-weight: bold;" />
-                        </p:panelGrid>
-                        <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
-                            <h:outputLabel value="Last Price"/>
-                            <h:outputLabel value=""/>
-                            <span id="priceId" style="font-weight:bold;"></span>
-                        </p:panelGrid>
-                        <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;" >
-                            <h:outputLabel value="Balance"/>
-                            <h:outputLabel value=""/>
-                            <h:outputLabel value="#{indexView.getBalance(bot.symbol)}" style="font-weight:bold"/>
-                        </p:panelGrid>
-                        <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
-                            <h:outputLabel value="Last check"/>
-                            <h:outputLabel value=""/>
-                            <span id="lastCheckId" style="font-weight:bold;"></span>
-                        </p:panelGrid>
+                              <p:outputLabel for="select2" value="Time Unit"/>
+                              <p:selectOneMenu value="#{indexView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">
+                                   <f:selectItems value="#{indexView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
+                              </p:selectOneMenu>
 
-                        <f:facet name="footer">
-                            <p:commandButton icon="pi pi-list" oncomplete="PF('botDetails').show()" update="detailsForm" style="margin-right:5px;" action="#{indexView.getBotOrders(indexView.selectedTradeBot.id)}">
-                                <f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
-                            </p:commandButton>
+                              <p:outputLabel for="input4" value="TaskId"/>
+                              <p:inputText id="input4" value="#{indexView.selectedTradeBot.taskId}"/>
 
-                            <p:commandButton id="editId" icon="pi pi-file" oncomplete="PF('manageBot').show()" update="manageBotForm" style="margin-right:5px;" disabled="#{indexView.isBotRunning(bot.taskId)}" action="#{indexView.editBot()}">
-                                <f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
-                            </p:commandButton>
+                              <p:outputLabel for="input2" value="Initial Delay"/>
+                              <p:inputText id="input2" value="#{indexView.selectedTradeBot.initialDelay}" />
 
-                            <div style="display:inline-block;float:right"><p:toggleSwitch id="cycleId" onchange="toggleSwitchCycles(this)" disabled="#{!indexView.isBotRunning(bot.taskId)}" /></div>
-                            <p:outputLabel value="Stop Cycle" style="float:right;margin-right:3px;margin-top:8px;font-weight:bold"/>
+                              <p:outputLabel for="input3" value="Delay"/>
+                              <p:inputText id="input3" value="#{indexView.selectedTradeBot.delay}" />
 
-                            <p:commandButton icon="pi pi-exclamation-triangle" rendered="#{indexView.getErrorsSize(bot.id) > 0}" oncomplete="PF('manageErrors').show()" update="errorsForm" action="#{indexView.getBotErrors(bot.id)}"
-                                             value="#{indexView.getErrorsSize(bot.id)}" styleClass="ui-button-danger" />
-                        </f:facet>
-                    </p:card>
-                </p:repeat>
-            </h:form>   
+                              <p:outputLabel for="input5" value="Quote Order Qty"/>
+                              <p:inputText id="input5" value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
 
-            <h:form id="manageBotForm">
-                <p:dialog widgetVar="manageBot" height="auto" width="40%" modal="true">
-                    <f:facet name="header">
-                        <h:outputText id="outputId" value="#{indexView.shouldEditBot ? 'Edit Bot' : 'Create New Bot'}" />
-                    </f:facet>
-                    <p:panelGrid id="manage-bot" columns="4" style="width: 100%" styleClass="ui-noborder center-it">
-                        <p:outputLabel for="input1" value="Symbol"/>
-                        <p:inputText id="input1" value="#{indexView.selectedTradeBot.symbol}" />
+                              <p:outputLabel for="input6" value="Max Orders per Cycle"/>
+                              <p:inputText id="input6" value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>
 
-                        <p:outputLabel for="select2" value="Time Unit"/>
-                        <p:selectOneMenu value="#{indexView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">
-                            <f:selectItems value="#{indexView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
-                        </p:selectOneMenu>
+                              <p:outputLabel for="input7" value="Order Step in %"/>
+                              <p:inputText id="input7" value="#{indexView.selectedTradeBot.orderStep}"/>
 
-                        <p:outputLabel for="input4" value="TaskId"/>
-                        <p:inputText id="input4" value="#{indexView.selectedTradeBot.taskId}"/>
+                              <p:outputLabel for="input8" value="Date Created"/>
+                              <p:datePicker id="input8" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 
-                        <p:outputLabel for="input2" value="Initial Delay"/>
-                        <p:inputText id="input2" value="#{indexView.selectedTradeBot.initialDelay}" />
+                              <p:outputLabel for="input9" value="Description"/>
+                              <p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
+                         </p:panelGrid>
+                         <f:facet name="footer">
+                              <div style="padding-top:15px;">
+                                   <p:commandButton value="Save" icon="pi pi-check" action="#{indexView.updateBot}" update="growl botListForm" 
+                                                    oncomplete="runningStates();cycleStates();"/>
+                                   <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageBot').hide()"
+                                                    class="ui-button-secondary" type="button" />
+                              </div>
+                         </f:facet>
+                    </p:dialog>
+               </h:form>
 
-                        <p:outputLabel for="input3" value="Delay"/>
-                        <p:inputText id="input3" value="#{indexView.selectedTradeBot.delay}" />
+               <h:form id="detailsForm">
+                    <p:dialog widgetVar="botDetails" height="400" width="60%" modal="true" >
+                         <f:facet name="header">
+                              #{indexView.selectedTradeBot.symbol}
+                              <h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />
+                         </f:facet>
 
-                        <p:outputLabel for="input5" value="Quote Order Qty"/>
-                        <p:inputText id="input5" value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
+                         <p:panelGrid columns="2" style="display:inline-block;margin-right:10px;">
+                              <h:outputText value="Symbol"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.symbol}"/>
+                              <h:outputText value="Delay"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.delay}"/>
+                              <h:outputText value="Initial Delay"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.initialDelay}"/>
+                              <h:outputText value="CycleMaxOrders"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>						
+                         </p:panelGrid>
+                         <p:panelGrid columns="2" style="display:inline-block;margin-right:10px">
+                              <h:outputText value="QuoteOrderQty"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
+                              <h:outputText value="Order Step"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.orderStep}"/>
+                              <h:outputText value="Time Unit"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.timeUnit}"/>
+                              <h:outputText value="TaskId"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.taskId}"/>
+                         </p:panelGrid>
+                         <p:panelGrid columns="2" style="display:inline-block;">
+                              <h:outputText value="Description"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.description}"/>
+                              <h:outputText value="Created Date"/>
+                              <p:outputLabel value="#{bot.createdDate}">
+                                   <f:convertDateTime timeZone="CET" pattern="dd.MM.yyyy" />
+                              </p:outputLabel>
+                         </p:panelGrid>
 
-                        <p:outputLabel for="input6" value="Max Orders per Cycle"/>
-                        <p:inputText id="input6" value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>
+                         <hr style="margin-top:20px"></hr>
 
-                        <p:outputLabel for="input7" value="Order Step in %"/>
-                        <p:inputText id="input7" value="#{indexView.selectedTradeBot.orderStep}"/>
-
-                        <p:outputLabel for="input8" value="Date Created"/>
-                        <p:datePicker id="input8" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
-
-                        <p:outputLabel for="input9" value="Description"/>
-                        <p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
-                    </p:panelGrid>
-                    <f:facet name="footer">
-                        <div style="padding-top:15px;">
-                            <p:commandButton value="Save" icon="pi pi-check" action="#{indexView.updateBot}" update="growl botListForm" 
-                                             oncomplete="runningStates();cycleStates();"/>
-                            <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageBot').hide()"
-                                             class="ui-button-secondary" type="button" />
-                        </div>
-                    </f:facet>
-                </p:dialog>
-            </h:form>
-
-            <h:form id="detailsForm">
-                <p:dialog widgetVar="botDetails" height="400" width="60%" modal="true" >
-                    <f:facet name="header">
-                        #{indexView.selectedTradeBot.symbol}
-                        <h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />
-                    </f:facet>
-
-                    <p:panelGrid columns="2" style="display:inline-block;margin-right:10px;">
-                        <h:outputText value="Symbol"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.symbol}"/>
-                        <h:outputText value="Delay"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.delay}"/>
-                        <h:outputText value="Initial Delay"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.initialDelay}"/>
-                        <h:outputText value="CycleMaxOrders"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.cycleMaxOrders}"/>						
-                    </p:panelGrid>
-                    <p:panelGrid columns="2" style="display:inline-block;margin-right:10px">
-                        <h:outputText value="QuoteOrderQty"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.quoteOrderQty}"/>
-                        <h:outputText value="Order Step"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.orderStep}"/>
-                        <h:outputText value="Time Unit"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.timeUnit}"/>
-                        <h:outputText value="TaskId"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.taskId}"/>
-                    </p:panelGrid>
-                    <p:panelGrid columns="2" style="display:inline-block;">
-                        <h:outputText value="Description"/>
-                        <h:outputText value="#{indexView.selectedTradeBot.description}"/>
-                        <h:outputText value="Created Date"/>
-                        <p:outputLabel value="#{bot.createdDate}">
-                            <f:convertDateTime timeZone="CET" pattern="dd.MM.yyyy" />
-                        </p:outputLabel>
-                    </p:panelGrid>
-
-                    <hr style="margin-top:20px"></hr>
-
-                    <p:dataTable id="botsTable" var="order" value="#{indexView.botOrders}" sortMode="single" >
-                        <p:column sortBy="#{order.id}" headerText="Id">
-                            <h:outputText value="#{order.id}" />
-                        </p:column>
-                        <p:column sortBy="#{order.sell}" headerText="Sold">
-                            <p:button style="width:20px;height:20px;" icon="pi pi-check" styleClass="rounded-button ui-button-success" rendered="#{order.sell}"/>
-                        </p:column>
-                        <p:column sortBy="#{order.buyPrice}" headerText="Buy Price">
-                            <p:outputLabel value="#{order.buyPrice}">
-                                <f:convertNumber pattern="#0.00" />
-                            </p:outputLabel>
-                        </p:column>
-                        <p:column sortBy="#{order.sellPrice}" headerText="Sell Price">
-                            <p:outputLabel value="#{order.sellPrice}">
-                                <f:convertNumber pattern="#0.00" />
-                            </p:outputLabel>
-                        </p:column>
-                        <p:column sortBy="#{order.profit}" headerText="Profit">
-                            <p:outputLabel value="#{order.profit}">
-                                <f:convertNumber pattern="#0.00" />
-                            </p:outputLabel>
-                        </p:column>
-                        <p:column sortBy="#{order.buyDate}" headerText="Buy Date">
-                            <h:outputText value="#{order.buyDate}" >
-                                <f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
-                            </h:outputText>
-                        </p:column>						
-                        <p:column sortBy="#{order.sellDate}" headerText="Sell Date">
-                            <h:outputText value="#{order.sellDate}" >
-                                <f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
-                            </h:outputText>
-                        </p:column>
-                        <p:column headerText="Buy Id">
-                            <p:commandLink value="#{order.buyOrderId}" styleClass="ui-button-outlined ui-button-info" rendered="#{order.buyOrderId gt 0}"
-                                           action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.buyOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
-                        </p:column>
-                        <p:column headerText="Sell Id">
-                            <p:commandLink value="#{order.sellOrderId}" styleClass="ui-button-outlined ui-button-info" rendered="#{order.sellOrderId gt 0}"
-                                           action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.sellOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
-                        </p:column>
-                    </p:dataTable>
-
-                    <f:facet name="footer">
-                        <div style="padding-top:15px;">
-                            <hr style="margin-bottom:15px"></hr>
-                            <p:commandButton id="runId" update="txtId runId stopId growl headerForm:numberId botListForm" value="Run Bot" styleClass="ui-button-success"
-                                             action="#{indexView.addTask}" style="float:left" oncomplete="runningStates();cycleStates();"
-                                             disabled="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
-                            <p:commandButton id="stopId" update="txtId stopId runId growl headerForm:numberId botListForm" value="Stop Bot" styleClass="ui-button-warning"
-                                             action="#{indexView.removeTask}" style="float:left" oncomplete="runningStates();cycleStates();"
-                                             disabled="#{not indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
-                            <p:commandButton value="Close" styleClass="ui-button-secondary" onclick="PF('botDetails').hide()"
-                                             class="ui-button-secondary" type="button" />
-                        </div>
-                    </f:facet>
-                </p:dialog>
-
-                <p:dialog header="Order details" id="jsonDialog" widgetVar="orderDetails" height="auto" width="auto" modal="false" >
-
-                    <p:repeat value="#{indexView.orderJsonString}" var="line">
-                        <h:outputText value="#{line}"/><br></br>
-                    </p:repeat>					
-                </p:dialog>
-
-            </h:form>
-
-            <h:form id="errorsForm">
-                <p:dialog widgetVar="manageErrors" height="auto" width="50%" modal="true" >
-                    <f:facet name="header">
-                        Errors
-                    </f:facet>
-                    <p:commandButton value="Acknowlege All" action="#{indexView.acknowledgeAllBotErrors}" update=":errorsForm:errorPanel botListForm" 
-                                     oncomplete="runningStates();cycleStates();" style="margin-bottom:12px"/>
-                    <div style="height:400px; overflow-y: auto;">
-                        <p:outputPanel id="errorPanel">
-                            <p:repeat value="#{indexView.errors}" var="error">
-                                <p:panelGrid columns="4" id="panelId">
-                                    <p:outputLabel value="#{error.id}" />
-                                    <p:outputLabel value="#{error.errorTimestamp}">
+                         <p:dataTable id="botsTable" var="order" value="#{indexView.botOrders}" sortMode="single" >
+                              <p:column sortBy="#{order.id}" headerText="Id">
+                                   <h:outputText value="#{order.id}" />
+                              </p:column>
+                              <p:column sortBy="#{order.sell}" headerText="Sold">
+                                   <p:button style="width:20px;height:20px;" icon="pi pi-check" styleClass="rounded-button ui-button-success" rendered="#{order.sell}"/>
+                              </p:column>
+                              <p:column sortBy="#{order.buyPrice}" headerText="Buy Price">
+                                   <p:outputLabel value="#{order.buyPrice}">
+                                        <f:convertNumber pattern="#0.00" />
+                                   </p:outputLabel>
+                              </p:column>
+                              <p:column sortBy="#{order.sellPrice}" headerText="Sell Price">
+                                   <p:outputLabel value="#{order.sellPrice}">
+                                        <f:convertNumber pattern="#0.00" />
+                                   </p:outputLabel>
+                              </p:column>
+                              <p:column sortBy="#{order.profit}" headerText="Profit">
+                                   <p:outputLabel value="#{order.profit}">
+                                        <f:convertNumber pattern="#0.00" />
+                                   </p:outputLabel>
+                              </p:column>
+                              <p:column sortBy="#{order.buyDate}" headerText="Buy Date">
+                                   <h:outputText value="#{order.buyDate}" >
                                         <f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
-                                    </p:outputLabel>
-                                    <p:outputLabel value="#{error.errorMessage}" />
-                                    <p:commandButton value="Acknowlege" action="#{indexView.acknowledgeError(error)}" update=":errorsForm:errorPanel botListForm"
-                                            oncomplete="runningStates();cycleStates();" />
-                                </p:panelGrid>
-                            </p:repeat>
-                        </p:outputPanel>
-                    </div>
-                </p:dialog>
-            </h:form>
+                                   </h:outputText>
+                              </p:column>						
+                              <p:column sortBy="#{order.sellDate}" headerText="Sell Date">
+                                   <h:outputText value="#{order.sellDate}" >
+                                        <f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
+                                   </h:outputText>
+                              </p:column>
+                              <p:column headerText="Buy Id">
+                                   <p:commandLink value="#{order.buyOrderId}" styleClass="ui-button-outlined ui-button-info" rendered="#{order.buyOrderId gt 0}"
+                                                  action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.buyOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
+                              </p:column>
+                              <p:column headerText="Sell Id">
+                                   <p:commandLink value="#{order.sellOrderId}" styleClass="ui-button-outlined ui-button-info" rendered="#{order.sellOrderId gt 0}"
+                                                  action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.sellOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
+                              </p:column>
+                         </p:dataTable>
 
-            <h:form id="accountForm">
-                <p:dialog widgetVar="accountDetails" height="auto" width="25%" modal="true" >
-                    <f:facet name="header">
-                        Account Info
-                    </f:facet>
-                    <div style="height:400px; overflow-y: auto;">
-                        <p:outputPanel id="accountPanel">
-                            <p:repeat value="#{indexView.balances}" var="jsonString">
-                                <h:outputText value="#{jsonString}"/><br/>
-                            </p:repeat>
-                        </p:outputPanel>
-                    </div>					
-                </p:dialog>
-            </h:form>
+                         <f:facet name="footer">
+                              <div style="padding-top:15px;">
+                                   <hr style="margin-bottom:15px"></hr>
+                                   <p:commandButton id="runId" update="txtId runId stopId growl headerForm:numberId botListForm" value="Run Bot" styleClass="ui-button-success"
+                                                    action="#{indexView.addTask}" style="float:left" oncomplete="runningStates();cycleStates();"
+                                                    disabled="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
+                                   <p:commandButton id="stopId" update="txtId stopId runId growl headerForm:numberId botListForm" value="Stop Bot" styleClass="ui-button-warning"
+                                                    action="#{indexView.removeTask}" style="float:left" oncomplete="runningStates();cycleStates();"
+                                                    disabled="#{not indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
+                                   <p:commandButton value="Close" styleClass="ui-button-secondary" onclick="PF('botDetails').hide()"
+                                                    class="ui-button-secondary" type="button" />
+                              </div>
+                         </f:facet>
+                    </p:dialog>
 
-        </div>
-    </h:body>
+                    <p:dialog header="Order details" id="jsonDialog" widgetVar="orderDetails" height="auto" width="auto" modal="false" >
+
+                         <p:repeat value="#{indexView.orderJsonString}" var="line">
+                              <h:outputText value="#{line}"/><br></br>
+                         </p:repeat>					
+                    </p:dialog>
+
+               </h:form>
+
+               <h:form id="errorsForm">
+                    <p:dialog widgetVar="manageErrors" height="auto" width="50%" modal="true" >
+                         <f:facet name="header">
+                              Errors
+                         </f:facet>
+                         <p:commandButton value="Acknowlege All" action="#{indexView.acknowledgeAllBotErrors}" update=":errorsForm:errorPanel botListForm" 
+                                          oncomplete="runningStates();cycleStates();" style="margin-bottom:12px"/>
+                         <div style="height:400px; overflow-y: auto;">
+                              <p:outputPanel id="errorPanel">
+                                   <p:repeat value="#{indexView.errors}" var="error">
+                                        <p:panelGrid columns="4" id="panelId">
+                                             <p:outputLabel value="#{error.id}" />
+                                             <p:outputLabel value="#{error.errorTimestamp}">
+                                                  <f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
+                                             </p:outputLabel>
+                                             <p:outputLabel value="#{error.errorMessage}" />
+                                             <p:commandButton value="Acknowlege" action="#{indexView.acknowledgeError(error)}" update=":errorsForm:errorPanel botListForm"
+                                                              oncomplete="runningStates();cycleStates();" />
+                                        </p:panelGrid>
+                                   </p:repeat>
+                              </p:outputPanel>
+                         </div>
+                    </p:dialog>
+               </h:form>
+
+               <h:form id="accountForm">
+                    <p:dialog widgetVar="accountDetails" height="auto" width="25%" modal="true" >
+                         <f:facet name="header">
+                              Account Info
+                         </f:facet>
+                         <div style="height:400px; overflow-y: auto;">
+                              <p:outputPanel id="accountPanel">
+                                   <p:repeat value="#{indexView.balances}" var="jsonString">
+                                        <h:outputText value="#{jsonString}"/><br/>
+                                   </p:repeat>
+                              </p:outputPanel>
+                         </div>					
+                    </p:dialog>
+               </h:form>
+
+          </div>
+     </h:body>
 </html>
