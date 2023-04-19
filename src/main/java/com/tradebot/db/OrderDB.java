@@ -231,7 +231,7 @@ public class OrderDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "SELECT * FROM ORDER_TRACKER WHERE BUYDATE >= DATEADD('HOUR', -48, NOW())";
+		String query = "SELECT * FROM ORDER_TRACKER WHERE BUYDATE >= DATEADD('HOUR', -24, NOW())";
 		
 		try {
 			
