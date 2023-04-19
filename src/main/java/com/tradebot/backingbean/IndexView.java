@@ -191,8 +191,13 @@ public class IndexView implements Serializable {
 		getBotErrors(err.getTradebot_id());
 	}
         
-        public void acknowledgeAllBotErrors() throws Exception {
+     public void acknowledgeAllBotErrors() throws Exception {
 		ErrorTrackerDB.updateAllBotErrors(currentErrorBotId);
+		getBotErrors(currentErrorBotId);
+	}
+     
+     public void acknowledgeAllErrors() throws Exception {
+		ErrorTrackerDB.updateAllErrors();
 		getBotErrors(currentErrorBotId);
 	}
 	

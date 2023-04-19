@@ -152,10 +152,17 @@
                                      oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
                          <p:resetInput target="manageBotForm:manage-bot" />
                     </p:commandButton>
-                    <p:outputLabel value="USDT Balance: #{indexView.getBalanceUSDT()}" style="margin-left:10px"/>
-                    <p:outputLabel id="numberId" value="Number of running tasks: #{indexView.getRunningTasksNumber()}" style="float:right;padding-top:10px"/>
+                    
+                    <p:outputLabel value="USDT Balance: #{indexView.getBalanceUSDT()}" style="margin-left:10px"/>                    
+
+                    <p:commandButton value="Clear Errors" action="#{indexView.acknowledgeAllErrors}" update="botListForm" 
+                                          oncomplete="runningStates();cycleStates();" style="float:right" />
+
                     <p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfoAll()}"
-                                     style="float:right;margin-right:20px;" update="accountForm:accountPanel"/>
+                                     style="float:right;margin-right:5px;" update="accountForm:accountPanel"/>
+                    
+                    <p:outputLabel id="numberId" value="Running Tasks: #{indexView.getRunningTasksNumber()}" style="padding-top:10px;float:right;margin-right:15px"/>
+
                     <hr style="margin-bottom:10px;margin-top:15px"></hr>
                </h:form>
 
