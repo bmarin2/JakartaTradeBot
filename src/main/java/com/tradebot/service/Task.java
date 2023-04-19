@@ -146,14 +146,14 @@ public class Task implements Runnable {
           } catch (BinanceConnectorException e) {
                e.printStackTrace();
                try {
-                    addErrorMessage(e.getMessage(), tradeBot.getId());
+                    addErrorMessage("(Binance Connector Exception) " + e.getMessage(), tradeBot.getId());
                } catch (Exception ex) {
                     ex.printStackTrace();
                }
           } catch (BinanceClientException e) {
                e.printStackTrace();
                try {
-                    addErrorMessage(e.getErrMsg() + " " + e.getErrorCode() + " " + e.getHttpStatusCode(), tradeBot.getId());
+                    addErrorMessage("(Binance Client Exception) " + e.getErrMsg() + " " + e.getErrorCode() + " " + e.getHttpStatusCode(), tradeBot.getId());
                     telegramBot.sendMessage("Binance Client Exception\n" + e.getErrMsg() + " " + e.getErrorCode() + " " + e.getHttpStatusCode());
                } catch (Exception ex) {
                     ex.printStackTrace();
@@ -161,7 +161,7 @@ public class Task implements Runnable {
           } catch (BinanceServerException e) {
                e.printStackTrace();
                try {
-                    addErrorMessage(e.getMessage(), tradeBot.getId());
+                    addErrorMessage("(Binance Server Exception) " + e.getMessage(), tradeBot.getId());
                     telegramBot.sendMessage("Binance Server Exception\n" + e.getMessage());
                } catch (Exception ex) {
                     ex.printStackTrace();
@@ -170,7 +170,6 @@ public class Task implements Runnable {
                e.printStackTrace();
                try {
                     addErrorMessage(e.getMessage(), tradeBot.getId());
-                    telegramBot.sendMessage("Exception\n" + e.getMessage());
                } catch (Exception ex) {
                     ex.printStackTrace();
                }
