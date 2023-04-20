@@ -112,7 +112,7 @@ public class Task implements Runnable {
 
                          for (Long tempOrder : tempOrders) {
                               BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder), 8, RoundingMode.HALF_DOWN)).multiply(newPosition);
-                              quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.HALF_DOWN));
+                              quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.HALF_EVEN));
                          }
 
                          long timeStamp = System.currentTimeMillis();
