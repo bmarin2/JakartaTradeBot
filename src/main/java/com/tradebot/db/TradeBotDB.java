@@ -18,8 +18,8 @@ public class TradeBotDB {
 		ResultSet rs = null;
 		long order_id = 0;
 
-		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quoteOrderQty, cycleMaxOrders, orderStep, description, initialDelay, delay, timeUnit) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quoteOrderQty, cycleMaxOrders, orderStep, description, initialDelay, delay, timeUnit, stopLoss) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -33,6 +33,7 @@ public class TradeBotDB {
 			ps.setInt(8, bot.getInitialDelay());
 			ps.setInt(9, bot.getDelay());
 			ps.setInt(10, bot.getTimeUnit().ordinal());
+			ps.setDouble(11, bot.getStopLoss());
 			
 			ps.executeUpdate();
 			
@@ -76,6 +77,7 @@ public class TradeBotDB {
 				bot.setInitialDelay(rs.getInt("initialDelay"));
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
+				bot.setStopLoss(rs.getDouble("stopLoss"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -112,6 +114,7 @@ public class TradeBotDB {
 				bot.setInitialDelay(rs.getInt("initialDelay"));
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
+				bot.setStopLoss(rs.getDouble("stopLoss"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -148,6 +151,7 @@ public class TradeBotDB {
 				bot.setInitialDelay(rs.getInt("initialDelay"));
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
+				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bots.add(bot);
 			}
 			return bots;
@@ -167,7 +171,7 @@ public class TradeBotDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?, description=?, initialDelay=?, delay=?, timeUnit=? WHERE id = ?";
+		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?, description=?, initialDelay=?, delay=?, timeUnit=?, stopLoss=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -182,7 +186,8 @@ public class TradeBotDB {
 			ps.setInt(8, bot.getInitialDelay());
 			ps.setInt(9, bot.getDelay());
 			ps.setInt(10, bot.getTimeUnit().ordinal());
-			ps.setLong(11, bot.getId());
+			ps.setDouble(11, bot.getStopLoss());
+			ps.setLong(12, bot.getId());
 			
 			ps.executeUpdate();
 
