@@ -105,8 +105,6 @@ public class Task implements Runnable {
 						break;
 					}
 				}
-				System.out.println("New price " + newPosition);
-				System.out.println("Should send Notigication " + (LocalDateTime.now().compareTo(notifyTime) > 0));
 
 				if(!tempOrdersStopLoss.isEmpty()) {
 					
