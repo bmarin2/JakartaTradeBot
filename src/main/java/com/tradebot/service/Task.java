@@ -35,12 +35,15 @@ public class Task implements Runnable {
      private boolean stopBotCycle;
 
      private final TelegramBot telegramBot;
-
+	
+	private LocalDateTime notifyTime;
+	
      public Task(TradeBot tradeBot) throws Exception {
           this.spotClientImpl = SpotClientConfig.spotClientSignTest();
           this.tradeBot = tradeBot;
           this.positions = convertOrdersToMap(tradeBot);
           this.telegramBot = new TelegramBot();
+		notifyTime = LocalDateTime.now();
      }
 
      @Override
@@ -62,7 +65,7 @@ public class Task implements Runnable {
                     botDTO.setLastCheck(new Date());
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
                } else {
-                    BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false, new Date()));
+                    BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false, new Date(), false));
                }
 
                if (positions.isEmpty()) {
@@ -88,7 +91,40 @@ public class Task implements Runnable {
                     if (comparisonDecreaseed < 0) {
                          createBuyOrder(newPosition);
                     }
-               } 
+               }
+			// STOP LOSS
+			else if (comparison < 0 && (positions.size() >= tradeBot.getCycleMaxOrders())) {
+				List<Long> tempOrdersStopLoss = new ArrayList<>();
+				for (Map.Entry<Long, BigDecimal> position : positions.entrySet()) {
+					BigDecimal positionPercentageStopLoss = position.getValue().multiply(new BigDecimal(tradeBot.getStopLoss() / 100));
+					BigDecimal decreasedPositionStopLoss = position.getValue().subtract(positionPercentageStopLoss);
+					int comparisonDecreaseedStopLoss = newPosition.compareTo(decreasedPositionStopLoss);
+					if (comparisonDecreaseedStopLoss < 0) {
+						tempOrdersStopLoss.add(position.getKey());
+					} else {
+						break;
+					}
+				}
+				System.out.println("New price " + newPosition);
+				System.out.println("Should send Notigication " + (LocalDateTime.now().compareTo(notifyTime) > 0));
+
+				if(!tempOrdersStopLoss.isEmpty()) {
+					
+					if (LocalDateTime.now().compareTo(notifyTime) > 0) {
+						
+						telegramBot.sendMessage("Stop Loss triggered " + tradeBot.getSymbol() + " " + tradeBot.getTaskId() + 
+							   " Price bellow " + tradeBot.getStopLoss() + "%");
+
+						BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());						
+						if(!botDTO.isStopLossTriggered()) {
+							botDTO.setStopLossTriggered(true);
+							BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+						}
+						
+						notifyTime = notifyTime.plusHours(1);						
+					}
+				}				
+			}
                // SELL
                else if (comparison > 0 && !positions.isEmpty()) {
                     BigDecimal increasedPosition = positions.get(lastAddedKey).add(positionPercentage);
@@ -106,37 +142,15 @@ public class Task implements Runnable {
                                    break;
                               }
                          }
-
-                         // should be able to choose profits in crypto or stable
-                         BigDecimal quoteSum = BigDecimal.ZERO;
-
-                         for (Long tempOrder : tempOrders) {
-                              BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder), 8, RoundingMode.HALF_DOWN)).multiply(newPosition);
-						quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.HALF_DOWN));
-                         }
-
-                         long timeStamp = System.currentTimeMillis();
-                         String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
-                                 tradeBot.getSymbol(),
-                                 OrderSide.SELL,
-                                 quoteSum,
-                                 timeStamp));
-
-                         JSONObject orderResultJson = new JSONObject(orderResult);
-
-                         // update orders in DB and remove from map
-                         for (Long id : tempOrders) {
-                              OrderTracker order = OrderDB.getOneOrder(id);
-                              order.setSell(true);
-                              order.setSellPrice(newPosition);
-                              order.setSellDate(LocalDateTime.now());
-                              order.setSellOrderId(orderResultJson.getLong("orderId"));
-                              BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(id), 8, RoundingMode.HALF_DOWN)).multiply(newPosition);
-                              BigDecimal earnings = temp.subtract(new BigDecimal(tradeBot.getQuoteOrderQty()));
-                              order.setProfit(earnings.setScale(8, RoundingMode.HALF_DOWN));
-                              OrderDB.updateOrder(order);
-                              positions.remove(id);
-                         }
+					
+					createSellOrder(newPosition, tempOrders);
+					
+					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+					if (botDTO.isStopLossTriggered()) {
+						botDTO.setStopLossTriggered(false);
+						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+					}
+					
                          if (positions.isEmpty() && !stopBotCycle) {
                               createBuyOrder(newPosition);
                          }
@@ -210,4 +224,36 @@ public class Task implements Runnable {
           errorTracker.setTradebot_id(tradeBotId);
           ErrorTrackerDB.addError(errorTracker);
      }
+	
+	private void createSellOrder(BigDecimal newPosition, List<Long> tempOrders) throws Exception {
+		BigDecimal quoteSum = BigDecimal.ZERO;
+
+		for (Long tempOrder : tempOrders) {
+			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder), 8, RoundingMode.DOWN)).multiply(newPosition);
+			quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
+		}
+		System.out.println("quoteSum " + quoteSum);
+		long timeStamp = System.currentTimeMillis();
+		String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
+			   tradeBot.getSymbol(),
+			   OrderSide.SELL,
+			   quoteSum,
+			   timeStamp));
+
+		JSONObject orderResultJson = new JSONObject(orderResult);
+
+		// update orders in DB and remove from map
+		for (Long id : tempOrders) {
+			OrderTracker order = OrderDB.getOneOrder(id);
+			order.setSell(true);
+			order.setSellPrice(newPosition);
+			order.setSellDate(LocalDateTime.now());
+			order.setSellOrderId(orderResultJson.getLong("orderId"));
+			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(id), 8, RoundingMode.DOWN)).multiply(newPosition);
+			BigDecimal earnings = temp.subtract(new BigDecimal(tradeBot.getQuoteOrderQty()));
+			order.setProfit(earnings.setScale(8, RoundingMode.DOWN));
+			OrderDB.updateOrder(order);
+			positions.remove(id);
+		}
+	}
 }

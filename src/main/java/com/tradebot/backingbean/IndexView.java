@@ -307,7 +307,7 @@ public class IndexView implements Serializable {
 			BotExtraInfo.putInfo(taskId, botDTO);
 			addMessage("Stop Cycle updated to " + Boolean.valueOf(stopCycle), "Bot " + taskId);
 		} else {			
-			BotExtraInfo.putInfo(taskId, new BotDTO(BigDecimal.ZERO, Boolean.parseBoolean(stopCycle), new Date(0)));
+			BotExtraInfo.putInfo(taskId, new BotDTO(BigDecimal.ZERO, Boolean.parseBoolean(stopCycle), new Date(0), false));
 			addMessage("Stop Cycle added and updated to " + Boolean.valueOf(stopCycle), "Bot " + taskId);
 		}
 		
@@ -348,5 +348,13 @@ public class IndexView implements Serializable {
 				addMessage("Task " + taskId + " removed", "");
 			}
 		}
-	}	
+	}
+	
+	public boolean getStopLossStatus(String taskId) {
+		if(BotExtraInfo.containsInfo(taskId)) {
+			BotDTO botDTO = BotExtraInfo.getInfo(taskId);
+				return botDTO.isStopLossTriggered();
+		}
+		return false;
+	}
 }

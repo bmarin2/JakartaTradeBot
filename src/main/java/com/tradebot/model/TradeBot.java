@@ -32,4 +32,6 @@ public class TradeBot implements Serializable {
 	private Integer delay = 5;
 	
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
+	
+	private Double stopLoss = 10.0;
 }

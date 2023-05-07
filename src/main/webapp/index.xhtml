@@ -171,6 +171,7 @@
                          <p:card style="margin:.5em;display:inline-block;border-color:background;background-color:#F0F0F0;padding:0;width:32%">
                               <f:facet name="title">
                                    <span style="font-size:70%;">#{bot.symbol}</span><span style="font-size:55%;margin-left:8px;margin-right:8px">#{bot.taskId}</span>
+							<p:tag severity="danger" value="Stop Loss" rendered="#{indexView.getStopLossStatus(bot.taskId)}"></p:tag>
                                    <div style="float:right">
                                         <p:toggleSwitch onchange="toggleSwitchRunning(this)">
                                              <p:ajax update="editId" />
