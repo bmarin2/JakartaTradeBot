@@ -186,9 +186,10 @@
                               </p:panelGrid>						
                               <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block;padding-right:3px;border-right:1px solid gray" >
                                    <h:outputLabel value="Sold:"/>
-                                   <h:outputLabel value="#{indexView.querySoldOrdersCount(bot.id)}" style="color: green !important;font-weight: bold;" />
-                                   <h:outputLabel value="Profit:"/>							
-                                   <h:outputLabel value="#{indexView.getBotProfit(bot.id)}" style="color: green !important;font-weight: bold;" />
+                                   <h:outputLabel value="#{indexView.querySoldOrdersCount(bot.id)}" style="font-weight: bold;" />
+                                   <h:outputLabel value="Profit:"/>
+                                   <h:outputLabel value="#{indexView.getBotProfit(bot.id)}"
+										style="color: #{indexView.getBotProfit(bot.id).startsWith('+') ? 'green !important' : indexView.getBotProfit(bot.id).startsWith('-') ? 'red !important' : 'black !important'}; font-weight: bold;" />
                               </p:panelGrid>
                               <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
                                    <h:outputLabel value="Last Price"/>
@@ -216,7 +217,7 @@
                                    </p:commandButton>
 
                                    <div style="display:inline-block;float:right"><p:toggleSwitch id="cycleId" onchange="toggleSwitchCycles(this)" disabled="#{!indexView.isBotRunning(bot.taskId)}" /></div>
-                                   <p:outputLabel value="Stop Cycle" style="float:right;margin-right:3px;margin-top:8px;font-weight:bold"/>
+                                   <p:outputLabel value="Stop Buy" style="float:right;margin-right:3px;margin-top:8px;font-weight:bold"/>
 
                                    <p:commandButton icon="pi pi-exclamation-triangle" rendered="#{indexView.getErrorsSize(bot.id) > 0}" oncomplete="PF('manageErrors').show()" update="errorsForm" action="#{indexView.getBotErrors(bot.id)}"
                                                     value="#{indexView.getErrorsSize(bot.id)}" styleClass="ui-button-danger" />
@@ -256,12 +257,15 @@
 
                               <p:outputLabel for="input7" value="Order Step in %"/>
                               <p:inputText id="input7" value="#{indexView.selectedTradeBot.orderStep}"/>
+						
+						<p:outputLabel for="input8" value="Stop Loss in %"/>
+                              <p:inputText id="input8" value="#{indexView.selectedTradeBot.stopLoss}"/>
 
-                              <p:outputLabel for="input8" value="Date Created"/>
-                              <p:datePicker id="input8" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
+                              <p:outputLabel for="input9" value="Date Created"/>
+                              <p:datePicker id="input9" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 
-                              <p:outputLabel for="input9" value="Description"/>
-                              <p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
+                              <p:outputLabel for="input10" value="Description"/>
+                              <p:inputTextarea id="input10" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
                          </p:panelGrid>
                          <f:facet name="footer">
                               <div style="padding-top:15px;">
@@ -308,6 +312,8 @@
                               <p:outputLabel value="#{bot.createdDate}">
                                    <f:convertDateTime timeZone="CET" pattern="dd.MM.yyyy" />
                               </p:outputLabel>
+						<h:outputText value="Stop Loss(%) eg 10.1"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.stopLoss}"/>
                          </p:panelGrid>
 
                          <hr style="margin-top:20px"></hr>
