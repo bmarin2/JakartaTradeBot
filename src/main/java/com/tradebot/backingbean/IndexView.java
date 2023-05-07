@@ -115,7 +115,11 @@ public class IndexView implements Serializable {
 		String val = "";
 		if(temp != null){
 			val = temp.setScale(2, RoundingMode.HALF_DOWN).toString();
-			return "+"+val;
+			if (temp.compareTo(BigDecimal.ZERO) < 0) {
+				return val;
+			} else {
+				return "+"+val;
+			}			
 		}
 		return "0";
 	}
