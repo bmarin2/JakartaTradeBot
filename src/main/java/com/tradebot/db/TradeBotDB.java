@@ -192,7 +192,7 @@ public class TradeBotDB {
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			ps.setDouble(11, bot.getStopLoss());
 			ps.setDouble(12, bot.getStopLossWarning());
-			ps.setLong(12, bot.getId());
+			ps.setLong(13, bot.getId());
 			
 			ps.executeUpdate();
 
