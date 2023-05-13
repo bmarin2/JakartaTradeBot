@@ -111,7 +111,7 @@ public class OrderDB {
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
 				order.setStopLossPrice(rs.getBigDecimal("stopLossPrice"));
-				order.setStopLossPrice(rs.getBigDecimal("stopLossPriceWarning"));
+				order.setStopLossPriceWarning(rs.getBigDecimal("stopLossPriceWarning"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
 			}
 			return order;
@@ -158,8 +158,8 @@ public class OrderDB {
 				order.setSellDate(rs.getTimestamp("sellDate") != null ? rs.getTimestamp("sellDate").toLocalDateTime() : null);
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
-				order.setTradebot_id(rs.getLong("tradebot_id"));
-				order.setStopLossPrice(rs.getBigDecimal("stopLossPriceWarning"));
+				order.setStopLossPrice(rs.getBigDecimal("stopLossPrice"));
+				order.setStopLossPriceWarning(rs.getBigDecimal("stopLossPriceWarning"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
 				orders.add(order);
 			}
@@ -257,6 +257,8 @@ public class OrderDB {
 				order.setSellDate(rs.getTimestamp("sellDate") != null ? rs.getTimestamp("sellDate").toLocalDateTime() : null);
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
+				order.setStopLossPrice(rs.getBigDecimal("stopLossPrice"));
+				order.setStopLossPriceWarning(rs.getBigDecimal("stopLossPriceWarning"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
 				orders.add(order);
 			}

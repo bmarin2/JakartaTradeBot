@@ -14,7 +14,6 @@ import com.tradebot.model.OrderSide;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.PositionDTO;
 import com.tradebot.model.TradeBot;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -55,7 +54,7 @@ public class Task implements Runnable {
                String result = spotClientImpl.createMarket().tickerSymbol(OrdersParams.getTickerSymbolParams(tradeBot.getSymbol()));
                JSONObject jsonObject = new JSONObject(result);
                BigDecimal newPosition = new BigDecimal(jsonObject.getString("price"));
-
+			
                if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
                     BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
                     botDTO.setLastPrice(newPosition);

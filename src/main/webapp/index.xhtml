@@ -259,20 +259,17 @@
                               <p:outputLabel for="input7" value="Order Step in %"/>
                               <p:inputText id="input7" value="#{indexView.selectedTradeBot.orderStep}"/>
 						
-						<p:outputLabel for="input8" value="Stop Loss in %"/>
+						<p:outputLabel for="input8" value="Stop Loss (%)"/>
                               <p:inputText id="input8" value="#{indexView.selectedTradeBot.stopLoss}"/>
 
                               <p:outputLabel for="input9" value="Date Created"/>
                               <p:datePicker id="input9" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 						
-						<p:outputLabel for="input10" value="Stop Loss"/>
-                              <p:inputText id="input10" value="#{indexView.selectedTradeBot.stopLoss}" />
-						
-						<p:outputLabel for="input11" value="Stop Loss Warning"/>
-                              <p:inputText id="input11" value="#{indexView.selectedTradeBot.stopLossWarning}" />
+						<p:outputLabel for="input10" value="Stop Loss Warning (%)"/>
+                              <p:inputText id="input10" value="#{indexView.selectedTradeBot.stopLossWarning}" />
 
-                              <p:outputLabel for="input12" value="Description"/>
-                              <p:inputTextarea id="input12" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
+                              <p:outputLabel for="input11" value="Description"/>
+                              <p:inputTextarea id="input11" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
                          </p:panelGrid>
                          <f:facet name="footer">
                               <div style="padding-top:15px;">
