@@ -34,4 +34,7 @@ public class TradeBot implements Serializable {
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
 	
 	private Double stopLoss = 10.0;
+	
+	private Double stopLossWarning = 5.0;
+
 }

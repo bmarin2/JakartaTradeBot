@@ -12,7 +12,9 @@ import com.tradebot.model.BotDTO;
 import com.tradebot.model.ErrorTracker;
 import com.tradebot.model.OrderSide;
 import com.tradebot.model.OrderTracker;
+import com.tradebot.model.PositionDTO;
 import com.tradebot.model.TradeBot;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -30,7 +32,7 @@ public class Task implements Runnable {
 
      private SpotClientImpl spotClientImpl;
 
-     private Map<Long, BigDecimal> positions;
+     private Map<Long, PositionDTO> positions;
 
      private boolean stopBotCycle;
 
@@ -74,65 +76,36 @@ public class Task implements Runnable {
                     }
                     return;
                }
+			
+			checkStopLoss(newPosition);
 
                Long lastAddedKey = null;
 
-               for (Map.Entry<Long, BigDecimal> entry : positions.entrySet()) {
+               for (Map.Entry<Long, PositionDTO> entry : positions.entrySet()) {
                     lastAddedKey = entry.getKey();
                }
-
-               int comparison = newPosition.compareTo(positions.get(lastAddedKey));
-               BigDecimal positionPercentage = positions.get(lastAddedKey).multiply(new BigDecimal(tradeBot.getOrderStep() / 100));
+			
+               int comparison = newPosition.compareTo(positions.get(lastAddedKey).getBuyPrice());
+               BigDecimal positionPercentage = positions.get(lastAddedKey).getBuyPrice().multiply(new BigDecimal(tradeBot.getOrderStep() / 100));
 
                // BUY
                if (comparison < 0 && (positions.size() < tradeBot.getCycleMaxOrders()) && !stopBotCycle) {
-                    BigDecimal decreasedPosition = positions.get(lastAddedKey).subtract(positionPercentage);
+                    BigDecimal decreasedPosition = positions.get(lastAddedKey).getBuyPrice().subtract(positionPercentage);
                     int comparisonDecreaseed = newPosition.compareTo(decreasedPosition);
                     if (comparisonDecreaseed < 0) {
                          createBuyOrder(newPosition);
                     }
                }
-			// STOP LOSS
-			else if (comparison < 0 && (positions.size() >= tradeBot.getCycleMaxOrders())) {
-				List<Long> tempOrdersStopLoss = new ArrayList<>();
-				for (Map.Entry<Long, BigDecimal> position : positions.entrySet()) {
-					BigDecimal positionPercentageStopLoss = position.getValue().multiply(new BigDecimal(tradeBot.getStopLoss() / 100));
-					BigDecimal decreasedPositionStopLoss = position.getValue().subtract(positionPercentageStopLoss);
-					int comparisonDecreaseedStopLoss = newPosition.compareTo(decreasedPositionStopLoss);
-					if (comparisonDecreaseedStopLoss < 0) {
-						tempOrdersStopLoss.add(position.getKey());
-					} else {
-						break;
-					}
-				}
-
-				if(!tempOrdersStopLoss.isEmpty()) {
-					
-					if (LocalDateTime.now().compareTo(notifyTime) > 0) {
-						
-						telegramBot.sendMessage("Stop Loss triggered " + tradeBot.getSymbol() + " " + tradeBot.getTaskId() + 
-							   " Price bellow " + tradeBot.getStopLoss() + "%");
-
-						BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());						
-						if(!botDTO.isStopLossTriggered()) {
-							botDTO.setStopLossTriggered(true);
-							BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
-						}
-						
-						notifyTime = notifyTime.plusHours(1);						
-					}
-				}				
-			}
                // SELL
                else if (comparison > 0 && !positions.isEmpty()) {
-                    BigDecimal increasedPosition = positions.get(lastAddedKey).add(positionPercentage);
+                    BigDecimal increasedPosition = positions.get(lastAddedKey).getBuyPrice().add(positionPercentage);
                     int comparisonIncreased = newPosition.compareTo(increasedPosition);
                     if (comparisonIncreased > 0) {
-                         List<Map.Entry<Long, BigDecimal>> reverseList = new ArrayList<>(positions.entrySet());
+                         List<Map.Entry<Long, PositionDTO>> reverseList = new ArrayList<>(positions.entrySet());
                          Collections.reverse(reverseList);
                          List<Long> tempOrders = new ArrayList<>();
-                         for (Map.Entry<Long, BigDecimal> position : reverseList) {
-                              BigDecimal increasedPositionLoop = position.getValue().add(positionPercentage);
+                         for (Map.Entry<Long, PositionDTO> position : reverseList) {
+                              BigDecimal increasedPositionLoop = position.getValue().getBuyPrice().add(positionPercentage);
                               int comparisonIncreasedPosition = newPosition.compareTo(increasedPositionLoop);
                               if (comparisonIncreasedPosition > 0) {
                                    tempOrders.add(position.getKey());
@@ -144,8 +117,8 @@ public class Task implements Runnable {
 					createSellOrder(newPosition, tempOrders);
 					
 					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
-					if (botDTO.isStopLossTriggered()) {
-						botDTO.setStopLossTriggered(false);
+					if (botDTO.isStopLossWarningTriggered()) {
+						botDTO.setStopLossWarningTriggered(false);
 						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
 					}
 					
@@ -202,15 +175,29 @@ public class Task implements Runnable {
           order.setBuyPrice(newPosition);
           order.setTradebot_id(tradeBot.getId());
           order.setBuyOrderId(orderResultJson.getLong("orderId"));
+		order.setStopLossPrice(calcStopLossPrice(newPosition));
+		order.setStopLossPriceWarning(calcStopLossWarningPrice(newPosition));
           long order_id = OrderDB.addOrder(order);
-          positions.put(order_id, newPosition);
+		PositionDTO positionDTO = new PositionDTO(order.getBuyPrice(), order.getStopLossPrice(), order.getStopLossPriceWarning());
+          positions.put(order_id, positionDTO);
      }
+	
+	private BigDecimal calcStopLossPrice(BigDecimal pos) {
+		BigDecimal positionPercentageStopLoss = pos.multiply(new BigDecimal(tradeBot.getStopLoss() / 100));
+		return pos.subtract(positionPercentageStopLoss);
+	}
+	
+	private BigDecimal calcStopLossWarningPrice(BigDecimal pos) {
+		BigDecimal positionBellowWarrningPercent = pos.multiply(new BigDecimal(tradeBot.getStopLossWarning() / 100));
+		return pos.subtract(positionBellowWarrningPercent);
+	}
 
-     private Map<Long, BigDecimal> convertOrdersToMap(TradeBot bot) throws Exception {
+     private Map<Long, PositionDTO> convertOrdersToMap(TradeBot bot) throws Exception {
           List<OrderTracker> orders = OrderDB.getOrdersFromBot(false, bot.getId());
-          Map<Long, BigDecimal> map = new LinkedHashMap<>();
+          Map<Long, PositionDTO> map = new LinkedHashMap<>();
           for (OrderTracker order : orders) {
-               map.put(order.getId(), order.getBuyPrice());
+			PositionDTO positionDTO = new PositionDTO(order.getBuyPrice(), order.getStopLossPrice(), order.getStopLossPriceWarning());
+               map.put(order.getId(), positionDTO);
           }
           return map;
      }
@@ -227,10 +214,10 @@ public class Task implements Runnable {
 		BigDecimal quoteSum = BigDecimal.ZERO;
 
 		for (Long tempOrder : tempOrders) {
-			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder), 8, RoundingMode.DOWN)).multiply(newPosition);
+			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder).getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPosition);
 			quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
 		}
-		System.out.println("quoteSum " + quoteSum);
+
 		long timeStamp = System.currentTimeMillis();
 		String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
 			   tradeBot.getSymbol(),
@@ -247,11 +234,42 @@ public class Task implements Runnable {
 			order.setSellPrice(newPosition);
 			order.setSellDate(LocalDateTime.now());
 			order.setSellOrderId(orderResultJson.getLong("orderId"));
-			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(id), 8, RoundingMode.DOWN)).multiply(newPosition);
+			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(id).getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPosition);
 			BigDecimal earnings = temp.subtract(new BigDecimal(tradeBot.getQuoteOrderQty()));
 			order.setProfit(earnings.setScale(8, RoundingMode.DOWN));
 			OrderDB.updateOrder(order);
 			positions.remove(id);
 		}
+	}
+	
+	private void checkStopLoss(BigDecimal newPosition) throws Exception {
+
+		List<Long> tempOrdersStopLoss = new ArrayList<>();
+
+		for (Map.Entry<Long, PositionDTO> position : positions.entrySet()) {
+			if (newPosition.compareTo(position.getValue().getStopLossWarningPrice()) < 0 && newPosition.compareTo(position.getValue().getStopLossPrice()) > 0) {
+				if (LocalDateTime.now().compareTo(notifyTime) > 0) {
+					telegramBot.sendMessage("Warning! Price below " + tradeBot.getStopLossWarning() + "% " + tradeBot.getSymbol() + " " + tradeBot.getTaskId() + " Order: " + position.getKey());
+					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+					if (!botDTO.isStopLossWarningTriggered()) {
+						botDTO.setStopLossWarningTriggered(true);
+						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+					}
+					notifyTime = notifyTime.plusHours(2);
+				}
+			}
+			else if (newPosition.compareTo(position.getValue().getStopLossPrice()) < 0) {
+				tempOrdersStopLoss.add(position.getKey());
+			}
+			else {
+				break;
+			}
+		}
+		
+		if (!tempOrdersStopLoss.isEmpty()) {
+			createSellOrder(newPosition, tempOrdersStopLoss);
+			telegramBot.sendMessage("Sold at loss of " + tradeBot.getStopLoss() + "% Number of orders sold: " + tempOrdersStopLoss.size() + " " + tradeBot.getSymbol() + " " + tradeBot.getTaskId());
+			stopBotCycle = true;
+		}		
 	}
 }

@@ -9,12 +9,12 @@ public class BotDTO {
 	private boolean stopCycle;
 	private BigDecimal lastPrice;
 	private Date lastCheck;
-	private boolean stopLossTriggered;
+	private boolean stopLossWarningTriggered;
 	
 	public BotDTO(BigDecimal lastPrice, boolean stopCycle, Date lastCheck, boolean stopLossTriggered) {
 		this.lastPrice = lastPrice;
 		this.stopCycle = stopCycle;
 		this.lastCheck = lastCheck;
-		this.stopLossTriggered = stopLossTriggered;
+		this.stopLossWarningTriggered = stopLossTriggered;
 	}
 }

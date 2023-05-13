@@ -28,4 +28,8 @@ public class OrderTracker {
 	private long sellOrderId;
 	
 	private long tradebot_id;
+	
+	private BigDecimal stopLossPrice;
+	
+	private BigDecimal stopLossPriceWarning;
 }
