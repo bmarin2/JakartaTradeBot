@@ -8,6 +8,7 @@ import com.tradebot.db.OrderDB;
 import com.tradebot.db.TradeBotDB;
 import com.tradebot.model.BotDTO;
 import com.tradebot.model.ErrorTracker;
+import com.tradebot.model.OrderSide;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import com.tradebot.service.BotExtraInfo;
@@ -24,6 +25,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -51,6 +53,8 @@ public class IndexView implements Serializable {
 	private List<OrderTracker> botOrders;
 	
 	private TradeBot selectedTradeBot;
+	
+	private OrderTracker selectedOrder;
 
 	private TradeBot secondTradeBot;
 
@@ -65,6 +69,8 @@ public class IndexView implements Serializable {
 	private List<ErrorTracker> errors;
         
      private long currentErrorBotId;
+	
+	private BigDecimal checkedPrice;
 	
 	@PostConstruct
 	private void init() {
@@ -353,8 +359,39 @@ public class IndexView implements Serializable {
 	public boolean getStopLossStatus(String taskId) {
 		if(BotExtraInfo.containsInfo(taskId)) {
 			BotDTO botDTO = BotExtraInfo.getInfo(taskId);
-				return botDTO.isStopLossTriggered();
+				return botDTO.isStopLossWarningTriggered();
 		}
 		return false;
+	}
+	
+	public void createSellOrder(TradeBot bot, OrderTracker order, BigDecimal newPrice) throws Exception {
+		long timeStamp = System.currentTimeMillis();
+		
+		BigDecimal quoteQty = (new BigDecimal(bot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPrice);
+
+		String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
+			   bot.getSymbol(),
+			   OrderSide.SELL,
+			   quoteQty.setScale(8, RoundingMode.DOWN),
+			   timeStamp));
+		
+		JSONObject orderResultJson = new JSONObject(orderResult);
+		
+		OrderTracker orderSave = order;
+		
+		orderSave.setSell(true);
+		orderSave.setSellPrice(newPrice);
+		orderSave.setSellDate(LocalDateTime.now());
+		orderSave.setSellOrderId(orderResultJson.getLong("orderId"));
+		BigDecimal temp = (new BigDecimal(bot.getQuoteOrderQty()).divide(orderSave.getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPrice);
+		BigDecimal earnings = temp.subtract(new BigDecimal(bot.getQuoteOrderQty()));
+		orderSave.setProfit(earnings.setScale(8, RoundingMode.DOWN));
+		OrderDB.updateOrder(orderSave);
+	}
+	
+	public void checkPrice(String symbol) {
+		String result = spotClientImpl.createMarket().tickerSymbol(OrdersParams.getTickerSymbolParams(symbol));
+          JSONObject jsonObject = new JSONObject(result);
+          checkedPrice = new BigDecimal(jsonObject.getString("price"));
 	}
 }
