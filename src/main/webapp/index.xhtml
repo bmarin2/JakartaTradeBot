@@ -283,7 +283,7 @@
                </h:form>
 
                <h:form id="detailsForm">
-                    <p:dialog widgetVar="botDetails" height="400" width="60%" modal="true" >
+                    <p:dialog widgetVar="botDetails" height="400" width="70%" modal="true" >
                          <f:facet name="header">
                               #{indexView.selectedTradeBot.symbol}
                               <h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />
@@ -356,6 +356,19 @@
                                         <f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
                                    </h:outputText>
                               </p:column>
+
+						<p:column sortBy="#{order.stopLossPriceWarning}" headerText="Stop Loss Warning">
+                                   <p:outputLabel value="#{order.stopLossPriceWarning}">
+                                        <f:convertNumber pattern="#0.00" />
+                                   </p:outputLabel>
+                              </p:column>
+
+						<p:column sortBy="#{order.stopLossPrice}" headerText="Stop Loss">
+                                   <p:outputLabel value="#{order.stopLossPrice}">
+                                        <f:convertNumber pattern="#0.00" />
+                                   </p:outputLabel>
+                              </p:column>
+
                               <p:column headerText="Buy Id">
                                    <p:commandLink value="#{order.buyOrderId}" styleClass="ui-button-outlined ui-button-info" rendered="#{order.buyOrderId gt 0}"
                                                   action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.buyOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
