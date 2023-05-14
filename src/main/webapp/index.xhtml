@@ -181,7 +181,7 @@
 
                               <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block">
                                    <h:outputLabel value="Unsold:"/>
-                                   <h:outputLabel value="#{indexView.queryUnsoldOrdersCount(bot.id)}" style="color: blue !important;font-weight: bold;" />
+                                   <h:outputLabel value="#{indexView.queryUnsoldOrdersCount(bot.id)}/#{bot.cycleMaxOrders}" style="color: blue !important;font-weight: bold;" />
                                    <h:outputLabel value="Total:"/>
                                    <h:outputLabel value="#{indexView.queryTotalOrdersCount(bot.id)}" style="font-weight: bold;" />
                               </p:panelGrid>						
@@ -283,7 +283,7 @@
                </h:form>
 
                <h:form id="detailsForm">
-                    <p:dialog widgetVar="botDetails" height="400" width="70%" modal="true" >
+                    <p:dialog widgetVar="botDetails" height="450" width="70%" modal="true" >
                          <f:facet name="header">
                               #{indexView.selectedTradeBot.symbol}
                               <h:outputText id="txtId" value="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId) ? '(Running)' : '(Stopped)'}" />
@@ -406,7 +406,7 @@
                          </p:repeat>					
                     </p:dialog>
 				
-				<p:dialog widgetVar="sellManually" height="70px" width="280px" modal="true">
+				<p:dialog widgetVar="sellManually" height="auto" width="280px" modal="true">
                          <f:facet name="header">
                               Sell Order Manually
                          </f:facet>
@@ -414,18 +414,12 @@
 					<p:outputPanel id="sellPanel">
 						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
 							<p:outputLabel value="Last Price: "/>
-							<p:outputLabel id="priceId" value="#{indexView.checkedPrice}" />
-							<p:commandButton value="Refresh Price" update="priceId" action="#{indexView.checkPrice(indexView.selectedTradeBot.symbol)}"/>
+							<p:outputLabel id="priceId" value="#{indexView.checkedPrice}" style="font-weight: bold" />
+							<p:commandButton value="Sell" action="#{indexView.createSellOrder(indexView.selectedTradeBot,indexView.selectedOrder,indexView.checkedPrice)}" 
+										  update="detailsForm:botsTable" style="float:left;margin-top: 15px;width:80px"/>
+							<p:commandButton value="Refresh" update="priceId" action="#{indexView.checkPrice(indexView.selectedTradeBot.symbol)}" style="margin-top: 15px"/>
 						</p:panelGrid>
 					</p:outputPanel>
-
-					<f:facet name="footer">
-                              <div style="padding-top:15px;">
-                                   <hr style="margin-bottom:15px"></hr>
-                                   <p:commandButton value="Sell" action="#{indexView.createSellOrder(indexView.selectedTradeBot,indexView.selectedOrder,indexView.checkedPrice)}" 
-										  update="detailsForm:botsTable"/>
-                              </div>
-                         </f:facet>
                     </p:dialog>
 
                </h:form>
