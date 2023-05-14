@@ -365,7 +365,7 @@
                                                   action="#{indexView.getOrderDetails(indexView.selectedTradeBot.symbol, order.sellOrderId)}" oncomplete="PF('orderDetails').show()" update="detailsForm:jsonDialog"/>
                               </p:column>
 						<p:column headerText="Sell Manually">
-							<p:commandButton value="Sell" disabled="#{order.sell}" oncomplete="PF('sellManually').show()" update="detailsForm:sellPanel" action="#{indexView.checkPrice(indexView.selectedTradeBot.symbol)}">
+							<p:commandButton value="Sell" disabled="#{(order.sell eq true) or (indexView.isBotRunning(indexView.selectedTradeBot.taskId) eq true)}" oncomplete="PF('sellManually').show()" update="detailsForm:sellPanel" action="#{indexView.checkPrice(indexView.selectedTradeBot.symbol)}">
 								<f:setPropertyActionListener value="#{order}" target="#{indexView.selectedOrder}" />
 							</p:commandButton>
 						</p:column>
