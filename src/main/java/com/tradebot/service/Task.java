@@ -268,7 +268,12 @@ public class Task implements Runnable {
 		if (!tempOrdersStopLoss.isEmpty()) {
 			createSellOrder(newPosition, tempOrdersStopLoss);
 			telegramBot.sendMessage("Sold at loss of " + tradeBot.getStopLoss() + "% Number of orders sold: " + tempOrdersStopLoss.size() + " " + tradeBot.getSymbol() + " " + tradeBot.getTaskId());
-			stopBotCycle = true;
+			
+			BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+			if(!botDTO.isStopCycle()) {
+				botDTO.setStopCycle(true);
+				BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+			}			
 		}		
 	}
 }
