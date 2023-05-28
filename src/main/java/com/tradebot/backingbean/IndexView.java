@@ -84,14 +84,14 @@ public class IndexView implements Serializable {
 
 		getAccountInfoAll();
 
-          if (!isBotRunning("reportTask")) {
-               ReportTask reportTask = new ReportTask();
-               taskService.addTask("reportTask", reportTask,
-                       1,
-                       24,
-                       TimeUnit.HOURS
-               );
-          }
+//          if (!isBotRunning("reportTask")) {
+//               ReportTask reportTask = new ReportTask();
+//               taskService.addTask("reportTask", reportTask,
+//                       1,
+//                       24,
+//                       TimeUnit.HOURS
+//               );
+//          }
 	}
 	
 	public void getOrderDetails(String symbol, long orderId) {

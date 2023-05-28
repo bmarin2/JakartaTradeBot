@@ -53,3 +53,15 @@ CREATE TABLE ERROR_TRACKER (
     tradebot_id BIGINT,
     FOREIGN KEY (tradebot_id) REFERENCES TRADE_BOT(id)
 );
+
+CREATE TABLE ALARM (
+	id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	symbol VARCHAR(255),
+	alarmId VARCHAR(255),
+     alarmPrice DECIMAL(14,8),
+     initialDelay INT,
+     delay INT,
+     timeUnit INT,
+	description VARCHAR(255),
+	msgSent BOOLEAN
+);

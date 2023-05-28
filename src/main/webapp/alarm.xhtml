@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+		 
+	<h:head>
+		<title>Alarms</title>
+		
+		<style>
+			body .ui-panelgrid .ui-panelgrid-cell  {
+				padding: 1px;
+				padding-right: 10px;
+			}
+
+		</style>
+		<script>			
+			$(document).ready(function() {
+                    runningStates();
+               });
+			
+			function toggleSwitchRunning(element) {
+				var isChecked = $(element).prop('checked');
+				var title = $(element).parent().parent().parent().parent();
+				var task = title.find('>span:nth-of-type(2)').text();
+				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
+			};
+			
+			function handleCompleteRunning(xhr, status, args) {
+                    var myList = JSON.parse(args.returnedValue);
+                    $('.ui-card').each(function () {
+                    var task = ($(this).find('.ui-card-body .ui-card-title > span:nth-of-type(2)').text());
+				if (myList.includes(task)) {
+					var toggle = $(this).find('.ui-card-body .ui-card-title .ui-toggleswitch');
+					toggle.addClass('ui-toggleswitch-checked');
+					}
+				});
+			};
+			
+		</script>
+		
+	</h:head>
+	
+	<h:body>
+		<p:growl id="growl" showDetail="true" />
+		
+		<div style="margin:0 auto;width:95%;">
+		
+		<p:commandButton value="Create Alarm" styleClass="ui-button-success" icon="pi pi-plus-circle"
+					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarm()}" update="manageAlarmsForm">
+			<p:resetInput target="manageAlarmsForm:manage-alarm" />
+		</p:commandButton>
+			
+		<h:form id="headerForm">
+			<p:remoteCommand name="updateRunningState" action="#{alarmView.updateRunningState}" update="growl" />
+			<p:remoteCommand name="runningStates" action="#{alarmView.runningStates}" oncomplete="handleCompleteRunning(xhr,status,args)" />
+		</h:form>
+			
+		<h:form id="alarmListForm">
+			<p:repeat value="#{alarmView.alarms}" var="alarm">
+				
+			<p:card style="margin:.5em;display:inline-block;border-color:background;background-color:bisque;padding:0;width:20%">
+				<f:facet name="title">
+					<span style="font-size:60%">#{alarm.symbol}</span>
+					<span style="font-size:55%;margin-right:6px">#{alarm.alarmId}</span>
+					<p:outputLabel style="font-size:60%;color: red" value="Sent!" rendered="#{alarm.msgSent}"/>
+					<div style="float:right">
+						<p:toggleSwitch onchange="toggleSwitchRunning(this)">
+							<p:ajax update="editId" />
+						</p:toggleSwitch>
+					</div>
+				</f:facet>
+				
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+					<h:outputLabel value="Last Price"/>
+					<p:outputLabel style="" value="#{alarmView.checkPrice(alarm.symbol)}">
+						<f:convertNumber pattern="#0.0000" />
+					</p:outputLabel>
+					<h:outputLabel value="Alarm Price"/>
+					<p:outputLabel style="font-weight:bold;" value="#{alarm.alarmPrice}">
+						<f:convertNumber pattern="#0.0000" />
+					</p:outputLabel>
+				</p:panelGrid>			
+				
+				<f:facet name="footer">
+					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()" update="manageAlarmsForm" style="margin-right:5px;" action="#{alarmView.editAlarm()}">
+						<f:setPropertyActionListener value="#{alarm}" target="#{alarmView.selectedAlarm}" />
+					</p:commandButton>					
+				</f:facet>				
+			</p:card>
+				
+			</p:repeat>
+		</h:form>
+		</div>
+		
+		
+		<h:form id="manageAlarmsForm">
+			<p:dialog widgetVar="manageAlarm" height="auto" width="40%" modal="true">
+				<f:facet name="header">
+					<h:outputText id="outputId" value="#{alarmView.shouldEditAlarm ? 'Edit Alarm' : 'Create New Alarm'}" />
+				</f:facet>
+				<p:panelGrid id="manage-alarm" columns="4" style="width: 100%" styleClass="ui-noborder center-it">
+					<p:outputLabel for="input1" value="Symbol"/>
+					<p:inputText id="input1" value="#{alarmView.selectedAlarm.symbol}" />
+
+					<p:outputLabel for="select2" value="Time Unit"/>
+					<p:selectOneMenu value="#{alarmView.selectedAlarm.timeUnit}" id="select2" style="width:100%">
+						<f:selectItems value="#{alarmView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
+					</p:selectOneMenu>
+					
+					<p:outputLabel for="input2" value="Alarm Id"/>
+					<p:inputText id="input2" value="#{alarmView.selectedAlarm.alarmId}"/>
+
+					<p:outputLabel for="input3" value="Alarm Price"/>
+					<p:inputText id="input3" value="#{alarmView.selectedAlarm.alarmPrice}"/>
+
+					<p:outputLabel for="input4" value="Initial Delay"/>
+					<p:inputText id="input4" value="#{alarmView.selectedAlarm.initialDelay}" />
+
+					<p:outputLabel for="input5" value="Delay"/>
+					<p:inputText id="input5" value="#{alarmView.selectedAlarm.delay}" />
+
+					<p:outputLabel for="input6" value="Description"/>
+					<p:inputTextarea id="input6" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
+					
+				</p:panelGrid>
+				<f:facet name="footer">
+					<div style="padding-top:15px;">
+						<p:commandButton value="Save" icon="pi pi-check" action="#{alarmView.updateAlarm}" update="growl alarmListForm" 
+									  oncomplete="runningStates()" />
+						<p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageAlarm').hide()"
+									  class="ui-button-secondary" type="button" />
+					</div>
+				</f:facet>
+			</p:dialog>
+		</h:form>
+		
+		
+	</h:body>
+	
+</html>
