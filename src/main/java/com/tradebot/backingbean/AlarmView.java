@@ -142,4 +142,8 @@ public class AlarmView implements Serializable {
 			   .put("returnedValue", new JSONArray(listToReturn).toString());
 	}
 	
+	public boolean isBotRunning(String taskId) {
+		return taskService.getScheduledTasks().containsKey(taskId);
+	}
+	
 }

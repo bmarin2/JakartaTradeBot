@@ -84,7 +84,7 @@
 				</p:panelGrid>			
 				
 				<f:facet name="footer">
-					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()" update="manageAlarmsForm" style="margin-right:5px;" action="#{alarmView.editAlarm()}">
+					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()" disabled="#{alarmView.isBotRunning(alarm.alarmId)}" update="manageAlarmsForm" style="margin-right:5px;" action="#{alarmView.editAlarm()}">
 						<f:setPropertyActionListener value="#{alarm}" target="#{alarmView.selectedAlarm}" />
 					</p:commandButton>					
 				</f:facet>				
