@@ -7,6 +7,8 @@ DELETE FROM ORDER_TRACKER WHERE tradebot_id=x;
 
 DROP TABLE ORDER_TRACKER;
 
+jdbc:h2:~/botdb;AUTO_SERVER=TRUE
+
 --Add column
 ALTER TABLE TRADE_BOT ADD COLUMN stopLoss DOUBLE;
 ALTER TABLE TRADE_BOT ADD COLUMN stopLossWarning DOUBLE;
@@ -55,16 +57,16 @@ CREATE TABLE ERROR_TRACKER (
 );
 
 CREATE TABLE ALARM (
-	id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	symbol VARCHAR(255),
-	alarmId VARCHAR(255),
-     alarmPrice DECIMAL(14,8),
-     initialDelay INT,
-     delay INT,
-     timeUnit INT,
-	description VARCHAR(255),
-	msgSent BOOLEAN,
-	intervall VARCHAR(255),
-	fastDema INT,
-	slowDema INT
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(255),
+    alarmId VARCHAR(255),
+    alarmPrice DECIMAL(14,8),
+    initialDelay INT,
+    delay INT,
+    timeUnit INT,
+    description VARCHAR(255),
+    msgSent BOOLEAN,
+    intervall VARCHAR(255),
+    fastDema INT,
+    slowDema INT
 );
