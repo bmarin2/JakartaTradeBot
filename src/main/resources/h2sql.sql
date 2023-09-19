@@ -63,5 +63,8 @@ CREATE TABLE ALARM (
      delay INT,
      timeUnit INT,
 	description VARCHAR(255),
-	msgSent BOOLEAN
+	msgSent BOOLEAN,
+	intervall VARCHAR(255),
+	fastDema INT,
+	slowDema INT
 );

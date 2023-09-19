@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class Alarm implements Serializable {	
+public class Alarm implements Serializable {
 	private long id;
 	private String symbol;
 	private String alarmId = TaskCodeGeneratorService.generateRandomString();
@@ -19,4 +19,8 @@ public class Alarm implements Serializable {
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
 	private String description;
 	private Boolean msgSent = false;
+	// for dema alerts
+	private String intervall = "5m";
+	private Integer fastDema = 10;
+	private Integer slowDema = 20;
 }

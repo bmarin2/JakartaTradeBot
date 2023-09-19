@@ -30,4 +30,12 @@ public class OrdersParams {
 		parameters.put("timestamp", timeStamp);
 		return parameters;
 	}
+	
+	public static LinkedHashMap<String, Object> getKlineParams(String symbol, String interval, Integer demaLength) {
+		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
+		parameters.put("symbol", symbol);
+		parameters.put("interval", interval);
+		parameters.put("limit", demaLength);
+		return parameters;
+	}
 }

@@ -6,6 +6,7 @@ import com.tradebot.configuration.OrdersParams;
 import com.tradebot.db.AlarmDB;
 import com.tradebot.model.Alarm;
 import com.tradebot.service.AlarmTask;
+import com.tradebot.service.DemaAlertTask;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -37,6 +38,7 @@ public class AlarmView implements Serializable {
 	private boolean shouldEditAlarm;
 	private BigDecimal checkedPrice;
 	private SpotClientImpl spotClientImpl;
+	private boolean demaAlert;
 	
 	@PostConstruct
 	private void init() {
@@ -49,6 +51,13 @@ public class AlarmView implements Serializable {
 		
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
 		
+	}
+	
+	public boolean isDemaAlert(Alarm alarm) {
+		if(alarm != null) {
+			return alarm.getIntervall() != null;
+		}
+		return false;
 	}
 	
 	public TimeUnit[] getUnits() {
@@ -79,12 +88,24 @@ public class AlarmView implements Serializable {
 	}
 	
 	public void newAlarm() {
+		demaAlert = false;
 		shouldEditAlarm = false;
 		selectedAlarm = new Alarm();
 	}
 
-	public void editAlarm() {
+	public void editAlarm(boolean isDema) {
+		if(isDema) {
+			demaAlert = true;
+		} else {
+			demaAlert = false;
+		}
 		shouldEditAlarm = true;
+	}
+	
+	public void newAlarmDema() {
+		demaAlert = true;
+		shouldEditAlarm = false;
+		selectedAlarm = new Alarm();
 	}
 	
 	public BigDecimal checkPrice(String symbol) {
@@ -99,6 +120,9 @@ public class AlarmView implements Serializable {
 
 		String runState = FacesContext.getCurrentInstance().
 			   getExternalContext().getRequestParameterMap().get("runState");
+		
+		String isDema = FacesContext.getCurrentInstance().
+			   getExternalContext().getRequestParameterMap().get("isDema");
 
 		if (Boolean.parseBoolean(runState)) {
 			if (taskService.getScheduledTasks().containsKey(taskId)) {
@@ -107,23 +131,37 @@ public class AlarmView implements Serializable {
 			
 			Alarm alarm = AlarmDB.getOneAlarm(taskId);
 			
-			BigDecimal currentPrice = checkPrice(alarm.getSymbol());
+			if (Boolean.parseBoolean(isDema)) {
+				DemaAlertTask demaAlertTask = new DemaAlertTask(alarm);
+				
+				taskService.addTask(alarm.getAlarmId(),
+					   demaAlertTask,
+					   alarm.getInitialDelay(),
+					   alarm.getDelay(),
+					   alarm.getTimeUnit()
+				);
+				
+			} else {
+				BigDecimal currentPrice = checkPrice(alarm.getSymbol());
+
+				boolean greater = false;
+
+				if (currentPrice.compareTo(alarm.getAlarmPrice()) < 0) {
+					greater = true;
+				}
+
+				AlarmTask alarmTask = new AlarmTask(alarm, greater);
+
+				taskService.addTask(alarm.getAlarmId(),
+					   alarmTask,
+					   alarm.getInitialDelay(),
+					   alarm.getDelay(),
+					   alarm.getTimeUnit()
+				);
+				addMessage("Alarm added", "id: " + alarm.getAlarmId());				
+			}
 			
-			boolean greater = false;
-			
-			if(currentPrice.compareTo(alarm.getAlarmPrice()) < 0) {
-				greater = true;
-			}			
-			
-			AlarmTask alarmTask = new AlarmTask(alarm, greater);
-			
-			taskService.addTask(alarm.getAlarmId(),
-				   alarmTask,
-				   alarm.getInitialDelay(),
-				   alarm.getDelay(),
-				   alarm.getTimeUnit()
-			);
-			addMessage("Alarm added", "id: " + alarm.getAlarmId());
+
 		} else {
 			if (taskService.getScheduledTasks().containsKey(taskId)) {
 				taskService.removeTask(taskId);

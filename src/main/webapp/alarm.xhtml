@@ -20,11 +20,11 @@
                     runningStates();
                });
 			
-			function toggleSwitchRunning(element) {
+			function toggleSwitchRunning(element, isDema) {
 				var isChecked = $(element).prop('checked');
 				var title = $(element).parent().parent().parent().parent();
 				var task = title.find('>span:nth-of-type(2)').text();
-				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
+				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}, {name: 'isDema', value: isDema}]);
 			};
 			
 			function handleCompleteRunning(xhr, status, args) {
@@ -52,6 +52,11 @@
 			<p:resetInput target="manageAlarmsForm:manage-alarm" />
 		</p:commandButton>
 			
+		<p:commandButton value="Create Dema Alert" styleClass="ui-button-success" icon="pi pi-plus-circle" style="margin-left:15px;"
+					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarmDema()}" update="manageAlarmsForm">
+			<p:resetInput target="manageAlarmsForm:manage-alarm" />
+		</p:commandButton>
+			
 		<h:form id="headerForm">
 			<p:remoteCommand name="updateRunningState" action="#{alarmView.updateRunningState}" update="growl" />
 			<p:remoteCommand name="runningStates" action="#{alarmView.runningStates}" oncomplete="handleCompleteRunning(xhr,status,args)" />
@@ -66,13 +71,13 @@
 					<span style="font-size:55%;margin-right:6px">#{alarm.alarmId}</span>
 					<p:outputLabel style="font-size:60%;color: red" value="Sent!" rendered="#{alarm.msgSent}"/>
 					<div style="float:right">
-						<p:toggleSwitch onchange="toggleSwitchRunning(this)">
+						<p:toggleSwitch onchange="toggleSwitchRunning(this, #{alarmView.isDemaAlert(alarm)})">
 							<p:ajax update="editId" />
 						</p:toggleSwitch>
 					</div>
 				</f:facet>
 				
-				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{!alarmView.isDemaAlert(alarm)}">
 					<h:outputLabel value="Last Price"/>
 					<p:outputLabel style="" value="#{alarmView.checkPrice(alarm.symbol)}">
 						<f:convertNumber pattern="#0.0000" />
@@ -81,10 +86,17 @@
 					<p:outputLabel style="font-weight:bold;" value="#{alarm.alarmPrice}">
 						<f:convertNumber pattern="#0.0000" />
 					</p:outputLabel>
-				</p:panelGrid>			
+				</p:panelGrid>
+				
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarmView.isDemaAlert(alarm)}">
+					<h:outputLabel value="Fast Dema"/>
+					<p:outputLabel value="#{alarm.fastDema}" />
+					<h:outputLabel value="Slow Dema"/>
+					<p:outputLabel value="#{alarm.slowDema}" />
+				</p:panelGrid>	
 				
 				<f:facet name="footer">
-					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()" disabled="#{alarmView.isBotRunning(alarm.alarmId)}" update="manageAlarmsForm" style="margin-right:5px;" action="#{alarmView.editAlarm()}">
+					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()" disabled="#{alarmView.isBotRunning(alarm.alarmId)}" update="manageAlarmsForm" style="margin-right:5px;" action="#{alarmView.editAlarm(alarmView.isDemaAlert(alarm))}">
 						<f:setPropertyActionListener value="#{alarm}" target="#{alarmView.selectedAlarm}" />
 					</p:commandButton>					
 				</f:facet>				
@@ -100,7 +112,7 @@
 				<f:facet name="header">
 					<h:outputText id="outputId" value="#{alarmView.shouldEditAlarm ? 'Edit Alarm' : 'Create New Alarm'}" />
 				</f:facet>
-				<p:panelGrid id="manage-alarm" columns="4" style="width: 100%" styleClass="ui-noborder center-it">
+				<p:panelGrid id="manage-alarm" columns="2" style="width: 100%" styleClass="ui-noborder center-it">
 					<p:outputLabel for="input1" value="Symbol"/>
 					<p:inputText id="input1" value="#{alarmView.selectedAlarm.symbol}" />
 
@@ -112,17 +124,26 @@
 					<p:outputLabel for="input2" value="Alarm Id"/>
 					<p:inputText id="input2" value="#{alarmView.selectedAlarm.alarmId}"/>
 
-					<p:outputLabel for="input3" value="Alarm Price"/>
-					<p:inputText id="input3" value="#{alarmView.selectedAlarm.alarmPrice}"/>
+					<p:outputLabel for="input3" value="Alarm Price" rendered="#{!alarmView.demaAlert}"/>
+					<p:inputText id="input3" value="#{alarmView.selectedAlarm.alarmPrice}" rendered="#{!alarmView.demaAlert}"/>
 
 					<p:outputLabel for="input4" value="Initial Delay"/>
 					<p:inputText id="input4" value="#{alarmView.selectedAlarm.initialDelay}" />
 
 					<p:outputLabel for="input5" value="Delay"/>
 					<p:inputText id="input5" value="#{alarmView.selectedAlarm.delay}" />
+					
+					<p:outputLabel for="input6" value="Intervall" rendered="#{alarmView.demaAlert}"/>
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input6" value="#{alarmView.selectedAlarm.intervall}" />
+					
+					<p:outputLabel for="input7" value="Fast Dema" rendered="#{alarmView.demaAlert}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input7" value="#{alarmView.selectedAlarm.fastDema}" />
+					
+					<p:outputLabel for="input8" value="Slow Dema" rendered="#{alarmView.demaAlert}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input8" value="#{alarmView.selectedAlarm.slowDema}" />
 
-					<p:outputLabel for="input6" value="Description"/>
-					<p:inputTextarea id="input6" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
+					<p:outputLabel for="input9" value="Description"/>
+					<p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
 					
 				</p:panelGrid>
 				<f:facet name="footer">
