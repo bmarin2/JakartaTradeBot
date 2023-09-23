@@ -49,6 +49,12 @@
             <artifactId>binance-connector-java</artifactId>
             <version>1.12.0</version>
         </dependency>
+	   
+	   <dependency>
+		   <groupId>io.github.binance</groupId>
+		   <artifactId>binance-futures-connector-java</artifactId>
+		   <version>3.0.2</version>
+	   </dependency>
         
     </dependencies>
     
