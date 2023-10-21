@@ -20,7 +20,7 @@ public class DemaCrossDB {
 			ps = connection.prepareStatement(query);
 			rs = ps.executeQuery();
 			while (rs.next()) {
-				cross = rs.getBoolean("cross");
+				cross = rs.getBoolean("crosss");
 			}
 			return cross;
 		} catch (SQLException e) {
