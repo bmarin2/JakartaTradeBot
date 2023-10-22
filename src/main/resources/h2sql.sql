@@ -72,10 +72,6 @@ CREATE TABLE ALARM (
     msgSent BOOLEAN,
     intervall VARCHAR(255),
     fastDema INT,
-    slowDema INT
-);
-
-CREATE TABLE DEMACROSS (
-    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    slowDema INT,
     crosss BOOLEAN
 );
