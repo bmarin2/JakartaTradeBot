@@ -73,6 +73,5 @@ CREATE TABLE ALARM (
     intervall VARCHAR(255),
     fastDema INT,
     slowDema INT,
-    crosss BOOLEAN,
-    tradeBotTaskId VARCHAR(255)
+    crosss BOOLEAN
 );
