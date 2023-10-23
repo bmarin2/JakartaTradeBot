@@ -23,4 +23,5 @@ public class Alarm implements Serializable {
 	private String intervall = "5m";
 	private Integer fastDema = 10;
 	private Integer slowDema = 20;
+	private Boolean crosss = false;
 }
