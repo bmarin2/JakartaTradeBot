@@ -34,6 +34,20 @@ CREATE TABLE TRADE_BOT (
     stopLossWarning DOUBLE
 );
 
+CREATE TABLE FUTURES_BOT (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(255),
+    createdDate DATE,
+    taskId VARCHAR(255),
+    quantity DOUBLE,
+    description VARCHAR(255),
+    initialDelay INT,
+    delay INT,
+    timeUnit INT,
+    stopLoss DOUBLE,
+    demaAlertTaskId VARCHAR(255)
+);
+
 
 CREATE TABLE ORDER_TRACKER (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -71,7 +85,8 @@ CREATE TABLE ALARM (
     description VARCHAR(255),
     msgSent BOOLEAN,
     intervall VARCHAR(255),
-    fastDema INT,
-    slowDema INT,
+    firstDema INT,
+    secondDema INT,
+    thirdDema INT,
     crosss BOOLEAN
 );
