@@ -21,7 +21,8 @@ public class Alarm implements Serializable {
 	private Boolean msgSent = false;
 	// for dema alerts
 	private String intervall = "5m";
-	private Integer fastDema = 10;
-	private Integer slowDema = 20;
+	private Integer firstDema = 10;
+	private Integer secondDema = 20;
+	private Integer thirdDema = 200;
 	private Boolean crosss = false;
 }
