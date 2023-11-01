@@ -3,7 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
-	xmlns:p="http://primefaces.org/ui">
+	 xmlns:p="http://primefaces.org/ui"
+	 xmlns:ui="http://xmlns.jcp.org/jsf/facelets" >
 		 
 	<h:head>
 		<title>Alarms</title>
@@ -12,7 +13,10 @@
 			body .ui-panelgrid .ui-panelgrid-cell  {
 				padding: 1px;
 				padding-right: 10px;
-			}
+			}			
+			.ui-widget {
+                    font-size: 13px !important;
+               }
 
 		</style>
 		<script>			
@@ -43,6 +47,7 @@
 	</h:head>
 	
 	<h:body>
+		<ui:include src="template/header.xhtml" />
 		<p:growl id="growl" showDetail="true" />
 		
 		<div style="margin:0 auto;width:95%;">
@@ -89,10 +94,12 @@
 				</p:panelGrid>
 				
 				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarmView.isDemaAlert(alarm)}">
-					<h:outputLabel value="Fast Dema"/>
-					<p:outputLabel value="#{alarm.fastDema}" />
-					<h:outputLabel value="Slow Dema"/>
-					<p:outputLabel value="#{alarm.slowDema}" />
+					<h:outputLabel value="First Dema"/>
+					<p:outputLabel value="#{alarm.firstDema}" />
+					<h:outputLabel value="Second Dema"/>
+					<p:outputLabel value="#{alarm.secondDema}" />
+					<h:outputLabel value="Third Dema"/>
+					<p:outputLabel value="#{alarm.thirdDema}" />
 					<h:outputLabel value="Interval"/>
 					<p:outputLabel value="#{alarm.intervall}" />
 					<h:outputLabel value="Delay"/>
@@ -142,14 +149,17 @@
 					<p:outputLabel for="input6" value="Intervall" rendered="#{alarmView.demaAlert}"/>
 					<p:inputText rendered="#{alarmView.demaAlert}" id="input6" value="#{alarmView.selectedAlarm.intervall}" />
 					
-					<p:outputLabel for="input7" value="Fast Dema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input7" value="#{alarmView.selectedAlarm.fastDema}" />
+					<p:outputLabel for="input7" value="First Dema" rendered="#{alarmView.demaAlert}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input7" value="#{alarmView.selectedAlarm.firstDema}" />
 					
-					<p:outputLabel for="input8" value="Slow Dema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input8" value="#{alarmView.selectedAlarm.slowDema}" />
+					<p:outputLabel for="input8" value="Second Dema" rendered="#{alarmView.demaAlert}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input8" value="#{alarmView.selectedAlarm.secondDema}" />
+					
+					<p:outputLabel for="input9" value="Third Ema" rendered="#{alarmView.demaAlert}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input9" value="#{alarmView.selectedAlarm.thirdDema}" />
 
-					<p:outputLabel for="input9" value="Description"/>
-					<p:inputTextarea id="input9" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
+					<p:outputLabel for="input10" value="Description"/>
+					<p:inputTextarea id="input10" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
 					
 				</p:panelGrid>
 				<f:facet name="footer">

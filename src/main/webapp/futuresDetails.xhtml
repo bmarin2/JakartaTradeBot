@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui" >
+     <h:head>
+		<title>Position Details</title>
+		<style>
+               .ui-widget {
+                    font-size: 13px !important;
+               }
+		</style>
+		<h:body>
+			<p:growl id="growl" showDetail="true" />
+			
+			<div>
+				<p:dataTable id="futureBotsTable" var="position" value="#{futuresDetailsView.positionList}" >
+					<f:facet name="header">
+						Position Information
+					</f:facet>
+					<p:column headerText="Entry Price">
+						#{position.entryPrice}
+					</p:column>
+
+					<p:column headerText="Break-Even Price">
+						#{position.breakEvenPrice}
+					</p:column>
+
+					<p:column headerText="Margin Type">
+						 #{position.marginType}
+					</p:column>
+
+					<p:column headerText="Auto Add Margin">
+						 #{position.isAutoAddMargin}
+					</p:column>
+
+					<p:column headerText="Isolated Margin">
+						#{position.isolatedMargin}
+					</p:column>
+
+					<p:column headerText="Leverage">
+						#{position.leverage}
+					</p:column>
+
+					<p:column headerText="Liquidation Price">
+						#{position.liquidationPrice}
+					</p:column>
+
+					<p:column headerText="Mark Price">
+						#{position.markPrice}
+					</p:column>
+
+					<p:column headerText="Max Notional Value">
+						#{position.maxNotionalValue}
+					</p:column>
+
+					<p:column headerText="Position Amount">
+						#{position.positionAmt}
+					</p:column>
+
+					<p:column headerText="Notional">
+						#{position.notional}
+					</p:column>
+
+					<p:column headerText="Isolated Wallet">
+						#{position.isolatedWallet}
+					</p:column>
+
+					<p:column headerText="Symbol">
+						#{position.symbol}
+					</p:column>
+
+					<p:column headerText="Unrealized Profit">
+						#{position.unRealizedProfit}
+					</p:column>
+
+					<p:column headerText="Position Side">
+						#{position.positionSide}
+					</p:column>
+
+					<p:column headerText="Update Time">						
+						<h:outputText id="timestamp" value="#{position.updateTime}">
+							<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+						</h:outputText>
+					</p:column>
+
+			</p:dataTable>
+			</div>
+			
+			<div style="margin-top: 20px;">
+				<p:dataTable var="trade" value="#{futuresDetailsView.accountTradeList}"
+						   scrollable="true" scrollHeight="400" >
+					<f:facet name="header">
+						Account Trade List
+					</f:facet>
+					<p:column headerText="Buyer">
+						<h:outputText value="#{trade.buyer ? 'Long' : 'Short'}" />
+					</p:column>
+
+					<p:column headerText="Commission">
+						<h:outputText value="#{trade.commission}" />
+					</p:column>
+
+					<p:column headerText="Commission Asset">
+						<h:outputText value="#{trade.commissionAsset}" />
+					</p:column>
+
+					<p:column headerText="ID">
+						<h:outputText value="#{trade.id}" />
+					</p:column>
+
+					<p:column headerText="Maker">
+						<h:outputText value="#{trade.maker ? 'Yes' : 'No'}" />
+					</p:column>
+
+					<p:column headerText="Order ID">
+						<h:outputText value="#{trade.orderId}" />
+					</p:column>
+
+					<p:column headerText="Price">
+						<h:outputText value="#{trade.price}" />
+					</p:column>
+
+					<p:column headerText="Qty">
+						<h:outputText value="#{trade.qty}" />
+					</p:column>
+
+					<p:column headerText="Quote Qty">
+						<h:outputText value="#{trade.quoteQty}" />
+					</p:column>
+
+					<p:column headerText="Realized PnL">
+						<h:outputText value="#{trade.realizedPnl}" />
+					</p:column>
+
+					<p:column headerText="Side">
+						<h:outputText value="#{trade.side}" />
+					</p:column>
+
+					<p:column headerText="Position Side">
+						<h:outputText value="#{trade.positionSide}" />
+					</p:column>
+
+					<p:column headerText="Symbol">
+						<h:outputText value="#{trade.symbol}" />
+					</p:column>
+
+					<p:column headerText="Time">
+						<h:outputText id="timestamp" value="#{trade.time}">
+							<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+						</h:outputText>
+					</p:column>
+				</p:dataTable>
+			</div>
+		</h:body>	
+	</h:head>
+</html>

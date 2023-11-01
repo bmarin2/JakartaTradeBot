@@ -3,7 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+	 xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
      <h:head>
           <title>Index</title>
           <style>
@@ -133,7 +134,7 @@
           </script>
      </h:head>
      <h:body>
-
+		<ui:include src="template/header.xhtml" />
           <p:growl id="growl" showDetail="true" />
 
           <div style="margin:0 auto;width:95%;">
@@ -152,9 +153,7 @@
                                      oncomplete="PF('manageBot').show()" action="#{indexView.newBot()}" update="manageBotForm">
                          <p:resetInput target="manageBotForm:manage-bot" />
                     </p:commandButton>
-				
-				<p:commandButton value="Alarms" styleClass="ui-button-success" style="margin-left:10px" icon="pi pi-bell" action="/alarm.xhtml?faces-redirect=true" />
-                    
+
                     <p:outputLabel value="USDT Balance: #{indexView.getBalanceUSDT()}" style="margin-left:10px"/>                    
 
                     <p:commandButton value="Clear Errors" action="#{indexView.acknowledgeAllErrors}" update="botListForm" 

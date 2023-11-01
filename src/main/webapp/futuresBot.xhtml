@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+	 xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+     <h:head>
+		<title>Index</title>
+		<style>
+               .ui-widget {
+                    font-size: 13px !important;
+               }
+		</style>
+		<h:body>
+			<ui:include src="template/header.xhtml" />
+			<p:growl id="growl" showDetail="true" />
+
+			<div style="margin:0 auto;width:100%;">
+				
+				<p:commandButton value="Create Bot" icon="pi pi-plus-circle" style="margin-bottom:15px;"
+                                     oncomplete="PF('manageBot').show()" action="#{futuresView.newBot}" update="manageBotForm">
+                         <p:resetInput target="manageBotForm:manage-bot" />
+                    </p:commandButton>				
+				
+				<p:commandButton value="Long" action="#{futuresView.createLongOrder}" style="margin-left:10px;"/>
+				<p:commandButton value="Short" action="#{futuresView.createShortOrder}" style="margin-left:10px;"/>
+				<div>
+					<p:panelGrid columns="2" style="display:inline-block;margin-right:20px">
+						<h:outputLabel value="Asset:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.asset}" />
+
+						<h:outputLabel value="Balance:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.balance}" />
+						
+						<h:outputLabel value="Cross Wallet Balance:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.crossWalletBalance}" />
+						
+						<h:outputLabel value="Cross UnPnL:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.crossUnPnl}" />
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="display:inline-block;margin-right:20px">						
+
+						<h:outputLabel value="Available Balance:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.availableBalance}" />
+					
+						<h:outputLabel value="Max Withdraw Amount:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.maxWithdrawAmount}" />
+
+						<h:outputLabel value="Margin Available:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.marginAvailable}" />
+
+						<h:outputLabel value="Update Time:" />
+						<h:outputText value="#{futuresView.futuresAccountBalanceUSDT.updateTime}" />
+					</p:panelGrid>
+
+				</div>
+
+				<p:dataTable id="futureBotsTable" var="bot" value="#{futuresView.bots}" sortMode="single" style="margin-top:20px;">
+					<p:column sortBy="#{bot.symbol}" headerText="Symbol">
+						<h:outputText value="#{bot.symbol}" />
+					</p:column>
+					<p:column sortBy="#{bot.createdDate}" headerText="Created Date">
+						<h:outputText value="#{bot.createdDate}" />
+					</p:column>
+					<p:column sortBy="#{bot.taskId}" headerText="TaskId">
+						<h:outputText value="#{bot.taskId}" />
+					</p:column>					
+					<p:column sortBy="#{bot.quantity}" headerText="Quantity">
+						<h:outputText value="#{bot.quantity}" />
+					</p:column>					
+					<p:column sortBy="#{bot.description}" headerText="Description">
+						<h:outputText value="#{bot.description}" />
+					</p:column>
+
+					<p:column sortBy="#{bot.initialDelay}" headerText="Init Delay">
+						<h:outputText value="#{bot.initialDelay}" />
+					</p:column>
+
+					<p:column sortBy="#{bot.delay}" headerText="Delay">
+						<h:outputText value="#{bot.delay}" />
+					</p:column>
+
+					<p:column sortBy="#{bot.timeUnit}" headerText="TimeUnit">
+						<h:outputText value="#{bot.timeUnit}" />
+					</p:column>
+
+					<p:column sortBy="#{bot.stopLoss}" headerText="SL">
+						<h:outputText value="#{bot.stopLoss}" />
+					</p:column>
+
+					<p:column sortBy="#{bot.demaAlertTaskId}" headerText="Dema">
+						<h:outputText value="#{bot.demaAlertTaskId}" />
+					</p:column>
+
+					<p:column>
+						<p:commandLink value="Edit" update="manageBotForm" oncomplete="PF('manageBot').show()" action="#{futuresView.editBot}" style="margin:4px">
+							<f:setPropertyActionListener value="#{bot}" target="#{futuresView.selectedTradeBot}" />
+						</p:commandLink>
+						<br/>
+						<p:commandLink value="Details" action="#{futuresView.redirectToFuturesDetails(bot.id)}" />
+					</p:column>
+
+				</p:dataTable>
+								
+			</div>
+			
+			<h:form id="manageBotForm">
+				<p:dialog widgetVar="manageBot" modal="true">
+					 <f:facet name="header">
+                              <h:outputText id="outputId" value="#{futuresView.shouldEditBot ? 'Edit Bot' : 'Create New Bot'}" />
+                         </f:facet>
+					<p:panelGrid id="manage-bot" columns="4" style="width: 100%" styleClass="ui-noborder center-it">
+						<p:outputLabel for="input1" value="Symbol"/>
+						<p:inputText id="input1" value="#{futuresView.selectedTradeBot.symbol}" />
+
+						<p:outputLabel for="input3" value="TaskId"/>
+						<p:inputText id="input3" value="#{futuresView.selectedTradeBot.taskId}"/>
+
+						<p:outputLabel for="input4" value="Quantity"/>
+						<p:inputText id="input4" value="#{futuresView.selectedTradeBot.quantity}" />
+
+						<p:outputLabel for="input5" value="Description"/>
+						<p:inputText id="input5" value="#{futuresView.selectedTradeBot.description}" />
+
+						<p:outputLabel for="input6" value="Initial Delay"/>
+						<p:inputText id="input6" value="#{futuresView.selectedTradeBot.initialDelay}"/>
+
+						<p:outputLabel for="input7" value="Delay"/>
+						<p:inputText id="input7" value="#{indexView.selectedTradeBot.delay}"/>
+
+						<p:outputLabel for="select2" value="Time Unit"/>
+						<p:selectOneMenu value="#{futuresView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">
+							<f:selectItems value="#{futuresView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
+						</p:selectOneMenu>
+
+						<p:outputLabel for="input9" value="Stop Loss (%)"/>
+						<p:inputText id="input9" value="#{futuresView.selectedTradeBot.stopLoss}"/>						
+
+						<p:outputLabel for="input10" value="Dema TaskId"/>
+						<p:inputText id="input10" value="#{futuresView.selectedTradeBot.demaAlertTaskId}" />
+					</p:panelGrid>
+					<f:facet name="footer">
+						<div style="padding-top:15px;">
+							<p:commandButton value="Save" icon="pi pi-check" action="#{futuresView.updateBot}" update="growl"
+										  oncomplete="PF('manageBot').hide()" />
+							<p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageBot').hide()"
+										  class="ui-button-secondary" type="button" />
+						</div>
+					</f:facet>
+				</p:dialog>
+			</h:form>
+			
+		</h:body>		
+	</h:head>
+</html>
