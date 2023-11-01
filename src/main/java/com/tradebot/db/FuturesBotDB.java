@@ -19,8 +19,8 @@ public class FuturesBotDB {
 		ResultSet rs = null;
 		long order_id = 0;
 
-		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quantity, description, initialDelay, delay, timeUnit, stopLoss) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String query = "INSERT INTO FUTURES_BOT (symbol, createdDate, taskId, quantity, description, initialDelay, delay, timeUnit, stopLoss, demaAlertTaskId) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -33,6 +33,7 @@ public class FuturesBotDB {
 			ps.setInt(7, bot.getDelay());
 			ps.setInt(8, bot.getTimeUnit().ordinal());
 			ps.setDouble(9, bot.getStopLoss());
+			ps.setString(10, bot.getDemaAlertTaskId());
 			
 			ps.executeUpdate();
 			
@@ -58,7 +59,7 @@ public class FuturesBotDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quantity=?, description=?, initialDelay=?, delay=?, timeUnit=?, stopLoss=? WHERE id = ?";
+		String query = "UPDATE FUTURES_BOT SET symbol=?, createdDate=?, taskId=?, quantity=?, description=?, initialDelay=?, delay=?, timeUnit=?, stopLoss=?, demaAlertTaskId=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -72,7 +73,8 @@ public class FuturesBotDB {
 			ps.setInt(7, bot.getDelay());
 			ps.setInt(8, bot.getTimeUnit().ordinal());
 			ps.setDouble(9, bot.getStopLoss());
-			ps.setLong(10, bot.getId());
+			ps.setString(10, bot.getDemaAlertTaskId());
+			ps.setLong(11, bot.getId());
 			
 			ps.executeUpdate();
 
@@ -108,6 +110,7 @@ public class FuturesBotDB {
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
+				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 				bots.add(bot);
 			}
 			return bots;
@@ -144,6 +147,7 @@ public class FuturesBotDB {
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
+				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -179,6 +183,7 @@ public class FuturesBotDB {
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
+				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 			}
 			return bot;
 		} catch (SQLException e) {

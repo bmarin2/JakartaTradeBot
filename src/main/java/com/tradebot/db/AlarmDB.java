@@ -18,8 +18,8 @@ public class AlarmDB {
 		ResultSet rs = null;
 		long alarm_id = 0;
 
-		String query = "INSERT INTO ALARM (symbol, alarmId, alarmPrice, initialDelay, delay, timeUnit, description, msgSent, intervall, fastDema, slowDema, crosss) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String query = "INSERT INTO ALARM (symbol, alarmId, alarmPrice, initialDelay, delay, timeUnit, description, msgSent, intervall, firstDema, secondDema, thirdDema, crosss) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -32,9 +32,10 @@ public class AlarmDB {
 			ps.setString(7, alarm.getDescription());
 			ps.setBoolean(8, alarm.getMsgSent());
 			ps.setString(9, alarm.getIntervall());
-			ps.setInt(10, alarm.getFastDema());
-			ps.setInt(11, alarm.getSlowDema());
-			ps.setBoolean(12, alarm.getCrosss());
+			ps.setInt(10, alarm.getFirstDema());
+			ps.setInt(11, alarm.getSecondDema());
+			ps.setInt(12, alarm.getThirdDema());
+			ps.setBoolean(13, alarm.getCrosss());
 			
 			ps.executeUpdate();
 			
@@ -77,8 +78,9 @@ public class AlarmDB {
 				alarm.setDescription(rs.getString("description"));
 				alarm.setMsgSent(rs.getBoolean("msgSent"));
 				alarm.setIntervall(rs.getString("intervall"));
-				alarm.setFastDema(rs.getInt("fastDema"));
-				alarm.setSlowDema(rs.getInt("slowDema"));
+				alarm.setFirstDema(rs.getInt("firstDema"));
+				alarm.setSecondDema(rs.getInt("secondDema"));
+				alarm.setThirdDema(rs.getInt("thirdDema"));
 				alarm.setCrosss(rs.getBoolean("crosss"));
 			}
 			return alarm;
@@ -115,8 +117,9 @@ public class AlarmDB {
 				alarm.setDescription(rs.getString("description"));
 				alarm.setMsgSent(rs.getBoolean("msgSent"));
 				alarm.setIntervall(rs.getString("intervall"));
-				alarm.setFastDema(rs.getInt("fastDema"));
-				alarm.setSlowDema(rs.getInt("slowDema"));
+				alarm.setFirstDema(rs.getInt("firstDema"));
+				alarm.setSecondDema(rs.getInt("secondDema"));
+				alarm.setThirdDema(rs.getInt("thirdDema"));
 				alarm.setCrosss(rs.getBoolean("crosss"));
 			}
 			return alarm;
@@ -153,8 +156,9 @@ public class AlarmDB {
 				alarm.setDescription(rs.getString("description"));
 				alarm.setMsgSent(rs.getBoolean("msgSent"));
 				alarm.setIntervall(rs.getString("intervall"));
-				alarm.setFastDema(rs.getInt("fastDema"));
-				alarm.setSlowDema(rs.getInt("slowDema"));
+				alarm.setFirstDema(rs.getInt("firstDema"));
+				alarm.setSecondDema(rs.getInt("secondDema"));
+				alarm.setThirdDema(rs.getInt("thirdDema"));
 				alarm.setCrosss(rs.getBoolean("crosss"));
 				alarms.add(alarm);
 			}
@@ -176,7 +180,7 @@ public class AlarmDB {
 		ResultSet rs = null;
 
 		String query = "UPDATE ALARM SET symbol=?, alarmId=?, alarmPrice=?, initialDelay=?, delay=?, timeUnit=?, description=?, "
-			   + "msgSent=?, intervall=?, fastDema=?, slowDema=?, crosss=? WHERE id = ?";
+			   + "msgSent=?, intervall=?, firstDema=?, secondDema=?, thirdDema=?, crosss=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -190,10 +194,11 @@ public class AlarmDB {
 			ps.setString(7, alarm.getDescription());
 			ps.setBoolean(8, alarm.getMsgSent());
 			ps.setString(9, alarm.getIntervall());
-			ps.setInt(10, alarm.getFastDema());
-			ps.setInt(11, alarm.getSlowDema());
-			ps.setBoolean(12, alarm.getCrosss());
-			ps.setLong(13, alarm.getId());
+			ps.setInt(10, alarm.getFirstDema());
+			ps.setInt(11, alarm.getSecondDema());
+			ps.setInt(12, alarm.getThirdDema());
+			ps.setBoolean(13, alarm.getCrosss());
+			ps.setLong(14, alarm.getId());
 			
 			ps.executeUpdate();
 
