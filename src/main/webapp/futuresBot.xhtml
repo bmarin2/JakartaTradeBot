@@ -11,11 +11,42 @@
                     font-size: 13px !important;
                }
 		</style>
+		<script>
+			function toggleSwitchRunning(element, taskId) {
+				var isChecked = $(element).prop('checked');				
+				var task = $(element).parent().parent().parent().parent().find("td:eq(2)").text();
+				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
+			};
+			
+			function handleRunningStates(xhr, status, args) {
+                    var myList = JSON.parse(args.returnedValue);				
+				var tbody = $('#futureBotsTable').find("div:first").find("table").find("tbody");				
+				$(tbody).each(function(index) {
+				    $(this).find("td:nth-child(3)").each(function() {
+					     if (myList.includes($(this).text())) {
+							$(this).parent().find("td:nth-child(11)").find("div:first")
+									.addClass('ui-toggleswitch-checked');
+						}
+				    });
+				});
+               };
+			
+			$(document).ready(function () {
+                    runningStates();
+			});
+
+          </script>
+
 		<h:body>
 			<ui:include src="template/header.xhtml" />
 			<p:growl id="growl" showDetail="true" />
 
 			<div style="margin:0 auto;width:100%;">
+				
+				<h:form>
+					<p:remoteCommand name="updateRunningState" action="#{futuresView.updateRunningState}" update="growl" />
+					<p:remoteCommand name="runningStates" action="#{futuresView.runningStates}" oncomplete="handleRunningStates(xhr,status,args)" />
+				</h:form>
 				
 				<p:commandButton value="Create Bot" icon="pi pi-plus-circle" style="margin-bottom:15px;"
                                      oncomplete="PF('manageBot').show()" action="#{futuresView.newBot}" update="manageBotForm">
@@ -90,6 +121,10 @@
 
 					<p:column sortBy="#{bot.demaAlertTaskId}" headerText="Dema">
 						<h:outputText value="#{bot.demaAlertTaskId}" />
+					</p:column>
+					
+					<p:column>
+						<p:toggleSwitch onchange="toggleSwitchRunning(this)"/>
 					</p:column>
 
 					<p:column>

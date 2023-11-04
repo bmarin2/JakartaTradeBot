@@ -4,28 +4,38 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.FuturesBotDB;
-import com.tradebot.model.AccountTradeList;
+import com.tradebot.db.TradeBotDB;
 import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
 import com.tradebot.model.PositionSide;
+import com.tradebot.model.TradeBot;
+import com.tradebot.service.FuturesBotTask;
+import com.tradebot.service.Task;
+import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.primefaces.context.PrimeRequestContext;
 
 @Named
 @ViewScoped
 @Data
 public class FuturesView implements Serializable {
 	
+	@Inject
+	private TaskService taskService;
+
 	private List<FuturesBot> bots;
 	
 	private FuturesAccountBalance futuresAccountBalanceUSDT;
@@ -133,5 +143,42 @@ public class FuturesView implements Serializable {
 			}
 		}
 		return futuresAccountBalance;
+	}
+	
+	public void updateRunningState() throws Exception {
+		String taskId = FacesContext.getCurrentInstance().
+			   getExternalContext().getRequestParameterMap().get("taskId");
+
+		String runState = FacesContext.getCurrentInstance().
+			   getExternalContext().getRequestParameterMap().get("runState");
+
+		if (Boolean.parseBoolean(runState)) {
+			if (taskService.getScheduledTasks().containsKey(taskId)) {
+				return;
+			}
+			FuturesBot bot = FuturesBotDB.getOneTradeBot(taskId);
+			FuturesBotTask task = new FuturesBotTask(bot);
+			taskService.addTask(bot.getTaskId(),
+				   task,
+				   bot.getInitialDelay(),
+				   bot.getDelay(),
+				   bot.getTimeUnit()
+			);
+			addMessage("Task added", "Bot " + bot.getTaskId());
+		} else {
+			if (taskService.getScheduledTasks().containsKey(taskId)) {
+				taskService.removeTask(taskId);
+				addMessage("Task " + taskId + " removed", "");
+			}
+		}
+	}
+
+	public void runningStates() {
+		List<String> listToReturn = new ArrayList<>();
+		for (String key : taskService.getScheduledTasks().keySet()) {
+			listToReturn.add(key);
+		}
+		PrimeRequestContext.getCurrentInstance().getCallbackParams()
+			   .put("returnedValue", new JSONArray(listToReturn).toString());
 	}
 }
