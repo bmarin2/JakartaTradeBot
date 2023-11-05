@@ -4,14 +4,10 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.FuturesBotDB;
-import com.tradebot.db.TradeBotDB;
 import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
-import com.tradebot.model.PositionSide;
-import com.tradebot.model.TradeBot;
 import com.tradebot.service.FuturesBotTask;
-import com.tradebot.service.Task;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -103,7 +99,7 @@ public class FuturesView implements Serializable {
 		long timeStamp = System.currentTimeMillis();
 		
 		String orderResult = umFuturesClientImpl.account().newOrder(
-				FuturesOrderParams.getOrderParams("LTCUSDT", orderSide, PositionSide.BOTH, 0.73, timeStamp)		
+				FuturesOrderParams.getOrderParams("LTCUSDT", orderSide, OrderSide.BOTH, 0.73, timeStamp)		
 		);
 		
 		System.out.println("Order Result:");

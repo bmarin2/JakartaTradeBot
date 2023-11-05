@@ -6,6 +6,7 @@ import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.FuturesBotDB;
 import com.tradebot.model.AccountTradeList;
 import com.tradebot.model.FuturesBot;
+import com.tradebot.model.FuturesOrder;
 import com.tradebot.model.PositionInformation;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.ExternalContext;
@@ -31,6 +32,8 @@ public class FuturesDetailsView implements Serializable {
 	private long botid;
 	private FuturesBot futuresBot;
 	private List<AccountTradeList> accountTradeList;
+	private List<FuturesOrder> allOpenOrders;
+	private List<FuturesOrder> allOrders;
 	
 	@PostConstruct
 	private void init() {
@@ -40,25 +43,22 @@ public class FuturesDetailsView implements Serializable {
 		ExternalContext externalContext = context.getExternalContext();
 		botid = Long.valueOf(externalContext.getRequestParameterMap().get("botid"));
 		
+		positionList = getPositionInformations();
+		accountTradeList = getAccountTradeList();
+		allOpenOrders = fetchAllOpenOrders();
+		allOrders = fetchAllOrders();
+		
 		try {
 			futuresBot = FuturesBotDB.getOneFuturesBot(botid);
-			positionList = getPositionInformations();
-			accountTradeList = getAccountTradeList();
 		} catch (Exception ex) {
 			ex.printStackTrace();
-		}
-//		try {
-//			orders = FuturesBotDB.getAllFuturesBots();
-//		} catch (Exception ex) {
-//			ex.printStackTrace();
-//		}
-		
+		}		
 	}
 	
 	public List<PositionInformation> getPositionInformations() {
 		long timeStamp = System.currentTimeMillis();
 		String jsonResult = umFuturesClientImpl.account().positionInformation(
-			   FuturesOrderParams.getPositionInformationParams(futuresBot.getSymbol(), timeStamp)
+			   FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp)
 		);
 		
 		List<PositionInformation> positionList = new ArrayList<>();
@@ -95,7 +95,7 @@ public class FuturesDetailsView implements Serializable {
 	public List<AccountTradeList> getAccountTradeList() {
 		long timeStamp = System.currentTimeMillis();		
 		String jsonResult = umFuturesClientImpl.account().accountTradeList(
-				FuturesOrderParams.getAccountTradeListParams(futuresBot.getSymbol(), timeStamp));			   
+				FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp));			   
 		
 		List<AccountTradeList> accountTradeList = new ArrayList<>();
 		JSONArray positions = new JSONArray(jsonResult);
@@ -123,5 +123,52 @@ public class FuturesDetailsView implements Serializable {
 		}
 		Collections.reverse(accountTradeList);
 		return accountTradeList;
+	}
+
+	public List<FuturesOrder> fetchAllOpenOrders() {
+
+		List<FuturesOrder> ordersList = new ArrayList<>();
+
+		long timeStamp = System.currentTimeMillis();
+		String jsonResult = umFuturesClientImpl.account().currentAllOpenOrders(
+				FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp));
+
+		JSONArray orders = new JSONArray(jsonResult);
+
+		for (int i = 0; i < orders.length(); i++) {
+			JSONObject orderObject = orders.getJSONObject(i);
+
+			FuturesOrder futuresOrder = new FuturesOrder();
+			futuresOrder.setOrderId(orderObject.optLong("orderId"));
+			futuresOrder.setType(orderObject.optString("origType"));
+			futuresOrder.setStatus(orderObject.optString("status"));
+			futuresOrder.setTime(orderObject.optLong("time"));
+
+			ordersList.add(futuresOrder);
+		}
+		return ordersList;
+	}
+	
+	public List<FuturesOrder> fetchAllOrders() {
+		List<FuturesOrder> ordersList = new ArrayList<>();
+
+		long timeStamp = System.currentTimeMillis();
+		String jsonResult = umFuturesClientImpl.account().allOrders(
+				FuturesOrderParams.getAllOrdersParams(futuresBot.getSymbol(), timeStamp));
+
+		JSONArray orders = new JSONArray(jsonResult);
+
+		for (int i = 0; i < orders.length(); i++) {
+			JSONObject orderObject = orders.getJSONObject(i);
+
+			FuturesOrder futuresOrder = new FuturesOrder();
+			futuresOrder.setOrderId(orderObject.optLong("orderId"));
+			futuresOrder.setStatus(orderObject.optString("status"));
+			futuresOrder.setType(orderObject.optString("origType"));
+			futuresOrder.setTime(orderObject.optLong("time"));
+
+			ordersList.add(futuresOrder);
+		}
+		return ordersList;
 	}
 }

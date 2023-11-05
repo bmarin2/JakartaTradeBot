@@ -10,6 +10,10 @@
                .ui-widget {
                     font-size: 13px !important;
                }
+			
+			.ui-datatable-header {
+				background: #e0e0eb !important;
+			}
 		</style>
 		<script>
 			function toggleSwitchRunning(element, taskId) {
@@ -85,7 +89,7 @@
 					</p:panelGrid>
 
 				</div>
-
+				
 				<p:dataTable id="futureBotsTable" var="bot" value="#{futuresView.bots}" sortMode="single" style="margin-top:20px;">
 					<p:column sortBy="#{bot.symbol}" headerText="Symbol">
 						<h:outputText value="#{bot.symbol}" />

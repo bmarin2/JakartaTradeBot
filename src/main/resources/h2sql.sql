@@ -88,5 +88,9 @@ CREATE TABLE ALARM (
     firstDema INT,
     secondDema INT,
     thirdDema INT,
-    crosss BOOLEAN
+    crosss BOOLEAN,
+    currentFirstDema DOUBLE,
+    currentSecondDema DOUBLE,
+    currentThirdDema DOUBLE,
+    crosssBig BOOLEAN
 );

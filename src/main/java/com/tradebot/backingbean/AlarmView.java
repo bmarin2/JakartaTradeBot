@@ -140,7 +140,7 @@ public class AlarmView implements Serializable {
 					   alarm.getDelay(),
 					   alarm.getTimeUnit()
 				);
-				
+				addMessage("Alarm added", "id: " + alarm.getAlarmId());
 			} else {
 				BigDecimal currentPrice = checkPrice(alarm.getSymbol());
 

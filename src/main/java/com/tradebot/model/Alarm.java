@@ -25,4 +25,8 @@ public class Alarm implements Serializable {
 	private Integer secondDema = 20;
 	private Integer thirdDema = 200;
 	private Boolean crosss = false;
+	private Double currentFirstDema = 0.0;
+	private Double currentSecondDema = 0.0;
+	private Double currentThirdDema = 0.0;
+	private Boolean crosssBig = false;
 }

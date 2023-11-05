@@ -9,6 +9,11 @@
                .ui-widget {
                     font-size: 13px !important;
                }
+
+			.ui-datatable-header {
+				background: #e0e0eb !important;
+			}
+
 		</style>
 		<h:body>
 			<p:growl id="growl" showDetail="true" />
@@ -85,6 +90,62 @@
 					</p:column>
 
 			</p:dataTable>
+			</div>
+			
+			<div style="width:30%; margin-top: 20px; display:inline-block;">
+				<p:dataTable var="order" value="#{futuresDetailsView.allOpenOrders}"
+						   scrollable="true" scrollHeight="300" >
+					<f:facet name="header">
+						All Open Orders
+					</f:facet>
+					
+					<p:column headerText="OrderId">
+						<h:outputText value="#{order.orderId}" />
+					</p:column>
+					
+					<p:column headerText="Type">
+						<h:outputText value="#{order.type}" />
+					</p:column>
+					
+					<p:column headerText="Status">
+						<h:outputText value="#{order.status}" />
+					</p:column>
+					
+					<p:column headerText="Time">
+						<h:outputText id="timestamp" value="#{order.time}">
+							<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+						</h:outputText>
+					</p:column>
+					
+				</p:dataTable>
+			</div>
+			
+			<div style="width:30%; margin-top: 20px; display:inline-block;">
+				<p:dataTable var="order" value="#{futuresDetailsView.allOrders}"
+						   scrollable="true" scrollHeight="300" >
+					<f:facet name="header">
+						All Open Orders
+					</f:facet>
+					
+					<p:column headerText="OrderId">
+						<h:outputText value="#{order.orderId}" />
+					</p:column>
+					
+					<p:column headerText="Type">
+						<h:outputText value="#{order.type}" />
+					</p:column>
+					
+					<p:column headerText="Status">
+						<h:outputText value="#{order.status}" />
+					</p:column>
+					
+					<p:column headerText="Time">
+						<h:outputText id="timestamp" value="#{order.time}">
+							<f:convertDateTime pattern="yyyy-MM-dd HH:mm:ss" />
+						</h:outputText>
+					</p:column>
+					
+				</p:dataTable>
 			</div>
 			
 			<div style="margin-top: 20px;">
