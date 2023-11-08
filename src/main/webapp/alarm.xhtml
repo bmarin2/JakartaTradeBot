@@ -104,16 +104,33 @@
 					<p:outputLabel value="#{alarm.intervall}" />
 					<h:outputLabel value="Delay"/>
 					<p:outputLabel value="#{alarm.delay}" />
-					<h:outputLabel value="Cross"/>
+					<h:outputLabel value="Cross Small"/>
 					<p:outputLabel value="#{alarm.crosss}" />
 					<h:outputLabel value="Cross Big"/>
 					<p:outputLabel value="#{alarm.crosssBig}" />
 					<h:outputLabel value="Current Fast EMA"/>
-					<p:outputLabel value="#{alarm.currentFirstDema}" />
+
+                                        <h:outputText value="#{alarm.currentFirstDema}">
+                                            <f:convertNumber pattern="#0.00" />
+                                        </h:outputText>
+					
 					<h:outputLabel value="Current Slow EMA"/>
-					<p:outputLabel value="#{alarm.currentSecondDema}" />
+                                        
+                                        <h:outputText value="#{alarm.currentSecondDema}">
+                                            <f:convertNumber pattern="#0.00" />
+                                        </h:outputText>                                        
+					
 					<h:outputLabel value="Current Third EMA"/>
-					<p:outputLabel value="#{alarm.currentThirdDema}" />
+                                        
+                                        <h:outputText value="#{alarm.currentThirdDema}">
+                                            <f:convertNumber pattern="#0.00" />
+                                        </h:outputText>
+                                        
+                                        <h:outputLabel value="Last Closing Candle"/>
+                                        
+                                        <h:outputText value="#{alarm.lastClosingCandle}">
+                                            <f:convertNumber pattern="#0.00" />
+                                        </h:outputText>
 				</p:panelGrid>	
 				
 				<f:facet name="footer">

@@ -92,5 +92,6 @@ CREATE TABLE ALARM (
     currentFirstDema DOUBLE,
     currentSecondDema DOUBLE,
     currentThirdDema DOUBLE,
-    crosssBig BOOLEAN
+    crosssBig BOOLEAN,
+    lastClosingCandle DOUBLE
 );
