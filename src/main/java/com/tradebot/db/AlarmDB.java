@@ -20,8 +20,8 @@ public class AlarmDB {
 
 		String query = "INSERT INTO ALARM (symbol, alarmId, alarmPrice, initialDelay, delay, timeUnit, description,"
 			   + " msgSent, intervall, firstDema, secondDema, thirdDema, crosss, currentFirstDema, currentSecondDema,"
-			   + " currentThirdDema, crosssBig, lastClosingCandle) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			   + " currentThirdDema, crosssBig, lastClosingCandle, minGap) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -43,6 +43,7 @@ public class AlarmDB {
 			ps.setDouble(16, alarm.getCurrentThirdDema());
 			ps.setBoolean(17, alarm.getCrosssBig());
                         ps.setDouble(18, alarm.getLastClosingCandle());
+                        ps.setDouble(19, alarm.getMinGap());
 			
 			ps.executeUpdate();
 			
@@ -94,6 +95,7 @@ public class AlarmDB {
 				alarm.setCurrentThirdDema(rs.getDouble("currentThirdDema"));
 				alarm.setCrosssBig(rs.getBoolean("crosssBig"));
                                 alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
+                                alarm.setMinGap(rs.getDouble("minGap"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -138,6 +140,7 @@ public class AlarmDB {
 				alarm.setCurrentThirdDema(rs.getDouble("currentThirdDema"));
 				alarm.setCrosssBig(rs.getBoolean("crosssBig"));
                                 alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
+                                alarm.setMinGap(rs.getDouble("minGap"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -182,6 +185,7 @@ public class AlarmDB {
 				alarm.setCurrentThirdDema(rs.getDouble("currentThirdDema"));
 				alarm.setCrosssBig(rs.getBoolean("crosssBig"));
                                 alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
+                                alarm.setMinGap(rs.getDouble("minGap"));
 				alarms.add(alarm);
 			}
 			return alarms;
@@ -203,7 +207,7 @@ public class AlarmDB {
 
 		String query = "UPDATE ALARM SET symbol=?, alarmId=?, alarmPrice=?, initialDelay=?, delay=?, timeUnit=?, description=?, "
 			   + "msgSent=?, intervall=?, firstDema=?, secondDema=?, thirdDema=?, crosss=?, currentFirstDema=?, "
-			   + "currentSecondDema=?, currentThirdDema=?, crosssBig=?, lastClosingCandle=? WHERE id = ?";
+			   + "currentSecondDema=?, currentThirdDema=?, crosssBig=?, lastClosingCandle=?, minGap=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -226,7 +230,8 @@ public class AlarmDB {
 			ps.setDouble(16, alarm.getCurrentThirdDema());
 			ps.setBoolean(17, alarm.getCrosssBig());
                         ps.setDouble(18, alarm.getLastClosingCandle());
-			ps.setLong(19, alarm.getId());
+                        ps.setDouble(19, alarm.getMinGap());
+			ps.setLong(20, alarm.getId());
 			
 			ps.executeUpdate();
 

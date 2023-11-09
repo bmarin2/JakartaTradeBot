@@ -30,4 +30,5 @@ public class Alarm implements Serializable {
 	private Double currentThirdDema = 0.0;
 	private Boolean crosssBig = false;
         private Double lastClosingCandle = 0.0;
+        private Double minGap = 0.0;
 }

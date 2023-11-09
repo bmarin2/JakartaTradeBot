@@ -131,6 +131,12 @@
                                         <h:outputText value="#{alarm.lastClosingCandle}">
                                             <f:convertNumber pattern="#0.00" />
                                         </h:outputText>
+                                        
+                                        <h:outputLabel value="Min. Gap"/>
+
+                                        <h:outputText value="#{alarm.minGap}">
+                                            <f:convertNumber pattern="#0.0" />
+                                        </h:outputText>
 				</p:panelGrid>	
 				
 				<f:facet name="footer">
@@ -182,9 +188,12 @@
 					
 					<p:outputLabel for="input9" value="Third Ema" rendered="#{alarmView.demaAlert}" />
 					<p:inputText rendered="#{alarmView.demaAlert}" id="input9" value="#{alarmView.selectedAlarm.thirdDema}" />
+                                        
+                                        <p:outputLabel for="input10" value="Min Gap"/>
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input10" value="#{alarmView.selectedAlarm.minGap}" />
 
-					<p:outputLabel for="input10" value="Description"/>
-					<p:inputTextarea id="input10" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
+					<p:outputLabel for="input11" value="Description"/>
+					<p:inputTextarea id="input11" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
 					
 				</p:panelGrid>
 				<f:facet name="footer">
