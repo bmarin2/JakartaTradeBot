@@ -42,7 +42,7 @@ public class DemaAlertTaskOneCross implements Runnable {
 		try {
 
 			double latest = getLatestPrice();
-			update(latest);
+			update(latest, true);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,12 +87,12 @@ public class DemaAlertTaskOneCross implements Runnable {
 		}
 		
 		for (Double secondListPrice : secondList) {
-			update(secondListPrice);
+			update(secondListPrice, false);
 		}
 
 	}
 
-	public void update(double newPrice) throws Exception {
+	public void update(double newPrice, boolean setCross) throws Exception {
 
 		secondEma = (newPrice - secondEma) * multiplierSecondDema + secondEma;
 		thirdEma = (newPrice - thirdEma) * multiplierThirdDema + thirdEma;
@@ -100,42 +100,36 @@ public class DemaAlertTaskOneCross implements Runnable {
 		// EMA of EMA
 		secondDema = (secondEma - secondDema) * multiplierSecondDema + secondDema;
 		thirdDema = (thirdEma - thirdDema) * multiplierThirdDema + thirdDema;
+		
+		if (setCross) {
+			double calculatedSlowDEMA = (2 * secondEma) - secondDema;
+			double calculatedThirdDEMA = (2 * thirdEma) - thirdDema;
 
-		double calculatedSlowDEMA = (2 * secondEma) - secondDema;
-		double calculatedThirdDEMA = (2 * thirdEma) - thirdDema;
+			Alarm al = AlarmDB.getOneAlarm(alarm.getId());
 
-		Alarm al = AlarmDB.getOneAlarm(alarm.getId());
+			al.setCurrentSecondDema(calculatedSlowDEMA);
+			al.setCurrentThirdDema(calculatedThirdDEMA);
 
-		al.setCurrentSecondDema(calculatedSlowDEMA);
-		al.setCurrentThirdDema(calculatedThirdDEMA);
+			boolean demaCross = al.getCrosss();
 
-		boolean demaCross = al.getCrosss();
+			// for fast crossing slow
+			if (demaCross && calculatedSlowDEMA > calculatedThirdDEMA) {
 
-		// for fast crossing slow
-		if (demaCross && calculatedSlowDEMA > calculatedThirdDEMA) {
-			double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdDEMA;
-			double incrisedThirdDEMA = calculatedThirdDEMA + percentageIncrease;
-
-			if (calculatedSlowDEMA > incrisedThirdDEMA) {
 				telegramBot.sendMessage("DEMA Alert " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
-					   + "DEMA " + alarm.getFirstDema() + " UP crossed " + alarm.getSecondDema());
+					   + "DEMA " + alarm.getSecondDema() + " UP crossed " + alarm.getThirdDema());
 
 				al.setCrosss(false);
-			}
 
-		} else if (!demaCross && calculatedSlowDEMA < calculatedThirdDEMA) {
-			double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdDEMA;
-			double decrisedThirdDEMA = calculatedThirdDEMA - percentageIncrease;
+			} else if (!demaCross && calculatedSlowDEMA < calculatedThirdDEMA) {
 
-			if (calculatedSlowDEMA < decrisedThirdDEMA) {
 				telegramBot.sendMessage("DEMA Alert - " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
-					   + "DEMA " + alarm.getFirstDema() + " DOWN crossed " + alarm.getSecondDema());
+					   + "DEMA " + alarm.getSecondDema() + " DOWN crossed " + alarm.getThirdDema());
 
 				al.setCrosss(true);
 			}
-		}
 
-		AlarmDB.editAlarm(al);
+			AlarmDB.editAlarm(al);
+		}
 	}
 
 	private List<Double> getKlinePrices() {

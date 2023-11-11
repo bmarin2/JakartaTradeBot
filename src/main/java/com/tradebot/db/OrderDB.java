@@ -20,7 +20,7 @@ public class OrderDB {
 		ResultSet rs = null;
 		long order_id = 0;
 
-		String query = "INSERT INTO ORDER_TRACKER (sell, buyPrice, sellPrice, profit, buyDate, sellDate, buyOrderId, sellOrderId, tradebot_id, stopLossPrice, stopLossPriceWarning ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String query = "INSERT INTO ORDER_TRACKER (sell, buyPrice, sellPrice, profit, buyDate, sellDate, buyOrderId, sellOrderId, tradebot_id, stopLossPrice ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -34,7 +34,6 @@ public class OrderDB {
 			ps.setLong(8, order.getSellOrderId());
 			ps.setLong(9, order.getTradebot_id());
 			ps.setBigDecimal(10, order.getStopLossPrice());
-			ps.setBigDecimal(11, order.getStopLossPriceWarning());
 			
 			ps.executeUpdate();
 			
@@ -60,7 +59,7 @@ public class OrderDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "UPDATE ORDER_TRACKER SET sell=?, buyPrice=?, sellPrice=?, profit=?, buyDate=?, sellDate=?, buyOrderId=?, sellOrderId=?, tradebot_id=?, stopLossPrice=?, stopLossPriceWarning=? WHERE id = ?";
+		String query = "UPDATE ORDER_TRACKER SET sell=?, buyPrice=?, sellPrice=?, profit=?, buyDate=?, sellDate=?, buyOrderId=?, sellOrderId=?, tradebot_id=?, stopLossPrice=? WHERE id = ?";
 		try {
 			ps = connection.prepareStatement(query);
 			
@@ -74,8 +73,7 @@ public class OrderDB {
 			ps.setLong(8, order.getSellOrderId());
 			ps.setLong(9, order.getTradebot_id());
 			ps.setBigDecimal(10, order.getStopLossPrice());
-			ps.setBigDecimal(11, order.getStopLossPriceWarning());
-			ps.setLong(12, order.getId());
+			ps.setLong(11, order.getId());
 			
 			ps.executeUpdate();
 			
@@ -111,7 +109,6 @@ public class OrderDB {
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
 				order.setStopLossPrice(rs.getBigDecimal("stopLossPrice"));
-				order.setStopLossPriceWarning(rs.getBigDecimal("stopLossPriceWarning"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
 			}
 			return order;
@@ -159,7 +156,6 @@ public class OrderDB {
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
 				order.setStopLossPrice(rs.getBigDecimal("stopLossPrice"));
-				order.setStopLossPriceWarning(rs.getBigDecimal("stopLossPriceWarning"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
 				orders.add(order);
 			}
@@ -258,7 +254,6 @@ public class OrderDB {
 				order.setBuyOrderId(rs.getLong("buyOrderId"));
 				order.setSellOrderId(rs.getLong("sellOrderId"));
 				order.setStopLossPrice(rs.getBigDecimal("stopLossPrice"));
-				order.setStopLossPriceWarning(rs.getBigDecimal("stopLossPriceWarning"));
 				order.setTradebot_id(rs.getLong("tradebot_id"));
 				orders.add(order);
 			}

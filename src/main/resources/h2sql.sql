@@ -31,7 +31,7 @@ CREATE TABLE TRADE_BOT (
     delay INT,
     timeUnit INT,
     stopLoss DOUBLE,
-    stopLossWarning DOUBLE
+    demaAlertTaskId VARCHAR(255)
 );
 
 CREATE TABLE FUTURES_BOT (
@@ -61,8 +61,7 @@ CREATE TABLE ORDER_TRACKER (
     sellOrderId BIGINT,
     tradebot_id BIGINT,
     FOREIGN KEY (tradebot_id) REFERENCES TRADE_BOT(id),
-    stopLossPrice DECIMAL(14,8),
-    stopLossPriceWarning DECIMAL(14,8)
+    stopLossPrice DECIMAL(14,8)
 );
 
 CREATE TABLE ERROR_TRACKER (

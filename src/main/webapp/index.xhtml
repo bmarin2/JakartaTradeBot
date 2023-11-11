@@ -262,12 +262,12 @@
 						
 						<p:outputLabel for="input8" value="Stop Loss (%)"/>
                               <p:inputText id="input8" value="#{indexView.selectedTradeBot.stopLoss}"/>
-
-                              <p:outputLabel for="input9" value="Date Created"/>
-                              <p:datePicker id="input9" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 						
-						<p:outputLabel for="input10" value="Stop Loss Warning (%)"/>
-                              <p:inputText id="input10" value="#{indexView.selectedTradeBot.stopLossWarning}" />
+						<p:outputLabel for="input9" value="Dema Alert Id"/>
+                              <p:inputText id="input9" value="#{indexView.selectedTradeBot.demaAlertTaskId}"/>
+
+                              <p:outputLabel for="input10" value="Date Created"/>
+                              <p:datePicker id="input10" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 
                               <p:outputLabel for="input11" value="Description"/>
                               <p:inputTextarea id="input11" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
@@ -311,6 +311,8 @@
                               <h:outputText value="#{indexView.selectedTradeBot.taskId}"/>
                          </p:panelGrid>
                          <p:panelGrid columns="2" style="display:inline-block;">
+						<h:outputText value="Dema Alert Id"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.demaAlertTaskId}"/>
                               <h:outputText value="Description"/>
                               <h:outputText value="#{indexView.selectedTradeBot.description}"/>
                               <h:outputText value="Created Date"/>
@@ -319,8 +321,6 @@
                               </p:outputLabel>
 						<h:outputText value="Stop Loss(%)"/>
                               <h:outputText value="#{indexView.selectedTradeBot.stopLoss}"/>
-						<h:outputText value="Stop Loss Warning(%)"/>
-                              <h:outputText value="#{indexView.selectedTradeBot.stopLossWarning}"/>
                          </p:panelGrid>
 
                          <hr style="margin-top:20px"></hr>
@@ -356,12 +356,6 @@
                                    <h:outputText value="#{order.sellDate}" >
                                         <f:convertDateTime type="localDateTime" pattern="dd.MM.yyyy HH:mm" />
                                    </h:outputText>
-                              </p:column>
-
-						<p:column sortBy="#{order.stopLossPriceWarning}" headerText="Stop Loss Warning">
-                                   <p:outputLabel value="#{order.stopLossPriceWarning}">
-                                        <f:convertNumber pattern="#0.00" />
-                                   </p:outputLabel>
                               </p:column>
 
 						<p:column sortBy="#{order.stopLossPrice}" headerText="Stop Loss">

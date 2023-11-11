@@ -96,7 +96,7 @@
 				</p:panelGrid>
 				
 				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarmView.isDemaAlert(alarm)}">
-					<h:outputLabel value="#{alarm.firstDema eq 0 ? 'One Cross Dema' : 'Two Cross Dema'}" style="color:blue;font-weight:bold"/>
+					<h:outputLabel value="#{alarm.firstDema eq 0 ? 'One Cross Dema (For Spot)' : 'Two Cross Dema'}" style="color:blue;font-weight:bold"/>
 					<h:outputLabel value=""/>
 					<h:outputLabel value="First Dema"/>
 					<p:outputLabel value="#{alarm.firstDema}" />
@@ -185,13 +185,13 @@
 					<p:inputText rendered="#{alarmView.demaAlert}" id="input6" value="#{alarmView.selectedAlarm.intervall}" />
 					
 					<p:outputLabel for="input7" value="First Dema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input7" value="#{alarmView.selectedAlarm.firstDema}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input7" value="#{alarmView.selectedAlarm.firstDema}" style="background-color: #ccffcc"/>
 					
 					<p:outputLabel for="input8" value="Second Dema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input8" value="#{alarmView.selectedAlarm.secondDema}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input8" value="#{alarmView.selectedAlarm.secondDema}" style="background-color: #ccffcc"/>
 					
 					<p:outputLabel for="input9" value="Third Ema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input9" value="#{alarmView.selectedAlarm.thirdDema}" />
+					<p:inputText rendered="#{alarmView.demaAlert}" id="input9" value="#{alarmView.selectedAlarm.thirdDema}" style="background-color: #ccffcc"/>
                                         
                          <p:outputLabel for="input10" value="Min Gap"/>
 					<p:inputText rendered="#{alarmView.demaAlert}" id="input10" value="#{alarmView.selectedAlarm.minGap}" />

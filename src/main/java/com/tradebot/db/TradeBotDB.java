@@ -18,7 +18,7 @@ public class TradeBotDB {
 		ResultSet rs = null;
 		long order_id = 0;
 
-		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quoteOrderQty, cycleMaxOrders, orderStep, description, initialDelay, delay, timeUnit, stopLoss, stopLossWarning) "
+		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quoteOrderQty, cycleMaxOrders, orderStep, description, initialDelay, delay, timeUnit, stopLoss, demaAlertTaskId) "
 			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -34,7 +34,7 @@ public class TradeBotDB {
 			ps.setInt(9, bot.getDelay());
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			ps.setDouble(11, bot.getStopLoss());
-			ps.setDouble(12, bot.getStopLossWarning());
+			ps.setString(12, bot.getDemaAlertTaskId());
 			
 			ps.executeUpdate();
 			
@@ -79,7 +79,7 @@ public class TradeBotDB {
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
-				bot.setStopLossWarning(rs.getDouble("stopLossWarning"));
+				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -117,7 +117,7 @@ public class TradeBotDB {
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
-				bot.setStopLossWarning(rs.getDouble("stopLossWarning"));
+				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -155,7 +155,7 @@ public class TradeBotDB {
 				bot.setDelay(rs.getInt("delay"));
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
-				bot.setStopLossWarning(rs.getDouble("stopLossWarning"));
+				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 				bots.add(bot);
 			}
 			return bots;
@@ -175,7 +175,7 @@ public class TradeBotDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?, description=?, initialDelay=?, delay=?, timeUnit=?, stopLoss=?, stopLossWarning=? WHERE id = ?";
+		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?, description=?, initialDelay=?, delay=?, timeUnit=?, stopLoss=?, demaAlertTaskId=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -191,7 +191,7 @@ public class TradeBotDB {
 			ps.setInt(9, bot.getDelay());
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			ps.setDouble(11, bot.getStopLoss());
-			ps.setDouble(12, bot.getStopLossWarning());
+			ps.setString(12, bot.getDemaAlertTaskId());
 			ps.setLong(13, bot.getId());
 			
 			ps.executeUpdate();

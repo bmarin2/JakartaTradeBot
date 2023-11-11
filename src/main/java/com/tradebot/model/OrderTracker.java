@@ -30,6 +30,4 @@ public class OrderTracker {
 	private long tradebot_id;
 	
 	private BigDecimal stopLossPrice;
-	
-	private BigDecimal stopLossPriceWarning;
 }
