@@ -57,10 +57,12 @@
 			<p:resetInput target="manageAlarmsForm:manage-alarm" />
 		</p:commandButton>
 			
-		<p:commandButton value="Create Dema Alert" styleClass="ui-button-success" icon="pi pi-plus-circle" style="margin-left:15px;"
+		<p:commandButton value="Create Dema Alert" styleClass="ui-button-success" icon="pi pi-plus-circle" style="margin-left:15px;margin-bottom:10px"
 					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarmDema()}" update="manageAlarmsForm">
 			<p:resetInput target="manageAlarmsForm:manage-alarm" />
 		</p:commandButton>
+		<br/>
+		<p:outputLabel value="Max dema length is 500 | Set dema1 as 0 to calculate one dema cross (second + third), set all 3 demas to calculate two crosses (first + second and first + third)" style="margin-left:15px; font-size:1rem !important" />
 			
 		<h:form id="headerForm">
 			<p:remoteCommand name="updateRunningState" action="#{alarmView.updateRunningState}" update="growl" />
@@ -94,6 +96,8 @@
 				</p:panelGrid>
 				
 				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarmView.isDemaAlert(alarm)}">
+					<h:outputLabel value="#{alarm.firstDema eq 0 ? 'One Cross Dema' : 'Two Cross Dema'}" style="color:blue;font-weight:bold"/>
+					<h:outputLabel value=""/>
 					<h:outputLabel value="First Dema"/>
 					<p:outputLabel value="#{alarm.firstDema}" />
 					<h:outputLabel value="Second Dema"/>
@@ -104,9 +108,9 @@
 					<p:outputLabel value="#{alarm.intervall}" />
 					<h:outputLabel value="Delay"/>
 					<p:outputLabel value="#{alarm.delay}" />
-					<h:outputLabel value="Cross Small"/>
+					<h:outputLabel value="Cross1"/>
 					<p:outputLabel value="#{alarm.crosss}" />
-					<h:outputLabel value="Cross Big"/>
+					<h:outputLabel value="Cross2"/>
 					<p:outputLabel value="#{alarm.crosssBig}" />
 					<h:outputLabel value="Dema1"/>
 

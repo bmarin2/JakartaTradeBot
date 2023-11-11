@@ -7,6 +7,7 @@ import com.tradebot.db.AlarmDB;
 import com.tradebot.model.Alarm;
 import com.tradebot.service.AlarmTask;
 import com.tradebot.service.DemaAlertTask;
+import com.tradebot.service.DemaAlertTaskOneCross;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -132,14 +133,26 @@ public class AlarmView implements Serializable {
 			Alarm alarm = AlarmDB.getOneAlarm(taskId);
 			
 			if (Boolean.parseBoolean(isDema)) {
-				DemaAlertTask demaAlertTask = new DemaAlertTask(alarm);
-				
-				taskService.addTask(alarm.getAlarmId(),
-					   demaAlertTask,
-					   alarm.getInitialDelay(),
-					   alarm.getDelay(),
-					   alarm.getTimeUnit()
-				);
+
+				if (alarm.getFirstDema() == 0) {
+					DemaAlertTaskOneCross demaAlertTaskOneCross = new DemaAlertTaskOneCross(alarm);
+					taskService.addTask(alarm.getAlarmId(),
+						   demaAlertTaskOneCross,
+						   alarm.getInitialDelay(),
+						   alarm.getDelay(),
+						   alarm.getTimeUnit()
+					);
+
+				} else {
+					DemaAlertTask demaAlertTask = new DemaAlertTask(alarm);
+					taskService.addTask(alarm.getAlarmId(),
+						   demaAlertTask,
+						   alarm.getInitialDelay(),
+						   alarm.getDelay(),
+						   alarm.getTimeUnit()
+					);
+				}
+
 				addMessage("Alarm added", "id: " + alarm.getAlarmId());
 			} else {
 				BigDecimal currentPrice = checkPrice(alarm.getSymbol());
