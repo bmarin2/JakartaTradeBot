@@ -96,7 +96,8 @@
 				</p:panelGrid>
 				
 				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarmView.isDemaAlert(alarm)}">
-					<h:outputLabel value="#{alarm.firstDema eq 0 ? 'One Cross Dema (For Spot)' : 'Two Cross Dema'}" style="color:blue;font-weight:bold"/>
+					<h:outputLabel value="#{alarm.firstDema eq 0 ? '1x Cross (Spot)' : '2x Cross'}"
+								style="#{alarm.firstDema eq 0 ? 'color:blue;' : 'color:green;'}font-weight:bold"/>
 					<h:outputLabel value=""/>
 					<h:outputLabel value="First Dema"/>
 					<p:outputLabel value="#{alarm.firstDema}" />
@@ -114,19 +115,19 @@
 					<p:outputLabel value="#{alarm.crosssBig}" />
 					<h:outputLabel value="Dema1"/>
 
-					<h:outputText value="#{alarm.currentFirstDema}">
+					<h:outputText value="#{alarm.currentFirstDema}" style="#{alarm.firstDema eq 0 ? '' : 'background:#80ff80'}">
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
 
 					<h:outputLabel value="Dema2"/>
 
-					<h:outputText value="#{alarm.currentSecondDema}">
+					<h:outputText value="#{alarm.currentSecondDema}" style="#{alarm.firstDema eq 0 ? 'background:#b3b3ff' : 'background:#80ff80'}">
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>                                        
 
 					<h:outputLabel value="Dema3"/>
 
-					<h:outputText value="#{alarm.currentThirdDema}">
+					<h:outputText value="#{alarm.currentThirdDema}" style="#{alarm.firstDema eq 0 ? 'background:#b3b3ff' : 'background:#80ff80'}">
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
 

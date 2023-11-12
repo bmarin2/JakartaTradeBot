@@ -39,8 +39,6 @@ public class Task implements Runnable {
 
      private final TelegramBot telegramBot;
 	
-	private int safetyOrders;
-	
 	private boolean notified;
 	
      public Task(TradeBot tradeBot) throws Exception {
@@ -48,7 +46,6 @@ public class Task implements Runnable {
           this.tradeBot = tradeBot;
           this.positions = convertOrdersToMap(tradeBot);
           this.telegramBot = new TelegramBot();
-		this.safetyOrders = 0;
      }
 
      @Override
@@ -82,14 +79,15 @@ public class Task implements Runnable {
 			
 			boolean demaCross = getDemaCross();
 			
-			if (demaCross) {				
+			if (demaCross) {
 				checkStopLoss(newPosition);
-
-				if (!stopBotCycle && safetyOrders > 1) {
+				
+				if (!stopBotCycle) {
 					stopBotCycle = true;
-				}				
+				}
+
 				if (!notified) {
-					telegramBot.sendMessage("(Spot) Stopping buying (entering stop loss) " + tradeBot.getSymbol()
+					telegramBot.sendMessage("(Spot) Stopping buying (entering stop loss mode) " + tradeBot.getSymbol()
 						   + "\nDEMA: " + tradeBot.getDemaAlertTaskId());
 					notified = true;
 				}
@@ -98,11 +96,9 @@ public class Task implements Runnable {
 				if (stopBotCycle) {
 					stopBotCycle = false;
 				}
-				if (safetyOrders > 0) {
-					safetyOrders = 0;
-				}				
+				
 				if (notified) {
-					telegramBot.sendMessage("(Spot) Continuing with trading (exiting stop loss) " + tradeBot.getSymbol()
+					telegramBot.sendMessage("(Spot) Continuing with trading (exiting stop loss mode) " + tradeBot.getSymbol()
 						   + "\nDEMA: " + tradeBot.getDemaAlertTaskId());
 					notified = false;
 				}
@@ -123,9 +119,6 @@ public class Task implements Runnable {
                     int comparisonDecreaseed = newPosition.compareTo(decreasedPosition);
                     if (comparisonDecreaseed < 0) {
                          createBuyOrder(newPosition);
-					if (demaCross) {
-						safetyOrders++;
-					}
                     }
                }
                // SELL
