@@ -1,6 +1,8 @@
 package com.tradebot.service;
 
+import com.binance.connector.client.impl.SpotClientImpl;
 import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
+import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.db.AlarmDB;
 import com.tradebot.model.Alarm;
@@ -12,7 +14,8 @@ import org.json.JSONArray;
 public class DemaAlertTaskOneCross implements Runnable {
 
 	private Alarm alarm;
-	private UMFuturesClientImpl umFuturesClientImpl;
+	//private UMFuturesClientImpl umFuturesClientImpl;
+	private SpotClientImpl spotClientImpl;
 	private final TelegramBot telegramBot;
 
 	private double secondEma;
@@ -25,7 +28,8 @@ public class DemaAlertTaskOneCross implements Runnable {
 	private final double multiplierThirdDema;
 
 	public DemaAlertTaskOneCross(Alarm alarm) throws Exception {
-		umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
+		//umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
+		spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLProd();
 		this.telegramBot = new TelegramBot();
 		this.alarm = alarm;
 		this.secondEma = 0;
@@ -55,6 +59,7 @@ public class DemaAlertTaskOneCross implements Runnable {
 		al.setCurrentFirstDema(0.0);
 		al.setCurrentSecondDema(0.0);
 		al.setCurrentThirdDema(0.0);
+		al.setLastClosingCandle(0.0);
 		AlarmDB.editAlarm(al);
 	}
 
@@ -80,16 +85,11 @@ public class DemaAlertTaskOneCross implements Runnable {
 		thirdEma = thirdEma / (double) dema3;
 		thirdDema = thirdEma;
 
-		if (secondEma < thirdEma) {
-			Alarm al = AlarmDB.getOneAlarm(alarm.getId());
-			al.setCrosss(true);
-			AlarmDB.editAlarm(al);
-		}
-		
 		for (Double secondListPrice : secondList) {
 			update(secondListPrice, false);
-		}
-
+		}		
+		calculateDemas();
+		setLastCandle(secondList.get(secondList.size() - 1));
 	}
 
 	public void update(double newPrice, boolean setCross) throws Exception {
@@ -102,36 +102,50 @@ public class DemaAlertTaskOneCross implements Runnable {
 		thirdDema = (thirdEma - thirdDema) * multiplierThirdDema + thirdDema;
 		
 		if (setCross) {
-			double calculatedSlowDEMA = (2 * secondEma) - secondDema;
-			double calculatedThirdDEMA = (2 * thirdEma) - thirdDema;
-
-			Alarm al = AlarmDB.getOneAlarm(alarm.getId());
-
-			al.setCurrentSecondDema(calculatedSlowDEMA);
-			al.setCurrentThirdDema(calculatedThirdDEMA);
-
-			boolean demaCross = al.getCrosss();
-
-			// for fast crossing slow
-			if (demaCross && calculatedSlowDEMA > calculatedThirdDEMA) {
-
-				telegramBot.sendMessage("DEMA Alert " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
-					   + "DEMA " + alarm.getSecondDema() + " UP crossed " + alarm.getThirdDema());
-
-				al.setCrosss(false);
-
-			} else if (!demaCross && calculatedSlowDEMA < calculatedThirdDEMA) {
-
-				telegramBot.sendMessage("DEMA Alert - " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
-					   + "DEMA " + alarm.getSecondDema() + " DOWN crossed " + alarm.getThirdDema());
-
-				al.setCrosss(true);
-			}
-
-			AlarmDB.editAlarm(al);
+			calculateDemas();
 		}
 	}
 
+	private void calculateDemas() throws Exception {
+		double calculatedSlowDEMA = (2 * secondEma) - secondDema;
+		double calculatedThirdDEMA = (2 * thirdEma) - thirdDema;
+
+		Alarm al = AlarmDB.getOneAlarm(alarm.getId());
+
+		al.setCurrentSecondDema(calculatedSlowDEMA);
+		al.setCurrentThirdDema(calculatedThirdDEMA);
+
+		boolean demaCross = al.getCrosss();
+
+		// for fast crossing slow
+		if (demaCross && calculatedSlowDEMA > calculatedThirdDEMA) {
+			double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdDEMA;
+			double incrisedThirdDEMA = calculatedThirdDEMA + percentageIncrease;
+			
+			if (calculatedSlowDEMA > incrisedThirdDEMA) {
+				telegramBot.sendMessage("DEMA Alert " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
+					   + "DEMA " + alarm.getSecondDema() + " UP crossed " + alarm.getThirdDema()
+					   + "\nGap: " + alarm.getMinGap());
+
+				al.setCrosss(false);
+			}
+
+		} else if (!demaCross && calculatedSlowDEMA < calculatedThirdDEMA) {
+			double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdDEMA;
+			double decrisedThirdDEMA = calculatedThirdDEMA - percentageIncrease;
+			
+			if (calculatedSlowDEMA < decrisedThirdDEMA) {
+				telegramBot.sendMessage("DEMA Alert - " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
+					   + "DEMA " + alarm.getSecondDema() + " DOWN crossed " + alarm.getThirdDema()
+					   + "\nGap: " + alarm.getMinGap());
+
+				al.setCrosss(true);
+			}
+		}
+
+		AlarmDB.editAlarm(al);
+	}
+	
 	private List<Double> getKlinePrices() {
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
 		parameters.put("symbol", alarm.getSymbol());
@@ -139,7 +153,8 @@ public class DemaAlertTaskOneCross implements Runnable {
 		parameters.put("limit", alarm.getThirdDema() * 3 + 1);
 		List<Double> priceList = new ArrayList<>();
 
-		String result = umFuturesClientImpl.market().klines(parameters);
+		//String result = umFuturesClientImpl.market().klines(parameters);
+		String result = spotClientImpl.createMarket().klines(parameters);
 
 		JSONArray jsonArray = new JSONArray(result);
 		jsonArray.remove(jsonArray.length() - 1);
@@ -158,7 +173,8 @@ public class DemaAlertTaskOneCross implements Runnable {
 		parameters.put("interval", alarm.getIntervall());
 		parameters.put("limit", 2);
 
-		String result = umFuturesClientImpl.market().klines(parameters);
+		//String result = umFuturesClientImpl.market().klines(parameters);
+		String result = spotClientImpl.createMarket().klines(parameters);
 
 		JSONArray jsonArray = new JSONArray(result);
 
@@ -173,5 +189,16 @@ public class DemaAlertTaskOneCross implements Runnable {
 			ex.printStackTrace();
 		}
 		return newPrice;
+	}
+	
+	// set last candle on init
+	private void setLastCandle(double lastCandle) {
+		try {
+			Alarm al = AlarmDB.getOneAlarm(alarm.getId());
+			al.setLastClosingCandle(lastCandle);
+			AlarmDB.editAlarm(al);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

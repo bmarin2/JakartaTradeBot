@@ -59,11 +59,6 @@ public class Task implements Runnable {
                if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
                     BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
                     botDTO.setLastPrice(newPosition);
-                    if (botDTO.isStopCycle() && !stopBotCycle) {
-                         stopBotCycle = true;
-                    } else if (!botDTO.isStopCycle() && stopBotCycle) {
-                         stopBotCycle = false;
-                    }
                     botDTO.setLastCheck(new Date());
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
                } else {
@@ -84,6 +79,12 @@ public class Task implements Runnable {
 				
 				if (!stopBotCycle) {
 					stopBotCycle = true;
+
+					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+					if (!botDTO.isStopCycle()) {
+						botDTO.setStopCycle(true);
+						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+					}
 				}
 
 				if (!notified) {
@@ -95,6 +96,12 @@ public class Task implements Runnable {
 			} else {
 				if (stopBotCycle) {
 					stopBotCycle = false;
+					
+					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+					if (botDTO.isStopCycle()) {
+						botDTO.setStopCycle(false);
+						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+					}
 				}
 				
 				if (notified) {
@@ -283,13 +290,7 @@ public class Task implements Runnable {
 		if (!tempOrdersStopLoss.isEmpty()) {
 			createSellOrder(newPosition, tempOrdersStopLoss);
 			telegramBot.sendMessage("Sold at loss of " + tradeBot.getStopLoss() + "% Number of orders sold: "
-				   + tempOrdersStopLoss.size() + " " + tradeBot.getSymbol() + " " + tradeBot.getTaskId());
-			
-			BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
-			if(!botDTO.isStopCycle()) {
-				botDTO.setStopCycle(true);
-				BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
-			}			
+				   + tempOrdersStopLoss.size() + " " + tradeBot.getSymbol() + " " + tradeBot.getTaskId());			
 		}
 	}
 	
