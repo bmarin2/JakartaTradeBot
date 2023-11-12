@@ -111,11 +111,12 @@
 					<p:outputLabel value="#{alarm.delay}" />
 					<h:outputLabel value="Cross1"/>
 					<p:outputLabel value="#{alarm.crosss}" />
-					<h:outputLabel value="Cross2"/>
-					<p:outputLabel value="#{alarm.crosssBig}" />
-					<h:outputLabel value="Dema1"/>
+					<h:outputLabel value="Cross2" rendered="#{alarm.firstDema ne 0}"/>
+					<p:outputLabel value="#{alarm.crosssBig}" rendered="#{alarm.firstDema ne 0}"/>
+					<h:outputLabel value="Dema1" rendered="#{alarm.firstDema ne 0}"/>
 
-					<h:outputText value="#{alarm.currentFirstDema}" style="#{alarm.firstDema eq 0 ? '' : 'background:#80ff80'}">
+					<h:outputText value="#{alarm.currentFirstDema}" style="#{alarm.firstDema eq 0 ? '' : 'background:#80ff80'}"
+							    rendered="#{alarm.firstDema ne 0}">
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
 
