@@ -72,7 +72,8 @@
 		<h:form id="alarmListForm">
 			<p:repeat value="#{alarmView.alarms}" var="alarm">
 				
-			<p:card style="margin:.5em;display:inline-block;border-color:background;background-color:bisque;padding:0;width:18%">
+                            <p:card style="margin:.5em;display:inline-block;background-color:#{alarm.firstDema eq 0 ? '#e6ffe6' : '#cce0ff'};
+                                    padding:0;width:18%;vertical-align: top;">
 				<f:facet name="title">
 					<span style="font-size:60%">#{alarm.symbol}</span>
 					<span style="font-size:55%;margin-right:6px">#{alarm.alarmId}</span>
@@ -97,7 +98,7 @@
 				
 				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarmView.isDemaAlert(alarm)}">
 					<h:outputLabel value="#{alarm.firstDema eq 0 ? '1x Cross (Spot)' : '2x Cross'}"
-								style="#{alarm.firstDema eq 0 ? 'color:blue;' : 'color:green;'}font-weight:bold"/>
+								style="font-weight:bold"/>
 					<h:outputLabel value=""/>
 					<h:outputLabel value="First Dema"/>
 					<p:outputLabel value="#{alarm.firstDema}" />
@@ -109,6 +110,8 @@
 					<p:outputLabel value="#{alarm.intervall}" />
 					<h:outputLabel value="Delay"/>
 					<p:outputLabel value="#{alarm.delay}" />
+                                        <h:outputLabel value="Time Unit"/>
+					<p:outputLabel value="#{alarm.timeUnit}" />
 					<h:outputLabel value="Cross1"/>
 					<p:outputLabel value="#{alarm.crosss}" />
 					<h:outputLabel value="Cross2" rendered="#{alarm.firstDema ne 0}"/>
@@ -132,7 +135,7 @@
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
 
-                         <h:outputLabel value="Last Candle"/>
+                                        <h:outputLabel value="Last Candle"/>
 
 					<h:outputText value="#{alarm.lastClosingCandle}">
 						<f:convertNumber pattern="#0.00" />
@@ -143,6 +146,9 @@
 					<h:outputText value="#{alarm.minGap}">
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
+
+                                        <h:outputLabel value="Chart Mode"/>
+                                        <p:outputLabel value="#{alarm.chartMode}" />
 				</p:panelGrid>	
 				
 				<f:facet name="footer">
@@ -195,8 +201,13 @@
 					<p:outputLabel for="input9" value="Third Ema" rendered="#{alarmView.demaAlert}" />
 					<p:inputText rendered="#{alarmView.demaAlert}" id="input9" value="#{alarmView.selectedAlarm.thirdDema}" style="background-color: #ccffcc"/>
                                         
-                         <p:outputLabel for="input10" value="Min Gap"/>
+                                        <p:outputLabel for="input10" value="Min Gap" rendered="#{alarmView.demaAlert}"/>
 					<p:inputText rendered="#{alarmView.demaAlert}" id="input10" value="#{alarmView.selectedAlarm.minGap}" />
+                                        
+                                        <p:outputLabel for="select3" value="Chart Mode" rendered="#{alarmView.demaAlert}"/>
+                                        <p:selectOneMenu value="#{alarmView.selectedAlarm.chartMode}" id="select3" style="width:100%" rendered="#{alarmView.demaAlert}">
+                                            <f:selectItems value="#{alarmView.chartModes}" var="mode" itemLabel="#{mode}" itemValue="#{mode}"/>
+                                        </p:selectOneMenu>
 
 					<p:outputLabel for="input11" value="Description"/>
 					<p:inputTextarea id="input11" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />

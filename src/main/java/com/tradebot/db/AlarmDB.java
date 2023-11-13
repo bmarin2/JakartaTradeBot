@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import com.tradebot.enums.ChartMode;
 
 public class AlarmDB {
 	public static long createAlarm(Alarm alarm) throws Exception {
@@ -20,8 +21,8 @@ public class AlarmDB {
 
 		String query = "INSERT INTO ALARM (symbol, alarmId, alarmPrice, initialDelay, delay, timeUnit, description,"
 			   + " msgSent, intervall, firstDema, secondDema, thirdDema, crosss, currentFirstDema, currentSecondDema,"
-			   + " currentThirdDema, crosssBig, lastClosingCandle, minGap) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			   + " currentThirdDema, crosssBig, lastClosingCandle, minGap, chartMode) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -44,6 +45,7 @@ public class AlarmDB {
 			ps.setBoolean(17, alarm.getCrosssBig());
                         ps.setDouble(18, alarm.getLastClosingCandle());
                         ps.setDouble(19, alarm.getMinGap());
+                        ps.setInt(20, alarm.getChartMode().ordinal());
 			
 			ps.executeUpdate();
 			
@@ -96,6 +98,7 @@ public class AlarmDB {
 				alarm.setCrosssBig(rs.getBoolean("crosssBig"));
                                 alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
                                 alarm.setMinGap(rs.getDouble("minGap"));
+                                alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -141,6 +144,7 @@ public class AlarmDB {
 				alarm.setCrosssBig(rs.getBoolean("crosssBig"));
                                 alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
                                 alarm.setMinGap(rs.getDouble("minGap"));
+                                alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -186,6 +190,7 @@ public class AlarmDB {
 				alarm.setCrosssBig(rs.getBoolean("crosssBig"));
                                 alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
                                 alarm.setMinGap(rs.getDouble("minGap"));
+                                alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 				alarms.add(alarm);
 			}
 			return alarms;
@@ -207,7 +212,7 @@ public class AlarmDB {
 
 		String query = "UPDATE ALARM SET symbol=?, alarmId=?, alarmPrice=?, initialDelay=?, delay=?, timeUnit=?, description=?, "
 			   + "msgSent=?, intervall=?, firstDema=?, secondDema=?, thirdDema=?, crosss=?, currentFirstDema=?, "
-			   + "currentSecondDema=?, currentThirdDema=?, crosssBig=?, lastClosingCandle=?, minGap=? WHERE id = ?";
+			   + "currentSecondDema=?, currentThirdDema=?, crosssBig=?, lastClosingCandle=?, minGap=?, chartMode=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -231,7 +236,8 @@ public class AlarmDB {
 			ps.setBoolean(17, alarm.getCrosssBig());
                         ps.setDouble(18, alarm.getLastClosingCandle());
                         ps.setDouble(19, alarm.getMinGap());
-			ps.setLong(20, alarm.getId());
+                        ps.setInt(20, alarm.getChartMode().ordinal());
+			ps.setLong(21, alarm.getId());
 			
 			ps.executeUpdate();
 

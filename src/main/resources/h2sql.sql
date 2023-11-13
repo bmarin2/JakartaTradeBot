@@ -93,5 +93,6 @@ CREATE TABLE ALARM (
     currentThirdDema DOUBLE,
     crosssBig BOOLEAN,
     lastClosingCandle DOUBLE,
-    minGap DOUBLE
+    minGap DOUBLE,
+    chartMode INT
 );

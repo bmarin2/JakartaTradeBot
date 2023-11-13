@@ -25,6 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.primefaces.PrimeFaces;
 import org.primefaces.context.PrimeRequestContext;
+import com.tradebot.enums.ChartMode;
 
 @Named
 @ViewScoped
@@ -63,6 +64,10 @@ public class AlarmView implements Serializable {
 	
 	public TimeUnit[] getUnits() {
 		return TimeUnit.values();
+	}
+        
+        public ChartMode[] getChartModes() {
+		return ChartMode.values();
 	}
 	
 	public void updateAlarm() {
