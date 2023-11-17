@@ -106,10 +106,6 @@ public class FuturesView implements Serializable {
 		System.out.println(orderResult);
 	}
 	
-	public void getAccountTradeList() {
-		
-	}
-	
 	public String redirectToFuturesDetails(String id) {
 		return "/futuresDetails.xhtml?faces-redirect=true&botid=" + id;
 	}

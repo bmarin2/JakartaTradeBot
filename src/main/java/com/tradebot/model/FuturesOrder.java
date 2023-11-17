@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FuturesOrder implements Serializable {	
 	private long orderId;
+     private String stopPrice;
 	private String type;
 	private String status;
 	private long time;

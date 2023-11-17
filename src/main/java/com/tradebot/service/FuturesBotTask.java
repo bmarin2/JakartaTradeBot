@@ -4,151 +4,319 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.AlarmDB;
+import com.tradebot.enums.PositionSide;
 import com.tradebot.model.Alarm;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
+import java.io.IOException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class FuturesBotTask implements Runnable {
-	
-	private FuturesBot futuresBot;
-	private UMFuturesClientImpl umFuturesClientImpl;
-	private final TelegramBot telegramBot;
-	
-	private boolean currentCross; // cross: fast -> slow
-	private boolean currentCrossBig; // cross: fask -> third
-	
-	private boolean inTrade;
-	private String currentSPOrder = "";
 
-	public FuturesBotTask(FuturesBot futuresBot) {
-		this.futuresBot = futuresBot;
-		umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
-		initDemas();
-		this.telegramBot = new TelegramBot();		
-	}
+     private FuturesBot futuresBot;
+     private UMFuturesClientImpl umFuturesClientImpl;
+     private final TelegramBot telegramBot;
 
-	@Override
-	public void run() {
-		
-		if (!currentSPOrder.isEmpty()) {
-			if (getOrderStatus(currentSPOrder).equals("FILLED")) {
-				inTrade = false;
-				System.out.println("SP Triggered");
-			}
-		}
-		
-		Alarm alarm = null;
-		
-		try {
-			alarm = AlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+     private boolean currentCross; // cross: fast -> slow
+     private boolean currentCrossBig; // cross: fask -> third
 
-		if (currentCross != alarm.getCrosss()) {				
-			if (alarm.getCrosss()) {
-				if (inTrade) {
-					createShortOrder(); // take profit
-				}
-				createShortOrder(); // crete new order
-				createStopLoss(OrderSide.BUY, calctulateSP(true));
-				inTrade = true;
-			} else {
-				if (inTrade) {
-					createLongOrder(); // take profit
-				}
-				createLongOrder(); // crete new order
-				createStopLoss(OrderSide.SELL, calctulateSP(false));
-				inTrade = true;
-			}				
-			currentCross = alarm.getCrosss();
-		}		
+     private String currentSPOrder = "";
+     private PositionSide currentPositionSide;
+     private Double entryPrice;
 
-	}
-	
-	private void initDemas() {
-		try {
-			Alarm alarm = AlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
-			currentCross = alarm.getCrosss();
-			currentCrossBig = alarm.getCrosssBig();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	private void createLongOrder() {
-		createOrder(OrderSide.BUY);
-	}
+     public FuturesBotTask(FuturesBot futuresBot) {
+          this.futuresBot = futuresBot;
+          umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
+          initDemas();
+          currentSPOrder = initStopLossOrder();
+          currentPositionSide = initExistingPosition();
+          System.out.println("init side: " + currentPositionSide);
+          if (currentPositionSide != PositionSide.NONE) {
+               entryPrice = getEntryPrice();
+               System.out.println("init entry price; " + entryPrice);
+          }
 
-	private void createShortOrder() {
-		createOrder(OrderSide.SELL);
-	}
+          this.telegramBot = new TelegramBot();
+     }
 
-	private void createOrder(OrderSide orderSide) {
-		long timeStamp = System.currentTimeMillis();
+     @Override
+     public void run() {
+          System.out.println("SP order: " + currentSPOrder);
+          if (!currentSPOrder.isEmpty()) {
+               if (getOrderStatus(currentSPOrder).equals("FILLED")) {
+                    currentPositionSide = PositionSide.NONE;
+                    currentSPOrder = "";
+                    System.out.println("SP Triggered");
 
-		String orderResult = umFuturesClientImpl.account().newOrder(
-			   FuturesOrderParams.getOrderParams(futuresBot.getSymbol(), orderSide,
-					 OrderSide.BOTH, futuresBot.getQuantity(), timeStamp)
-		);
-		
-		JSONObject jsonResult = new JSONObject(orderResult);
-		String orderId = jsonResult.optString("orderId");
-		System.out.println("Order createed " + orderSide.toString() + " ID: " + orderId);
-	}
+                    try {
+                         telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol());
+                    } catch (Exception e) {
+                         e.printStackTrace();
+                    }
+               }
+          }
 
-	private void createStopLoss(OrderSide orderSide, Double stopPrice) {
-		long timeStamp = System.currentTimeMillis();
-		
-		String orderResult = umFuturesClientImpl.account().newOrder(
-			   FuturesOrderParams.getStopLossParams(futuresBot.getSymbol(),
-					 orderSide, OrderSide.BOTH, futuresBot.getQuantity(),
-					 stopPrice, timeStamp)
-		);
-		
-		JSONObject jsonResult = new JSONObject(orderResult);
-		currentSPOrder = jsonResult.optString("orderId");
-		System.out.println("SP Order ID: " + currentSPOrder);
-	}
+          Alarm alarm = null;
 
-	private void cancelOrder(long orderId) {
-		long timeStamp = System.currentTimeMillis();
-		String orderResult = umFuturesClientImpl.account().cancelOrder(
-			   FuturesOrderParams.getCancelOrderParams(futuresBot.getSymbol(),
-					 orderId, timeStamp)
-		);
-	}
-	
-	private String getOrderStatus(String orderId) {
-		long timeStamp = System.currentTimeMillis();
-		String orderResult = umFuturesClientImpl.account().queryOrder(
-			   FuturesOrderParams.getQueryOrderParams(futuresBot.getSymbol(),
-					 orderId, timeStamp)
-		);
-		JSONObject jsonResult = new JSONObject(orderResult);
-		String status = jsonResult.optString("status");
-		return status;
-	}
-	
-	private Double getTickerPrice() {
-		String result = umFuturesClientImpl.market().tickerSymbol(
-			   FuturesOrderParams.getTickerParams(futuresBot.getSymbol())
-		);
-		JSONObject jsonResult = new JSONObject(result);
-		return jsonResult.optDouble("price");
-	}
+          try {
+               alarm = AlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
+          } catch (Exception e) {
+               e.printStackTrace();
+          }
+          
+          if (currentPositionSide != PositionSide.NONE && !isDistantFromEntryPrice()) {
+               System.out.println("checking distance..");
+               return;
+          }      
+          System.out.println("Continuing...");
+          
+          System.out.println("DB Cross: " + alarm.getCrosss());
+          System.out.println("currentCross: " + currentCross);
+          System.out.println("current position side: " + currentPositionSide.toString());
+          
+          // ====================================================================================          
+          
+          if (currentCross != alarm.getCrosss()) {
+               
+               currentCross = alarm.getCrosss();
+               System.out.println("cross is now: " + currentCross);
 
-	private Double calctulateSP(boolean side) {
-		Double price = getTickerPrice();
-		Double percent = price * futuresBot.getStopLoss();
-		Double result = 0.0;
-		if (side) {
-			result = price + percent;
-		} else {
-			result = price - percent;
-		}
-		System.out.println("Stop Loss price: " + result);
-		return result;
-	}
+               if (alarm.getCrosss()) { // if crossed DOWN
+                    if (currentPositionSide == PositionSide.SHORT) {
+                         return;
+                    }
+
+                    if (currentPositionSide == PositionSide.LONG) {
+                         // take profit
+                         createShortOrder();
+
+                         // cancel old SP
+                         if (!currentSPOrder.isEmpty()) {
+                              if (getOrderStatus(currentSPOrder).equals("NEW")) {
+                                   cancelOrder(currentSPOrder);
+                                   currentSPOrder = "";
+                              }
+                         }
+
+                         try {
+                              telegramBot.sendMessage("Taking profit from Long " + futuresBot.getSymbol());
+                         } catch (Exception e) {
+                              e.printStackTrace();
+                         }
+
+                    }
+                    createShortOrder();
+                    entryPrice = getEntryPrice();
+                    createStopLoss(OrderSide.BUY, calctulateSP(PositionSide.SHORT));
+                    currentPositionSide = PositionSide.SHORT;
+
+               } else { // if crossed UP
+                    if (currentPositionSide == PositionSide.LONG) {
+                         return;
+                    }
+                    if (currentPositionSide == PositionSide.SHORT) {
+                         createLongOrder(); // take profit
+
+                         // cancel old SP
+                         if (!currentSPOrder.isEmpty()) {
+                              if (getOrderStatus(currentSPOrder).equals("NEW")) {
+                                   cancelOrder(currentSPOrder);
+                                   currentSPOrder = "";
+                              }
+                         }
+
+                         try {
+                              telegramBot.sendMessage("Taking profit from Short " + futuresBot.getSymbol());
+                         } catch (Exception e) {
+                              e.printStackTrace();
+                         }
+
+                    }
+                    createLongOrder();
+                    entryPrice = getEntryPrice();
+                    createStopLoss(OrderSide.SELL, calctulateSP(PositionSide.LONG));
+                    currentPositionSide = PositionSide.LONG;
+               }
+          }
+     }
+
+     // ==========================================================================================     
+
+     private void createLongOrder() {
+          createOrder(OrderSide.BUY);
+
+          try {
+               telegramBot.sendMessage("Entering LONG trade");
+          } catch (IOException e) {
+               e.printStackTrace();
+          }          
+     }
+
+     private void createShortOrder() {
+          createOrder(OrderSide.SELL);
+          
+          try {
+               telegramBot.sendMessage("Entering SHORT trade");
+          } catch (IOException e) {
+               e.printStackTrace();
+          }         
+     }
+
+     private void createOrder(OrderSide orderSide) {
+          long timeStamp = System.currentTimeMillis();
+
+          String orderResult = umFuturesClientImpl.account().newOrder(
+                  FuturesOrderParams.getOrderParams(futuresBot.getSymbol(), orderSide,
+                          OrderSide.BOTH, futuresBot.getQuantity(), timeStamp)
+          );
+
+          JSONObject jsonResult = new JSONObject(orderResult);
+          String orderId = jsonResult.optString("orderId");
+          String price = jsonResult.optString("price");
+
+          System.out.println("Order created " + orderSide.toString() + " ID: " + orderId);
+          System.out.println("price: " + price);
+     }
+
+     private void createStopLoss(OrderSide orderSide, String stopPrice) {
+          long timeStamp = System.currentTimeMillis();
+
+          String orderResult = umFuturesClientImpl.account().newOrder(
+                  FuturesOrderParams.getStopLossParams(futuresBot.getSymbol(),
+                          orderSide, OrderSide.BOTH, futuresBot.getQuantity(),
+                          stopPrice, timeStamp)
+          );
+
+          JSONObject jsonResult = new JSONObject(orderResult);
+          currentSPOrder = jsonResult.optString("orderId");
+          System.out.println("SP Order ID: " + currentSPOrder);
+     }
+
+     private void cancelOrder(String orderId) {
+          long timeStamp = System.currentTimeMillis();
+          umFuturesClientImpl.account().cancelOrder(
+                  FuturesOrderParams.getCancelOrderParams(futuresBot.getSymbol(),
+                          orderId, timeStamp)
+          );
+     }
+
+     private String getOrderStatus(String orderId) {
+          long timeStamp = System.currentTimeMillis();
+          String orderResult = umFuturesClientImpl.account().queryOrder(
+                  FuturesOrderParams.getQueryOrderParams(futuresBot.getSymbol(),
+                          orderId, timeStamp)
+          );
+          JSONObject jsonResult = new JSONObject(orderResult);
+          String status = jsonResult.optString("status");
+          return status;
+     }
+
+     private Double getTickerPrice() {
+          String result = umFuturesClientImpl.market().tickerSymbol(
+                  FuturesOrderParams.getTickerParams(futuresBot.getSymbol())
+          );
+          JSONObject jsonResult = new JSONObject(result);
+          return jsonResult.optDouble("price");
+     }
+
+     private String calctulateSP(PositionSide positionSide) {
+          Double price = entryPrice;
+          Double percent = (futuresBot.getStopLoss() / 100) * price;
+          Double result = 0.0;
+          if (positionSide == PositionSide.SHORT) {
+               result = price + percent;
+          } else if (positionSide == PositionSide.LONG){
+               result = price - percent;
+          }
+          String resultFormated = String.format("%.2f", result);
+          return resultFormated;
+     }
+
+     private void initDemas() {
+          try {
+               Alarm alarm = AlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
+               currentCross = alarm.getCrosss();
+               currentCrossBig = alarm.getCrosssBig();
+          } catch (Exception e) {
+               e.printStackTrace();
+          }
+          System.out.println("init currentCross: " + currentCross);
+     }
+
+     private PositionSide initExistingPosition() {
+          long timeStamp = System.currentTimeMillis();
+          String jsonResult = umFuturesClientImpl.account().positionInformation(
+                  FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp)
+          );
+          JSONArray positions = new JSONArray(jsonResult);
+          JSONObject positionObject = positions.getJSONObject(0);
+          
+          if (!positionObject.optString("entryPrice").equals("0.0")) {
+               String side = fetchPositionSide();
+               if (side.equals("BUY")) {
+                    return PositionSide.LONG;
+               } else if (side.equals("SELL")){
+                    return PositionSide.SHORT;
+               }
+          }
+          return PositionSide.NONE;
+     }
+     
+     private String fetchPositionSide() {
+          long timeStamp = System.currentTimeMillis();
+          String jsonResult = umFuturesClientImpl.account().accountTradeList(
+                  FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp));
+
+          JSONArray positions = new JSONArray(jsonResult);
+          JSONObject tradeObject = positions.getJSONObject(positions.length() - 1);
+
+          return tradeObject.optString("side");
+     }
+
+     private String initStopLossOrder() {
+          String orderId = "";
+
+          long timeStamp = System.currentTimeMillis();
+          String jsonResult = umFuturesClientImpl.account().currentAllOpenOrders(
+                  FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp));
+
+          JSONArray orders = new JSONArray(jsonResult);
+
+          for (int i = 0; i < orders.length(); i++) {
+               JSONObject orderObject = orders.getJSONObject(i);
+
+               if ("STOP_MARKET".equals(orderObject.optString("type"))) {
+                    orderId = Long.toString(orderObject.optLong("orderId"));
+                    break;
+               }
+          }
+          System.out.println("init SP order: " + orderId);
+          return orderId;
+     }
+
+     private double getEntryPrice() {
+          long timeStamp = System.currentTimeMillis();
+          String jsonResult = umFuturesClientImpl.account().positionInformation(
+                  FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp)
+          );
+          JSONObject positionObject = new JSONArray(jsonResult).getJSONObject(0);
+          return positionObject.optDouble("entryPrice");
+     }
+     
+     private boolean isDistantFromEntryPrice() {
+          double newPrice = getTickerPrice();
+          System.out.println("entryPrice: " + entryPrice);
+          System.out.println("newPrice " + newPrice);
+          switch (currentPositionSide) {
+               case LONG:
+                    return newPrice > entryPrice;
+               case SHORT:
+                    return newPrice < entryPrice;
+               case NONE:
+                    return true;
+               default:
+                    return true;
+          }    
+     }
 }

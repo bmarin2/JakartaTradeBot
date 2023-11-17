@@ -42,17 +42,17 @@ public class FuturesDetailsView implements Serializable {
 		FacesContext context = FacesContext.getCurrentInstance();
 		ExternalContext externalContext = context.getExternalContext();
 		botid = Long.valueOf(externalContext.getRequestParameterMap().get("botid"));
+          
+          try {
+               futuresBot = FuturesBotDB.getOneFuturesBot(botid);
+          } catch (Exception ex) {
+               ex.printStackTrace();
+          }
 		
 		positionList = getPositionInformations();
 		accountTradeList = getAccountTradeList();
 		allOpenOrders = fetchAllOpenOrders();
-		allOrders = fetchAllOrders();
-		
-		try {
-			futuresBot = FuturesBotDB.getOneFuturesBot(botid);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}		
+		allOrders = fetchAllOrders();	
 	}
 	
 	public List<PositionInformation> getPositionInformations() {
@@ -93,7 +93,7 @@ public class FuturesDetailsView implements Serializable {
 	}	
 	
 	public List<AccountTradeList> getAccountTradeList() {
-		long timeStamp = System.currentTimeMillis();		
+		long timeStamp = System.currentTimeMillis();
 		String jsonResult = umFuturesClientImpl.account().accountTradeList(
 				FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp));			   
 		
@@ -140,6 +140,7 @@ public class FuturesDetailsView implements Serializable {
 
 			FuturesOrder futuresOrder = new FuturesOrder();
 			futuresOrder.setOrderId(orderObject.optLong("orderId"));
+               futuresOrder.setStopPrice(orderObject.optString("stopPrice"));
 			futuresOrder.setType(orderObject.optString("origType"));
 			futuresOrder.setStatus(orderObject.optString("status"));
 			futuresOrder.setTime(orderObject.optLong("time"));
@@ -169,6 +170,7 @@ public class FuturesDetailsView implements Serializable {
 
 			ordersList.add(futuresOrder);
 		}
+          Collections.reverse(ordersList);
 		return ordersList;
 	}
 }

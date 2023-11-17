@@ -46,7 +46,7 @@ public class FuturesOrderParams {
 												 OrderSide side,
 												 OrderSide positionSide,
 												 Double quantity,
-												 Double stopPrice,
+												 String stopPrice,
 												 long timeStamp)
 	{		
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
@@ -61,7 +61,7 @@ public class FuturesOrderParams {
 	}
 	
 	public static LinkedHashMap<String, Object> getCancelOrderParams(String symbol,
-													long orderId,
+													String orderId,
 													long timeStamp)
 	{
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();

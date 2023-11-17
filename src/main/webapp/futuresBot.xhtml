@@ -59,6 +59,8 @@
 				
 				<p:commandButton value="Long" action="#{futuresView.createLongOrder}" style="margin-left:10px;"/>
 				<p:commandButton value="Short" action="#{futuresView.createShortOrder}" style="margin-left:10px;"/>
+                                <p:commandButton value="SP Long" action="#{futuresView.createShortOrder}" style="margin-left:10px;"/>
+                                <p:commandButton value="SP Short" action="#{futuresView.createShortOrder}" style="margin-left:10px;"/>
 				<div>
 					<p:panelGrid columns="2" style="display:inline-block;margin-right:20px">
 						<h:outputLabel value="Asset:" />
@@ -165,7 +167,7 @@
 						<p:inputText id="input6" value="#{futuresView.selectedTradeBot.initialDelay}"/>
 
 						<p:outputLabel for="input7" value="Delay"/>
-						<p:inputText id="input7" value="#{indexView.selectedTradeBot.delay}"/>
+						<p:inputText id="input7" value="#{futuresView.selectedTradeBot.delay}"/>
 
 						<p:outputLabel for="select2" value="Time Unit"/>
 						<p:selectOneMenu value="#{futuresView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">
