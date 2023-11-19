@@ -5,7 +5,7 @@
       xmlns:p="http://primefaces.org/ui"
 	 xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
      <h:head>
-		<title>Index</title>
+		<title>Futures</title>
 		<style>
                .ui-widget {
                     font-size: 13px !important;
@@ -132,6 +132,10 @@
 					<p:column>
 						<p:toggleSwitch onchange="toggleSwitchRunning(this)"/>
 					</p:column>
+					
+					<p:column sortBy="#{bot.futresDemaStrategy}" headerText="Strategy">
+						<h:outputText value="#{bot.futresDemaStrategy}" />
+					</p:column>
 
 					<p:column>
 						<p:commandLink value="Edit" update="manageBotForm" oncomplete="PF('manageBot').show()" action="#{futuresView.editBot}" style="margin:4px">
@@ -179,6 +183,12 @@
 
 						<p:outputLabel for="input10" value="Dema TaskId"/>
 						<p:inputText id="input10" value="#{futuresView.selectedTradeBot.demaAlertTaskId}" />
+						
+						<p:outputLabel for="select3" value="Strategy"/>
+						<p:selectOneMenu value="#{futuresView.selectedTradeBot.futresDemaStrategy}" id="select3" style="width:100%">
+							<f:selectItems value="#{futuresView.strategies}" var="strategy" itemLabel="#{strategy}" itemValue="#{strategy}"/>
+						</p:selectOneMenu>
+						
 					</p:panelGrid>
 					<f:facet name="footer">
 						<div style="padding-top:15px;">

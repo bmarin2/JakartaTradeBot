@@ -4,10 +4,12 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.FuturesBotDB;
+import com.tradebot.enums.FutresDemaStrategy;
 import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
-import com.tradebot.service.FuturesBotTask;
+import com.tradebot.service.FuturesTaskOneDema;
+import com.tradebot.service.FuturesTaskTwoDemas;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -71,6 +73,10 @@ public class FuturesView implements Serializable {
 	
 	public TimeUnit[] getUnits() {
 		return TimeUnit.values();
+	}
+	
+	public FutresDemaStrategy[] getStrategies() {
+		return FutresDemaStrategy.values();
 	}
 
 	private void addMessage(String summary, String msg) {
@@ -149,7 +155,16 @@ public class FuturesView implements Serializable {
 				return;
 			}
 			FuturesBot bot = FuturesBotDB.getOneTradeBot(taskId);
-			FuturesBotTask task = new FuturesBotTask(bot);
+			
+			Runnable task = null;
+			
+			if (bot.getFutresDemaStrategy() == FutresDemaStrategy.ONE_CROSS) {
+				task = new FuturesTaskOneDema(bot);  
+
+			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.TWO_CROSS){
+				task = new FuturesTaskTwoDemas(bot);
+			}
+
 			taskService.addTask(bot.getTaskId(),
 				   task,
 				   bot.getInitialDelay(),
@@ -157,6 +172,8 @@ public class FuturesView implements Serializable {
 				   bot.getTimeUnit()
 			);
 			addMessage("Task added", "Bot " + bot.getTaskId());
+			
+
 		} else {
 			if (taskService.getScheduledTasks().containsKey(taskId)) {
 				taskService.removeTask(taskId);

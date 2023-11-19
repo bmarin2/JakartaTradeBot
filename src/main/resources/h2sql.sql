@@ -45,7 +45,8 @@ CREATE TABLE FUTURES_BOT (
     delay INT,
     timeUnit INT,
     stopLoss DOUBLE,
-    demaAlertTaskId VARCHAR(255)
+    demaAlertTaskId VARCHAR(255),
+    futresDemaStrategy INT
 );
 
 

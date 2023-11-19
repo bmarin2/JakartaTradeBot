@@ -9,10 +9,12 @@ import com.tradebot.model.Alarm;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class FuturesBotTask implements Runnable {
+public class FuturesTaskOneDema implements Runnable {
 
      private FuturesBot futuresBot;
      private UMFuturesClientImpl umFuturesClientImpl;
@@ -25,7 +27,7 @@ public class FuturesBotTask implements Runnable {
      private PositionSide currentPositionSide;
      private Double entryPrice;
 
-     public FuturesBotTask(FuturesBot futuresBot) {
+     public FuturesTaskOneDema(FuturesBot futuresBot) {
           this.futuresBot = futuresBot;
           umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
           initDemas();
@@ -42,7 +44,6 @@ public class FuturesBotTask implements Runnable {
 
      @Override
      public void run() {
-          System.out.println("SP order: " + currentSPOrder);
           if (!currentSPOrder.isEmpty()) {
                if (getOrderStatus(currentSPOrder).equals("FILLED")) {
                     currentPositionSide = PositionSide.NONE;
@@ -64,16 +65,20 @@ public class FuturesBotTask implements Runnable {
           } catch (Exception e) {
                e.printStackTrace();
           }
+		
+		System.out.println("Time: " + getTime());
+		System.out.println("SP order: " + currentSPOrder);
+          System.out.println("DB Cross: " + alarm.getCrosss());
+          System.out.println("cross: " + currentCross);
+          System.out.println("pos: " + currentPositionSide.toString());
           
           if (currentPositionSide != PositionSide.NONE && !isDistantFromEntryPrice()) {
-               System.out.println("checking distance..");
+               System.out.println("\nNOT DISTANT FROM ENTRY PRICE!");
                return;
-          }      
-          System.out.println("Continuing...");
-          
-          System.out.println("DB Cross: " + alarm.getCrosss());
-          System.out.println("currentCross: " + currentCross);
-          System.out.println("current position side: " + currentPositionSide.toString());
+          }
+
+          System.out.println("\nContinuing...");
+
           
           // ====================================================================================          
           
@@ -88,6 +93,16 @@ public class FuturesBotTask implements Runnable {
                     }
 
                     if (currentPositionSide == PositionSide.LONG) {
+					
+					try {
+						double profit = getUnrealizedProfit();
+						telegramBot.sendMessage("Taking profit from LONG " + getTime() + "\n "
+							   + "Profit: " + profit + "USDT "
+							   + "(" + getPercentageIncrease(entryPrice, profit) + "%)");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
                          // take profit
                          createShortOrder();
 
@@ -99,13 +114,14 @@ public class FuturesBotTask implements Runnable {
                               }
                          }
 
-                         try {
-                              telegramBot.sendMessage("Taking profit from Long " + futuresBot.getSymbol());
-                         } catch (Exception e) {
-                              e.printStackTrace();
-                         }
-
                     }
+				
+				try {
+					telegramBot.sendMessage("Entering SHORT trade " + getTime());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
                     createShortOrder();
                     entryPrice = getEntryPrice();
                     createStopLoss(OrderSide.BUY, calctulateSP(PositionSide.SHORT));
@@ -116,6 +132,15 @@ public class FuturesBotTask implements Runnable {
                          return;
                     }
                     if (currentPositionSide == PositionSide.SHORT) {
+					
+					try {
+						double profit = getUnrealizedProfit();
+						telegramBot.sendMessage("Taking profit from SHORT " + getTime() + "\n "
+							   + "Profit: " + profit + "USDT ");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
                          createLongOrder(); // take profit
 
                          // cancel old SP
@@ -125,14 +150,14 @@ public class FuturesBotTask implements Runnable {
                                    currentSPOrder = "";
                               }
                          }
-
-                         try {
-                              telegramBot.sendMessage("Taking profit from Short " + futuresBot.getSymbol());
-                         } catch (Exception e) {
-                              e.printStackTrace();
-                         }
-
                     }
+				
+				try {
+					telegramBot.sendMessage("Entering LONG trade " + getTime());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
                     createLongOrder();
                     entryPrice = getEntryPrice();
                     createStopLoss(OrderSide.SELL, calctulateSP(PositionSide.LONG));
@@ -144,23 +169,11 @@ public class FuturesBotTask implements Runnable {
      // ==========================================================================================     
 
      private void createLongOrder() {
-          createOrder(OrderSide.BUY);
-
-          try {
-               telegramBot.sendMessage("Entering LONG trade");
-          } catch (IOException e) {
-               e.printStackTrace();
-          }          
+          createOrder(OrderSide.BUY);          
      }
 
      private void createShortOrder() {
-          createOrder(OrderSide.SELL);
-          
-          try {
-               telegramBot.sendMessage("Entering SHORT trade");
-          } catch (IOException e) {
-               e.printStackTrace();
-          }         
+          createOrder(OrderSide.SELL);        
      }
 
      private void createOrder(OrderSide orderSide) {
@@ -303,11 +316,18 @@ public class FuturesBotTask implements Runnable {
           JSONObject positionObject = new JSONArray(jsonResult).getJSONObject(0);
           return positionObject.optDouble("entryPrice");
      }
+	
+	private double getUnrealizedProfit() {
+          long timeStamp = System.currentTimeMillis();
+          String jsonResult = umFuturesClientImpl.account().positionInformation(
+                  FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp)
+          );
+          JSONObject positionObject = new JSONArray(jsonResult).getJSONObject(0);
+          return positionObject.optDouble("unRealizedProfit");
+     }
      
      private boolean isDistantFromEntryPrice() {
           double newPrice = getTickerPrice();
-          System.out.println("entryPrice: " + entryPrice);
-          System.out.println("newPrice " + newPrice);
           switch (currentPositionSide) {
                case LONG:
                     return newPrice > entryPrice;
@@ -319,4 +339,14 @@ public class FuturesBotTask implements Runnable {
                     return true;
           }    
      }
+	
+	private String getTime() {
+		LocalDateTime currentDateTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+		return currentDateTime.format(formatter);
+	}
+
+	private String getPercentageIncrease(double entry, double increase) {
+		return String.format("%.2f", (increase / entry) * 100);
+	}
 }

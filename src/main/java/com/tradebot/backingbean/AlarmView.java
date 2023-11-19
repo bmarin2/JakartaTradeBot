@@ -138,25 +138,22 @@ public class AlarmView implements Serializable {
 			Alarm alarm = AlarmDB.getOneAlarm(taskId);
 			
 			if (Boolean.parseBoolean(isDema)) {
+				
+				Runnable task = null;
 
 				if (alarm.getFirstDema() == 0) {
-					DemaAlertTaskOneCross demaAlertTaskOneCross = new DemaAlertTaskOneCross(alarm);
-					taskService.addTask(alarm.getAlarmId(),
-						   demaAlertTaskOneCross,
-						   alarm.getInitialDelay(),
-						   alarm.getDelay(),
-						   alarm.getTimeUnit()
-					);
+					task = new DemaAlertTaskOneCross(alarm);
 
 				} else {
-					DemaAlertTask demaAlertTask = new DemaAlertTask(alarm);
-					taskService.addTask(alarm.getAlarmId(),
-						   demaAlertTask,
-						   alarm.getInitialDelay(),
-						   alarm.getDelay(),
-						   alarm.getTimeUnit()
-					);
+					task = new DemaAlertTask(alarm);
 				}
+				
+				taskService.addTask(alarm.getAlarmId(),
+					   task,
+					   alarm.getInitialDelay(),
+					   alarm.getDelay(),
+					   alarm.getTimeUnit()
+				);
 
 				addMessage("Alarm added", "id: " + alarm.getAlarmId());
 			} else {

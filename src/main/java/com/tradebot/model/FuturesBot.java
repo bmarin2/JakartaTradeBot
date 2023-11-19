@@ -1,5 +1,6 @@
 package com.tradebot.model;
 
+import com.tradebot.enums.FutresDemaStrategy;
 import com.tradebot.util.TaskCodeGeneratorService;
 import java.io.Serializable;
 import java.util.Date;
@@ -32,4 +33,6 @@ public class FuturesBot implements Serializable {
 	private Double stopLoss = 10.0;
 	
 	private String demaAlertTaskId;
+	
+	private FutresDemaStrategy futresDemaStrategy = FutresDemaStrategy.ONE_CROSS;
 }
