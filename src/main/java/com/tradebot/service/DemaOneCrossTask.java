@@ -128,9 +128,9 @@ public class DemaOneCrossTask implements Runnable {
                   double incrisedThirdDEMA = calculatedThirdDEMA + percentageIncrease;
                   
                   if (calculatedSlowDEMA > incrisedThirdDEMA) {
-                        telegramBot.sendMessage("DEMA Alert " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
-                                + "DEMA " + alarm.getSecondDema() + " UP crossed " + alarm.getThirdDema()
-                                + "\nGap: " + alarm.getMinGap());
+//                        telegramBot.sendMessage("DEMA Alert " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
+//                                + "DEMA " + alarm.getSecondDema() + " UP crossed " + alarm.getThirdDema()
+//                                + "\nGap: " + alarm.getMinGap());
                         
                         al.setCrosss(false);
                   }
@@ -140,9 +140,9 @@ public class DemaOneCrossTask implements Runnable {
                   double decrisedThirdDEMA = calculatedThirdDEMA - percentageIncrease;
                   
                   if (calculatedSlowDEMA < decrisedThirdDEMA) {
-                        telegramBot.sendMessage("DEMA Alert - " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
-                                + "DEMA " + alarm.getSecondDema() + " DOWN crossed " + alarm.getThirdDema()
-                                + "\nGap: " + alarm.getMinGap());
+//                        telegramBot.sendMessage("DEMA Alert - " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
+//                                + "DEMA " + alarm.getSecondDema() + " DOWN crossed " + alarm.getThirdDema()
+//                                + "\nGap: " + alarm.getMinGap());
                         
                         al.setCrosss(true);
                   }
