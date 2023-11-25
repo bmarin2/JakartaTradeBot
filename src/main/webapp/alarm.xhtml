@@ -122,7 +122,7 @@
 							    rendered="#{alarm.firstDema ne 0}">
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
-
+					
 					<h:outputLabel value="Dema2"/>
 
 					<h:outputText value="#{alarm.currentSecondDema}" style="#{alarm.firstDema eq 0 ? 'background:#b3b3ff' : 'background:#80ff80'}">
@@ -147,10 +147,13 @@
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
 
-                                        <h:outputLabel value="Chart Mode"/>
-                                        <p:outputLabel value="#{alarm.chartMode}" />
+					<h:outputLabel value="Chart Mode"/>
+					<p:outputLabel value="#{alarm.chartMode}" />
+
+					<h:outputLabel value="Ema Strategy"/>
+					<p:outputLabel value="#{alarm.emaCrossStrategy}" />
 				</p:panelGrid>	
-				
+
 				<f:facet name="footer">
 					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()" disabled="#{alarmView.isBotRunning(alarm.alarmId)}" update="manageAlarmsForm" style="margin-right:5px;" action="#{alarmView.editAlarm(alarmView.isDemaAlert(alarm))}">
 						<f:setPropertyActionListener value="#{alarm}" target="#{alarmView.selectedAlarm}" />
@@ -204,10 +207,15 @@
                                         <p:outputLabel for="input10" value="Min Gap" rendered="#{alarmView.demaAlert}"/>
 					<p:inputText rendered="#{alarmView.demaAlert}" id="input10" value="#{alarmView.selectedAlarm.minGap}" />
                                         
-                                        <p:outputLabel for="select3" value="Chart Mode" rendered="#{alarmView.demaAlert}"/>
-                                        <p:selectOneMenu value="#{alarmView.selectedAlarm.chartMode}" id="select3" style="width:100%" rendered="#{alarmView.demaAlert}">
-                                            <f:selectItems value="#{alarmView.chartModes}" var="mode" itemLabel="#{mode}" itemValue="#{mode}"/>
-                                        </p:selectOneMenu>
+					<p:outputLabel for="select3" value="Chart Mode" rendered="#{alarmView.demaAlert}"/>
+					<p:selectOneMenu value="#{alarmView.selectedAlarm.chartMode}" id="select3" style="width:100%" rendered="#{alarmView.demaAlert}">
+					    <f:selectItems value="#{alarmView.chartModes}" var="mode" itemLabel="#{mode}" itemValue="#{mode}"/>
+					</p:selectOneMenu>
+					
+					<p:outputLabel for="select4" value="Ema Strategy" rendered="#{alarmView.demaAlert}"/>
+					<p:selectOneMenu value="#{alarmView.selectedAlarm.emaCrossStrategy}" id="select4" style="width:100%" rendered="#{alarmView.demaAlert}">
+					    <f:selectItems value="#{alarmView.emaCrossStrategies}" var="strategy" itemLabel="#{strategy}" itemValue="#{strategy}"/>
+					</p:selectOneMenu>
 
 					<p:outputLabel for="input11" value="Description"/>
 					<p:inputTextarea id="input11" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />

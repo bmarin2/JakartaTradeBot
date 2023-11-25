@@ -145,34 +145,26 @@ public class TemaTwoCrossTask implements Runnable {
           }
      }
 
-     private void calculateDemas() throws Exception {
-          double calculatedFastDEMA = (2 * firstEma) - firstDema;
-          double calculatedSlowDEMA = (2 * secondEma) - secondDema;
-          double calculatedThirdDEMA = (2 * thirdEma) - thirdDema;
-          
+     private void calculateDemas() throws Exception {          
           double calculatedFastTEMA = (3*firstEma) - (3*firstDema) + firstTema;
           double calculatedSlowTEMA = (3*secondEma) - (3*secondDema) + secondTema;
           double calculatedThirdTEMA = (3*thirdEma) - (3*thirdDema) + thirdTema;          
-          
-          System.out.println("calculatedFastTEMA: " + calculatedFastTEMA);
-          System.out.println("calculatedSlowTEMA: " + calculatedSlowTEMA);
-          System.out.println("calculatedThirdTEMA: " + calculatedThirdTEMA);
 
           Alarm al = AlarmDB.getOneAlarm(alarm.getId());
 
-          al.setCurrentFirstDema(calculatedFastDEMA);
-          al.setCurrentSecondDema(calculatedSlowDEMA);
-          al.setCurrentThirdDema(calculatedThirdDEMA);
+          al.setCurrentFirstDema(calculatedFastTEMA);
+          al.setCurrentSecondDema(calculatedSlowTEMA);
+          al.setCurrentThirdDema(calculatedThirdTEMA);
 
           boolean demaCross = al.getCrosss();
           boolean demaCrossBig = al.getCrosssBig();
 
-          // for fast crossing slow
-          if (demaCross && calculatedFastDEMA > calculatedSlowDEMA) {
-               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedSlowDEMA;
-               double incrisedSlowDEMA = calculatedSlowDEMA + percentageIncrease;
+          // for crossing first and second tema
+          if (demaCross && calculatedFastTEMA > calculatedSlowTEMA) {
+               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedSlowTEMA;
+               double incrisedSlowDEMA = calculatedSlowTEMA + percentageIncrease;
 
-               if (calculatedFastDEMA > incrisedSlowDEMA) {
+               if (calculatedFastTEMA > incrisedSlowDEMA) {
 //                        telegramBot.sendMessage("DEMA Alert " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
 //                                + "DEMA " + alarm.getFirstDema() + " UP crossed " + alarm.getSecondDema()
 //                                + "\nGap: " + alarm.getMinGap());
@@ -180,11 +172,11 @@ public class TemaTwoCrossTask implements Runnable {
                     al.setCrosss(false);
                }
 
-          } else if (!demaCross && calculatedFastDEMA < calculatedSlowDEMA) {
-               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedSlowDEMA;
-               double decrisedSlowDEMA = calculatedSlowDEMA - percentageIncrease;
+          } else if (!demaCross && calculatedFastTEMA < calculatedSlowTEMA) {
+               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedSlowTEMA;
+               double decrisedSlowDEMA = calculatedSlowTEMA - percentageIncrease;
 
-               if (calculatedFastDEMA < decrisedSlowDEMA) {
+               if (calculatedFastTEMA < decrisedSlowDEMA) {
 //                        telegramBot.sendMessage("DEMA Alert - " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
 //                                + "DEMA " + alarm.getFirstDema() + " DOWN crossed " + alarm.getSecondDema()
 //                                + "\nGap: " + alarm.getMinGap());
@@ -193,12 +185,12 @@ public class TemaTwoCrossTask implements Runnable {
                }
           }
 
-          // for fast crossing 200
-          if (demaCrossBig && calculatedFastDEMA > calculatedThirdDEMA) {
-               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdDEMA;
-               double incrisedThirdDEMA = calculatedThirdDEMA + percentageIncrease;
+          // for first crossing 200
+          if (demaCrossBig && calculatedFastTEMA > calculatedThirdTEMA) {
+               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdTEMA;
+               double incrisedThirdTEMA = calculatedThirdTEMA + percentageIncrease;
 
-               if (calculatedFastDEMA > incrisedThirdDEMA) {
+               if (calculatedFastTEMA > incrisedThirdTEMA) {
 //                        telegramBot.sendMessage("DEMA Alert " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
 //                                + "DEMA " + alarm.getFirstDema() + " UP crossed " + alarm.getThirdDema()
 //                                + "\nGap: " + alarm.getMinGap());
@@ -206,11 +198,11 @@ public class TemaTwoCrossTask implements Runnable {
                     al.setCrosssBig(false);
                }
 
-          } else if (!demaCrossBig && calculatedFastDEMA < calculatedThirdDEMA) {
-               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdDEMA;
-               double decrisedThirdDEMA = calculatedThirdDEMA - percentageIncrease;
+          } else if (!demaCrossBig && calculatedFastTEMA < calculatedThirdTEMA) {
+               double percentageIncrease = (alarm.getMinGap() / 100) * calculatedThirdTEMA;
+               double decrisedThirdTEMA = calculatedThirdTEMA - percentageIncrease;
 
-               if (calculatedFastDEMA < decrisedThirdDEMA) {
+               if (calculatedFastTEMA < decrisedThirdTEMA) {
 //                        telegramBot.sendMessage("DEMA Alert - " + alarm.getSymbol() + " (" + alarm.getIntervall() + ")\n"
 //                                + "DEMA " + alarm.getFirstDema() + " DOWN crossed " + alarm.getThirdDema()
 //                                + "\nGap: " + alarm.getMinGap());

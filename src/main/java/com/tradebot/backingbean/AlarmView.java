@@ -6,8 +6,8 @@ import com.tradebot.configuration.OrdersParams;
 import com.tradebot.db.AlarmDB;
 import com.tradebot.model.Alarm;
 import com.tradebot.service.AlarmTask;
-import com.tradebot.service.DemaAlertTask;
-import com.tradebot.service.DemaAlertTaskOneCross;
+import com.tradebot.service.DemaTwoCrossTask;
+import com.tradebot.service.DemaOneCrossTask;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -26,6 +26,9 @@ import org.json.JSONObject;
 import org.primefaces.PrimeFaces;
 import org.primefaces.context.PrimeRequestContext;
 import com.tradebot.enums.ChartMode;
+import com.tradebot.enums.EmaCrossStrategy;
+import com.tradebot.service.TemaOneCrossTask;
+import com.tradebot.service.TemaTwoCrossTask;
 
 @Named
 @ViewScoped
@@ -66,10 +69,14 @@ public class AlarmView implements Serializable {
 		return TimeUnit.values();
 	}
         
-        public ChartMode[] getChartModes() {
+     public ChartMode[] getChartModes() {
 		return ChartMode.values();
 	}
-	
+
+	public EmaCrossStrategy[] getEmaCrossStrategies() {
+		return EmaCrossStrategy.values();
+	}
+
 	public void updateAlarm() {
 		try {
 			if (shouldEditAlarm) {
@@ -141,11 +148,18 @@ public class AlarmView implements Serializable {
 				
 				Runnable task = null;
 
-				if (alarm.getFirstDema() == 0) {
-					task = new DemaAlertTaskOneCross(alarm);
-
+				if (alarm.getFirstDema() == 0) {					
+					if (alarm.getEmaCrossStrategy() == EmaCrossStrategy.ONE_CROSS_DEMA) {
+						task = new DemaOneCrossTask(alarm);
+					} else if(alarm.getEmaCrossStrategy() == EmaCrossStrategy.ONE_CROSS_TEMA) {
+						task = new TemaOneCrossTask(alarm);
+					}
 				} else {
-					task = new DemaAlertTask(alarm);
+					if (alarm.getEmaCrossStrategy() == EmaCrossStrategy.TWO_CROSS_DEMA) {
+						task = new DemaTwoCrossTask(alarm);
+					} else if (alarm.getEmaCrossStrategy() == EmaCrossStrategy.TWO_CROSS_TEMA) {
+						task = new TemaTwoCrossTask(alarm);
+					}
 				}
 				
 				taskService.addTask(alarm.getAlarmId(),

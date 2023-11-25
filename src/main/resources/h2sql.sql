@@ -95,5 +95,6 @@ CREATE TABLE ALARM (
     crosssBig BOOLEAN,
     lastClosingCandle DOUBLE,
     minGap DOUBLE,
-    chartMode INT
+    chartMode INT,
+    emaCrossStrategy INT
 );

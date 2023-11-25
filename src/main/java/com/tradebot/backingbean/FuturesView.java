@@ -8,8 +8,8 @@ import com.tradebot.enums.FutresDemaStrategy;
 import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
-import com.tradebot.service.FuturesTaskOneDema;
-import com.tradebot.service.FuturesTaskTwoDemas;
+import com.tradebot.service.FuturesTaskOneCross;
+import com.tradebot.service.FuturesTaskTwoCross;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -159,10 +159,10 @@ public class FuturesView implements Serializable {
 			Runnable task = null;
 			
 			if (bot.getFutresDemaStrategy() == FutresDemaStrategy.ONE_CROSS) {
-				task = new FuturesTaskOneDema(bot);  
+				task = new FuturesTaskOneCross(bot);  
 
 			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.TWO_CROSS){
-				task = new FuturesTaskTwoDemas(bot);
+				task = new FuturesTaskTwoCross(bot);
 			}
 
 			taskService.addTask(bot.getTaskId(),

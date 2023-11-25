@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class FuturesTaskOneDema implements Runnable {
+public class FuturesTaskOneCross implements Runnable {
 
      private FuturesBot futuresBot;
      private UMFuturesClientImpl umFuturesClientImpl;
@@ -27,7 +27,7 @@ public class FuturesTaskOneDema implements Runnable {
      private PositionSide currentPositionSide;
      private Double entryPrice;
 
-     public FuturesTaskOneDema(FuturesBot futuresBot) {
+     public FuturesTaskOneCross(FuturesBot futuresBot) {
           this.futuresBot = futuresBot;
           umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
           initDemas();

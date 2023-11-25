@@ -1,6 +1,7 @@
 package com.tradebot.model;
 
 import com.tradebot.enums.ChartMode;
+import com.tradebot.enums.EmaCrossStrategy;
 import com.tradebot.util.TaskCodeGeneratorService;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -30,7 +31,8 @@ public class Alarm implements Serializable {
 	private Double currentSecondDema = 0.0;
 	private Double currentThirdDema = 0.0;
 	private Boolean crosssBig = false;
-        private Double lastClosingCandle = 0.0;
-        private Double minGap = 0.0;
-        private ChartMode chartMode = ChartMode.SPOT;
+	private Double lastClosingCandle = 0.0;
+	private Double minGap = 0.0;
+	private ChartMode chartMode = ChartMode.SPOT;
+	private EmaCrossStrategy emaCrossStrategy = EmaCrossStrategy.ONE_CROSS_DEMA;
 }
