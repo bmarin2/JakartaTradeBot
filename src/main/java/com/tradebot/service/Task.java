@@ -64,15 +64,15 @@ public class Task implements Runnable {
                } else {
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false, new Date(), false));
                }
+			
+			boolean demaCross = getDemaCross();
 
                if (positions.isEmpty()) {
-                    if (!stopBotCycle) {
+                    if (!stopBotCycle && !demaCross) {
                          createBuyOrder(newPosition);
                     }
                     return;
-               }
-			
-			boolean demaCross = getDemaCross();
+               }			
 			
 			if (demaCross) {
 				checkStopLoss(newPosition);
