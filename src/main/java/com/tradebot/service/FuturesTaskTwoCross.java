@@ -79,6 +79,8 @@ public class FuturesTaskTwoCross implements Runnable {
           
           if (currentPositionSide != PositionSide.NONE && !isDistantFromEntryPrice()) {
                System.out.println("\nNOT DISTANT FROM ENTRY PRICE!");
+               currentCross = alarm.getCrosss();
+               currentCrossBig = alarm.getCrosssBig();
                return;
           }
 
@@ -123,7 +125,7 @@ public class FuturesTaskTwoCross implements Runnable {
           
           if (currentCross != alarm.getCrosss()) {
                
-               currentCross = alarm.getCrosss();			
+               currentCross = alarm.getCrosss();
                System.out.println("cross1 is now: " + currentCross);
 			
 
