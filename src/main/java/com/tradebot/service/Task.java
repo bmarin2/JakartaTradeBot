@@ -70,10 +70,11 @@ public class Task implements Runnable {
                if (positions.isEmpty()) {
                     if (!stopBotCycle && !demaCross) {
                          createBuyOrder(newPosition);
+                    } else {
+                         return;
                     }
-                    return;
-               }			
-			
+               }	
+
 			if (demaCross) {
 				checkStopLoss(newPosition);
 				
