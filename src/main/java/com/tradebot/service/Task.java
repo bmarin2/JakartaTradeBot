@@ -70,6 +70,7 @@ public class Task implements Runnable {
                if (positions.isEmpty()) {
                     if (!stopBotCycle && !demaCross) {
                          createBuyOrder(newPosition);
+					telegramBot.sendMessage("(Spot) Started with trading, first position bought " + tradeBot.getSymbol());
                     } else {
                          return;
                     }
