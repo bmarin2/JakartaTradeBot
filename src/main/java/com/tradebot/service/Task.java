@@ -94,7 +94,9 @@ public class Task implements Runnable {
 						   + "\nDEMA: " + tradeBot.getDemaAlertTaskId());
 					notified = true;
 				}
-				
+
+				return;
+
 			} else {
 				if (stopBotCycle) {
 					stopBotCycle = false;
