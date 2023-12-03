@@ -45,16 +45,19 @@ public class FuturesTaskTwoCross implements Runnable {
      @Override
      public void run() {
           if (!currentSPOrder.isEmpty()) {
-               if (getOrderStatus(currentSPOrder).equals("FILLED")) {
-                    currentPositionSide = PositionSide.NONE;
-                    currentSPOrder = "";
+               if (getOrderStatus(currentSPOrder).equals("FILLED")) {                   
+
                     System.out.println("SP Triggered");
 
                     try {
-                         telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol());
+                         telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol() + "\n"
+					+ "Realized PNL: " + getRealizedPNL(currentSPOrder));
                     } catch (Exception e) {
                          e.printStackTrace();
                     }
+
+				currentPositionSide = PositionSide.NONE;
+				currentSPOrder = "";
                }
           }
 
@@ -134,19 +137,18 @@ public class FuturesTaskTwoCross implements Runnable {
                          return;
                     }
 
-                    if (currentPositionSide == PositionSide.LONG) {
+                    if (currentPositionSide == PositionSide.LONG) {					
+                         // take profit
+                         String orderId = createShortOrder();
 					
 					try {
-						double profit = getUnrealizedProfit();
+						double pnl = getRealizedPNL(orderId);
 						telegramBot.sendMessage("Taking profit from LONG " + getTime() + "\n "
-							   + "Profit: " + String.format("%.2f", profit) + "USDT "
-							   + "(" + getPercentageIncrease(entryPrice, profit) + "%)");
+							   + "Realized PNL: " + String.format("%.2f", pnl) + "USDT "
+							   + "(" + getPercentageIncrease(entryPrice, pnl) + "%)");
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					
-                         // take profit
-                         createShortOrder();
 
                          // cancel old SP
                          if (!currentSPOrder.isEmpty()) {
@@ -177,16 +179,16 @@ public class FuturesTaskTwoCross implements Runnable {
                          return;
                     }
                     if (currentPositionSide == PositionSide.SHORT) {
-					
+					// take profit
+					String orderId = createLongOrder();
+
 					try {
-						double profit = getUnrealizedProfit();
+						double pnl = getRealizedPNL(orderId);
 						telegramBot.sendMessage("Taking profit from SHORT " + getTime() + "\n "
-							   + "Profit: " + String.format("%.2f", profit) + "USDT ");
+							   + "Realized PNL: " + String.format("%.2f", pnl) + "USDT ");
 					} catch (Exception e) {
 						e.printStackTrace();
-					}
-					
-                         createLongOrder(); // take profit
+					}                         
 
                          // cancel old SP
                          if (!currentSPOrder.isEmpty()) {
@@ -216,15 +218,15 @@ public class FuturesTaskTwoCross implements Runnable {
 
      // ==========================================================================================     
 
-     private void createLongOrder() {
-          createOrder(OrderSide.BUY);          
+     private String createLongOrder() {
+          return createOrder(OrderSide.BUY);          
      }
 
-     private void createShortOrder() {
-          createOrder(OrderSide.SELL);        
+     private String createShortOrder() {
+          return createOrder(OrderSide.SELL);        
      }
 
-     private void createOrder(OrderSide orderSide) {
+     private String createOrder(OrderSide orderSide) {
           long timeStamp = System.currentTimeMillis();
 
           String orderResult = umFuturesClientImpl.account().newOrder(
@@ -234,10 +236,10 @@ public class FuturesTaskTwoCross implements Runnable {
 
           JSONObject jsonResult = new JSONObject(orderResult);
           String orderId = jsonResult.optString("orderId");
-          String price = jsonResult.optString("price");
 
           System.out.println("Order created " + orderSide.toString() + " ID: " + orderId);
-          System.out.println("price: " + price);
+		
+		return orderId;
      }
 
      private void createStopLoss(OrderSide orderSide, String stopPrice) {
@@ -334,6 +336,17 @@ public class FuturesTaskTwoCross implements Runnable {
 
           return tradeObject.optString("side");
      }
+	
+	private double getRealizedPNL(String orderId) {
+		long timeStamp = System.currentTimeMillis();
+          String jsonResult = umFuturesClientImpl.account().accountTradeList(
+                  FuturesOrderParams.getQueryOrderParams(futuresBot.getSymbol(), orderId, timeStamp));
+
+		JSONArray tradeList = new JSONArray(jsonResult);
+		JSONObject tradeObject = tradeList.getJSONObject(tradeList.getInt(0));
+		
+          return tradeObject.optDouble("realizedPnl");
+	}
 
      private String initStopLossOrder() {
           String orderId = "";
@@ -364,16 +377,7 @@ public class FuturesTaskTwoCross implements Runnable {
           JSONObject positionObject = new JSONArray(jsonResult).getJSONObject(0);
           return positionObject.optDouble("entryPrice");
      }
-	
-	private double getUnrealizedProfit() {
-          long timeStamp = System.currentTimeMillis();
-          String jsonResult = umFuturesClientImpl.account().positionInformation(
-                  FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp)
-          );
-          JSONObject positionObject = new JSONArray(jsonResult).getJSONObject(0);
-          return positionObject.optDouble("unRealizedProfit");
-     }
-     
+
      private boolean isDistantFromEntryPrice() {
           double newPrice = getTickerPrice();
           switch (currentPositionSide) {
