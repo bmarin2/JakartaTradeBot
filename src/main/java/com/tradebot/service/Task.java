@@ -68,7 +68,7 @@ public class Task implements Runnable {
 			boolean demaCross = getDemaCross();
 
                if (positions.isEmpty()) {
-                    if (!stopBotCycle && !demaCross) {
+                    if (!demaCross) {
                          createBuyOrder(newPosition);
 					telegramBot.sendMessage("(Spot) Started with trading, first position bought " + tradeBot.getSymbol());
                     } else {
