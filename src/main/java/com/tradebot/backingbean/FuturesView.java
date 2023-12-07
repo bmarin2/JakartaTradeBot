@@ -10,6 +10,7 @@ import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
 import com.tradebot.service.FuturesTaskOneCross;
 import com.tradebot.service.FuturesTaskTwoCross;
+import com.tradebot.service.FuturesTaskTwoCrossTP;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -163,6 +164,9 @@ public class FuturesView implements Serializable {
 
 			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.TWO_CROSS){
 				task = new FuturesTaskTwoCross(bot);
+
+			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.TWO_CROSS_TAKE_PROFIT){
+				task = new FuturesTaskTwoCrossTP(bot);
 			}
 
 			taskService.addTask(bot.getTaskId(),
