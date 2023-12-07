@@ -59,6 +59,23 @@ public class FuturesOrderParams {
 		parameters.put("timestamp", timeStamp);
 		return parameters;
 	}
+     
+     public static LinkedHashMap<String, Object> getTakeProfitParams(String symbol,
+                                                             OrderSide side,
+                                                             OrderSide positionSide,
+                                                             Double quantity,
+                                                             String stopPrice,
+                                                             long timeStamp) {
+          LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
+          parameters.put("symbol", symbol);
+          parameters.put("side", side.toString());
+          parameters.put("positionSide", positionSide.toString());
+          parameters.put("type", "TAKE_PROFIT_MARKET");
+          parameters.put("quantity", quantity);
+          parameters.put("stopPrice", stopPrice);
+          parameters.put("timestamp", timeStamp);
+          return parameters;
+     }
 	
 	public static LinkedHashMap<String, Object> getCancelOrderParams(String symbol,
 													String orderId,
