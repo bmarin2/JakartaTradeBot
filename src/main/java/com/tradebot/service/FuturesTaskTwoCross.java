@@ -343,7 +343,7 @@ public class FuturesTaskTwoCross implements Runnable {
                   FuturesOrderParams.getQueryOrderParams(futuresBot.getSymbol(), orderId, timeStamp));
 
 		JSONArray tradeList = new JSONArray(jsonResult);
-		JSONObject tradeObject = tradeList.getJSONObject(tradeList.getInt(0));
+		JSONObject tradeObject = tradeList.getJSONObject(0);
 		
           return tradeObject.optDouble("realizedPnl");
 	}

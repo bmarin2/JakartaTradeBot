@@ -25,6 +25,6 @@ public final class ConfigParams {
 
 	// Futures test
 	public static final String F_TESTNET_BASE_URL = "https://testnet.binancefuture.com";
-	public static final String F_TESTNET_API_KEY = "e0111c09dd85834947ed25ead584786e00272637d0d61426f1433ef10270b76c";
-	public static final String F_TESTNET_SECRET_KEY = "54f3224d5b48d9448d15554303200e222b6768888b82bd9012273e429aface3c";
+	public static final String F_TESTNET_API_KEY = "4c1c95c92f0377de7039f2ba03909520315885bc2168fe70e23acf4a5f15155d";
+	public static final String F_TESTNET_SECRET_KEY = "a026a08f2a16de806a62623dc676eae623d830b279ad261e754b0f72d923b72d";
 }
