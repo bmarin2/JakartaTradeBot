@@ -55,6 +55,13 @@ public class TaskV2 implements Runnable {
                if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
                     BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
                     botDTO.setLastPrice(newPosition);
+
+                    if (botDTO.isStopCycle() && !stopBotCycle) {
+                         stopBotCycle = true;
+                    } else if (!botDTO.isStopCycle() && stopBotCycle) {
+                         stopBotCycle = false;
+                    }
+
                     botDTO.setLastCheck(new Date());
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
                } else {
