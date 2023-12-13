@@ -18,8 +18,9 @@ public class TradeBotDB {
 		ResultSet rs = null;
 		long order_id = 0;
 
-		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quoteOrderQty, cycleMaxOrders, orderStep, description, initialDelay, delay, timeUnit, stopLoss, demaAlertTaskId) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String query = "INSERT INTO TRADE_BOT (symbol, createdDate, taskId, quoteOrderQty, cycleMaxOrders, orderStep, description,"
+                  + "initialDelay, delay, timeUnit, stopLoss, demaAlertTaskId, enableStopLoss, profitBase) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -35,6 +36,8 @@ public class TradeBotDB {
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			ps.setDouble(11, bot.getStopLoss());
 			ps.setString(12, bot.getDemaAlertTaskId());
+               ps.setBoolean(13, bot.isEnableStopLoss());
+               ps.setBoolean(14, bot.isProfitBase());
 			
 			ps.executeUpdate();
 			
@@ -80,6 +83,8 @@ public class TradeBotDB {
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
+                    bot.setEnableStopLoss(rs.getBoolean("enableStopLoss"));
+                    bot.setProfitBase(rs.getBoolean("profitBase"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -118,6 +123,8 @@ public class TradeBotDB {
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
+                    bot.setEnableStopLoss(rs.getBoolean("enableStopLoss"));
+                    bot.setProfitBase(rs.getBoolean("profitBase"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -156,6 +163,8 @@ public class TradeBotDB {
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
+                    bot.setEnableStopLoss(rs.getBoolean("enableStopLoss"));
+                    bot.setProfitBase(rs.getBoolean("profitBase"));
 				bots.add(bot);
 			}
 			return bots;
@@ -175,7 +184,8 @@ public class TradeBotDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
-		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?, description=?, initialDelay=?, delay=?, timeUnit=?, stopLoss=?, demaAlertTaskId=? WHERE id = ?";
+		String query = "UPDATE TRADE_BOT SET symbol=?, createdDate=?, taskId=?, quoteOrderQty=?, cycleMaxOrders=?, orderStep=?,"
+                  + "description=?, initialDelay=?, delay=?, timeUnit=?, stopLoss=?, demaAlertTaskId=?, enableStopLoss=?, profitBase=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -192,7 +202,9 @@ public class TradeBotDB {
 			ps.setInt(10, bot.getTimeUnit().ordinal());
 			ps.setDouble(11, bot.getStopLoss());
 			ps.setString(12, bot.getDemaAlertTaskId());
-			ps.setLong(13, bot.getId());
+               ps.setBoolean(13, bot.isEnableStopLoss());
+               ps.setBoolean(14, bot.isProfitBase());
+			ps.setLong(15, bot.getId());
 			
 			ps.executeUpdate();
 

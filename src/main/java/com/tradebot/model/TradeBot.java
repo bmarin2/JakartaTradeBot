@@ -36,5 +36,8 @@ public class TradeBot implements Serializable {
 	private Double stopLoss = 10.0;
 
 	private String demaAlertTaskId;
-
+     
+     private boolean enableStopLoss = false;
+     
+     private boolean profitBase = false;
 }

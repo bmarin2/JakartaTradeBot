@@ -357,8 +357,8 @@ public class FuturesTaskTwoCrossTP implements Runnable {
           );
           JSONArray positions = new JSONArray(jsonResult);
           JSONObject positionObject = positions.getJSONObject(0);
-          
-          if (!positionObject.optString("entryPrice").equals("0.0")) {
+          System.out.println("price: " + positionObject.optString("entryPrice"));
+          if (!positionObject.optString("entryPrice").equals("0.00000000")) {
                String side = fetchPositionSide();
                if (side.equals("BUY")) {
                     return PositionSide.LONG;

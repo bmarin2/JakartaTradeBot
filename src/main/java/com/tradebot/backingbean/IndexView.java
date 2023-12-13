@@ -15,6 +15,7 @@ import com.tradebot.service.BotExtraInfo;
 import com.tradebot.service.ReportTask;
 import com.tradebot.service.Task;
 import com.tradebot.service.TaskService;
+import com.tradebot.service.TaskV2;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -242,7 +243,7 @@ public class IndexView implements Serializable {
 	}
 
 	public void addTask() throws Exception {
-		Task task = new Task(selectedTradeBot);
+		TaskV2 task = new TaskV2(selectedTradeBot);
 
 		taskService.addTask(selectedTradeBot.getTaskId(),
 			   task,
