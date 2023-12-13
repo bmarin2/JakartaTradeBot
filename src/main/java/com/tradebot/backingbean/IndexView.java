@@ -341,7 +341,7 @@ public class IndexView implements Serializable {
 				return;
 			}
 			TradeBot bot = TradeBotDB.getOneTradeBot(taskId);
-			Task task = new Task(bot);
+			TaskV2 task = new TaskV2(bot);
 			taskService.addTask(bot.getTaskId(),
 				   task,
 				   bot.getInitialDelay(),
