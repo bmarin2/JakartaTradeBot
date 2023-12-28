@@ -9,6 +9,7 @@ import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
 import com.tradebot.service.FuturesTaskOneCross;
+import com.tradebot.service.FuturesTaskOneCrossBorder;
 import com.tradebot.service.FuturesTaskTwoCross;
 import com.tradebot.service.FuturesTaskTwoCrossTP;
 import com.tradebot.service.TaskService;
@@ -167,6 +168,9 @@ public class FuturesView implements Serializable {
 
 			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.TWO_CROSS_TAKE_PROFIT){
 				task = new FuturesTaskTwoCrossTP(bot);
+
+			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.ONE_CROSS_BORDER){
+				task = new FuturesTaskOneCrossBorder(bot);
 			}
 
 			taskService.addTask(bot.getTaskId(),
