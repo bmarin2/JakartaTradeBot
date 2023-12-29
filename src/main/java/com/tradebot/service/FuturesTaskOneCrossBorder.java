@@ -53,6 +53,7 @@ public class FuturesTaskOneCrossBorder implements Runnable {
                if (status.equals("FILLED") || status.equals("CANCELED")) {
                     currentPositionSide = PositionSide.NONE;
                     currentSPOrder = "";
+                    clearFields();
                     System.out.println("SP Triggered");
 
                     try {
@@ -99,8 +100,10 @@ public class FuturesTaskOneCrossBorder implements Runnable {
                          e.printStackTrace();
                     }
 
-                    cancelCurrentSPOrder();
+                    clearFields();
+                    cancelCurrentSPOrder();                    
                     currentPositionSide = PositionSide.NONE;
+
                } else if (currentPrice < borderPrice && !borderCrossed) {
                     System.out.println("\nNOT DISTANT FROM BORDER PRICE!");
                     currentCross = alarm.getCrosss();
@@ -123,8 +126,10 @@ public class FuturesTaskOneCrossBorder implements Runnable {
                          e.printStackTrace();
                     }
 
-                    cancelCurrentSPOrder();
+                    clearFields();
+                    cancelCurrentSPOrder();                    
                     currentPositionSide = PositionSide.NONE;
+
                } else if (currentPrice > borderPrice && !borderCrossed) {
                     System.out.println("\nNOT DISTANT FROM BORDER PRICE!");
                     currentCross = alarm.getCrosss();
@@ -158,7 +163,8 @@ public class FuturesTaskOneCrossBorder implements Runnable {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-
+                         
+                         clearFields();
                          cancelCurrentSPOrder();
                     }
 				
@@ -189,7 +195,8 @@ public class FuturesTaskOneCrossBorder implements Runnable {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-
+                         
+                         clearFields();
                          cancelCurrentSPOrder();
                     }
 				
@@ -392,8 +399,10 @@ public class FuturesTaskOneCrossBorder implements Runnable {
 
           JSONArray positions = new JSONArray(jsonResult);
           JSONObject positionObject = positions.getJSONObject(0);
-          
-          if (!positionObject.optString("entryPrice").equals("0.00000000")) {
+
+          String price = positionObject.optString("entryPrice");
+
+          if (!price.equals("0.0") && !price.equals("0.00000000")) {
                String side = fetchPositionSide();
                if (side.equals("BUY")) {
                     return PositionSide.LONG;
@@ -424,9 +433,13 @@ public class FuturesTaskOneCrossBorder implements Runnable {
           }
 
           JSONArray positions = new JSONArray(jsonResult);
-          JSONObject tradeObject = positions.getJSONObject(positions.length() - 1);
-
-          return tradeObject.optString("side");
+          if (positions.length() > 0) {
+               JSONObject tradeObject = positions.getJSONObject(positions.length() - 1);
+               return tradeObject.optString("side");
+          } else {
+               return "none";
+          }
+          
      }
 
      private String initStopLossOrder() {
@@ -528,5 +541,11 @@ public class FuturesTaskOneCrossBorder implements Runnable {
                result = price + percent;
           }
           return result;
-     }     
+     }
+     
+     private void clearFields() {
+          entryPrice = null;
+          borderCrossed = false;
+          borderPrice = null;
+     }
 }
