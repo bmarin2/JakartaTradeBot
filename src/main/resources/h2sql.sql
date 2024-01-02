@@ -100,3 +100,22 @@ CREATE TABLE ALARM (
     chartMode INT,
     emaCrossStrategy INT
 );
+
+CREATE TABLE MACD_ALARM (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    symbol VARCHAR(255),
+    alarmId VARCHAR(255),
+    initialDelay INT,
+    delay INT,
+    timeUnit INT,
+    description VARCHAR(255),
+    intervall VARCHAR(255),
+    dema INT,
+    currentEMA DOUBLE,
+    crosss BOOLEAN,
+    macdLine DOUBLE,
+    signalLine DOUBLE,
+    lastClosingCandle DOUBLE,
+    minGap DOUBLE,
+    chartMode INT
+);

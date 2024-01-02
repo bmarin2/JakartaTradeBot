@@ -55,6 +55,12 @@
 		   <artifactId>binance-futures-connector-java</artifactId>
 		   <version>3.0.2</version>
 	   </dependency>
+	   
+	   <dependency>
+		   <groupId>org.ta4j</groupId>
+		   <artifactId>ta4j-core</artifactId>
+		   <version>0.15</version>
+	   </dependency>
         
     </dependencies>
     

@@ -104,10 +104,6 @@ public class FuturesTaskOneCrossBorder implements Runnable {
                     cancelCurrentSPOrder();                    
                     currentPositionSide = PositionSide.NONE;
 
-               } else if (currentPrice < borderPrice && !borderCrossed) {
-                    System.out.println("\nNOT DISTANT FROM BORDER PRICE!");
-                    currentCross = alarm.getCrosss();
-                    return;
                }
           } else if (currentPositionSide == PositionSide.SHORT) {
                Double currentPrice = getTickerPrice();
@@ -130,18 +126,14 @@ public class FuturesTaskOneCrossBorder implements Runnable {
                     cancelCurrentSPOrder();                    
                     currentPositionSide = PositionSide.NONE;
 
-               } else if (currentPrice > borderPrice && !borderCrossed) {
-                    System.out.println("\nNOT DISTANT FROM BORDER PRICE!");
-                    currentCross = alarm.getCrosss();
-                    return;
                }
           }
 
           System.out.println("\nContinuing...");
 
-          
+
           // ====================================================================================          
-          
+
           if (currentCross != alarm.getCrosss()) {
                
                currentCross = alarm.getCrosss();
