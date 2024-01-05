@@ -18,11 +18,12 @@ public class MACDAlarm implements Serializable {
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
 	private String description;
 	private String intervall = "1m";
-	private Integer dema = 200;
+	private Integer ema = 200;
 	private Double currentEma = 0.0;
-	private Boolean crosss = false;
-	private Double macdLine = 0.0;
-	private Double signalLine = 0.0;
+     private Boolean macdCrosss = false;
+     private Boolean goodForEntry = false;
+     private Double currentMacdLine = 0.0;
+	private Double currentSignalLine = 0.0;	
 	private Double lastClosingCandle = 0.0;
 	private Double minGap = 0.0;
 	private ChartMode chartMode = ChartMode.FUTURES;

@@ -2,6 +2,7 @@ package com.tradebot.db;
 
 import com.tradebot.enums.ChartMode;
 import com.tradebot.model.MACDAlarm;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,8 +22,8 @@ public class MACDAlarmDB {
 		long alarm_id = 0;
 
 		String query = "INSERT INTO MACD_ALARM (symbol, alarmId, initialDelay, delay, timeUnit, description,"
-			   + " intervall, dema, currentEma, crosss, macdLine, signalLine, lastClosingCandle, minGap, chartMode) "
-			   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			   + " intervall, ema, currentEma, macdCrosss, goodForEntry, currentMacdLine, currentSignalLine, lastClosingCandle, minGap, chartMode) "
+			   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 
@@ -33,14 +34,15 @@ public class MACDAlarmDB {
 			ps.setInt(5, alarm.getTimeUnit().ordinal());
 			ps.setString(6, alarm.getDescription());
 			ps.setString(7, alarm.getIntervall());
-			ps.setInt(8, alarm.getDema());
+			ps.setInt(8, alarm.getEma());
 			ps.setDouble(9, alarm.getCurrentEma());
-			ps.setBoolean(10, alarm.getCrosss());
-			ps.setDouble(11, alarm.getMacdLine());
-			ps.setDouble(12, alarm.getSignalLine());
-			ps.setDouble(13, alarm.getLastClosingCandle());
-			ps.setDouble(14, alarm.getMinGap());
-			ps.setInt(15, alarm.getChartMode().ordinal());
+			ps.setBoolean(10, alarm.getMacdCrosss());
+               ps.setBoolean(11, alarm.getGoodForEntry());
+			ps.setDouble(12, alarm.getCurrentMacdLine());
+               ps.setDouble(13, alarm.getCurrentSignalLine());
+			ps.setDouble(14, alarm.getLastClosingCandle());
+			ps.setDouble(15, alarm.getMinGap());
+			ps.setInt(16, alarm.getChartMode().ordinal());
 
 			ps.executeUpdate();
 
@@ -67,8 +69,9 @@ public class MACDAlarmDB {
 		ResultSet rs = null;
 
 		String query = "UPDATE MACD_ALARM SET symbol=?, alarmId=?, initialDelay=?, delay=?, timeUnit=?, description=?,"
-			   + " intervall=?, dema=?, currentEma=?, crosss=?, macdLine=?, signalLine=?, lastClosingCandle=?, minGap=?, chartMode=?"
-			   + "WHERE id = ?";
+			   + " intervall=?, ema=?, currentEma=?, macdCrosss=?, goodForEntry=?, currentMacdLine=?, currentSignalLine=?,"
+                  + " lastClosingCandle=?, minGap=?, chartMode=?"
+			   + " WHERE id = ?";
 		try {
 			ps = connection.prepareStatement(query);
 
@@ -79,15 +82,16 @@ public class MACDAlarmDB {
 			ps.setInt(5, alarm.getTimeUnit().ordinal());
 			ps.setString(6, alarm.getDescription());
 			ps.setString(7, alarm.getIntervall());
-			ps.setInt(8, alarm.getDema());
+			ps.setInt(8, alarm.getEma());
 			ps.setDouble(9, alarm.getCurrentEma());
-			ps.setBoolean(10, alarm.getCrosss());
-			ps.setDouble(11, alarm.getMacdLine());
-			ps.setDouble(12, alarm.getSignalLine());
-			ps.setDouble(13, alarm.getLastClosingCandle());
-			ps.setDouble(14, alarm.getMinGap());
-			ps.setInt(15, alarm.getChartMode().ordinal());
-			ps.setLong(16, alarm.getId());
+			ps.setBoolean(10, alarm.getMacdCrosss());
+               ps.setBoolean(11, alarm.getGoodForEntry());
+			ps.setDouble(12, alarm.getCurrentMacdLine());
+               ps.setDouble(13, alarm.getCurrentSignalLine());
+			ps.setDouble(14, alarm.getLastClosingCandle());
+			ps.setDouble(15, alarm.getMinGap());
+			ps.setInt(16, alarm.getChartMode().ordinal());
+			ps.setLong(17, alarm.getId());
 
 			ps.executeUpdate();
 
@@ -121,11 +125,12 @@ public class MACDAlarmDB {
 				alarm.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				alarm.setDescription(rs.getString("description"));
 				alarm.setIntervall(rs.getString("intervall"));
-				alarm.setDema(rs.getInt("dema"));
+				alarm.setEma(rs.getInt("ema"));
 				alarm.setCurrentEma(rs.getDouble("currentEma"));
-				alarm.setCrosss(rs.getBoolean("crosss"));
-				alarm.setMacdLine(rs.getDouble("macdLine"));
-				alarm.setSignalLine(rs.getDouble("signalLine"));				
+				alarm.setMacdCrosss(rs.getBoolean("macdCrosss"));
+                    alarm.setGoodForEntry(rs.getBoolean("goodForEntry"));
+				alarm.setCurrentMacdLine(rs.getDouble("currentMacdLine"));
+                    alarm.setCurrentSignalLine(rs.getDouble("currentSignalLine"));
 				alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
@@ -162,11 +167,12 @@ public class MACDAlarmDB {
 				alarm.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				alarm.setDescription(rs.getString("description"));
 				alarm.setIntervall(rs.getString("intervall"));
-				alarm.setDema(rs.getInt("dema"));
+				alarm.setEma(rs.getInt("ema"));
 				alarm.setCurrentEma(rs.getDouble("currentEma"));
-				alarm.setCrosss(rs.getBoolean("crosss"));
-				alarm.setMacdLine(rs.getDouble("macdLine"));
-				alarm.setSignalLine(rs.getDouble("signalLine"));
+				alarm.setMacdCrosss(rs.getBoolean("macdCrosss"));
+                    alarm.setGoodForEntry(rs.getBoolean("goodForEntry"));
+				alarm.setCurrentMacdLine(rs.getDouble("currentMacdLine"));
+                    alarm.setCurrentSignalLine(rs.getDouble("currentSignalLine"));
 				alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
@@ -203,11 +209,12 @@ public class MACDAlarmDB {
 				alarm.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				alarm.setDescription(rs.getString("description"));
 				alarm.setIntervall(rs.getString("intervall"));
-				alarm.setDema(rs.getInt("dema"));
+				alarm.setEma(rs.getInt("ema"));
 				alarm.setCurrentEma(rs.getDouble("currentEma"));
-				alarm.setCrosss(rs.getBoolean("crosss"));
-				alarm.setMacdLine(rs.getDouble("macdLine"));
-				alarm.setSignalLine(rs.getDouble("signalLine"));
+				alarm.setMacdCrosss(rs.getBoolean("macdCrosss"));
+                    alarm.setGoodForEntry(rs.getBoolean("goodForEntry"));
+				alarm.setCurrentMacdLine(rs.getDouble("currentMacdLine"));
+                    alarm.setCurrentSignalLine(rs.getDouble("currentSignalLine"));
 				alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);

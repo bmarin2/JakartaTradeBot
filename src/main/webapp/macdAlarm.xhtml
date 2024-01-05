@@ -93,15 +93,27 @@
 					<h:outputLabel value="Interval"/>
 					<p:outputLabel value="#{alarm.intervall}" />
 					<h:outputLabel value="Ema"/>
-					<p:outputLabel value="#{alarm.dema}" />
+					<p:outputLabel value="#{alarm.ema}" />
+
 					<h:outputLabel value="Current Ema"/>
-					<p:outputLabel value="#{alarm.currentEma}" />					
-					<h:outputLabel value="Cross"/>
-					<p:outputLabel value="#{alarm.crosss}" />
-					<h:outputLabel value="MACD Line"/>
-					<p:outputLabel value="#{alarm.macdLine}" />
-					<h:outputLabel value="Signal Line"/>
-					<p:outputLabel value="#{alarm.signalLine}" />
+                         <h:outputText value="#{alarm.currentEma}">
+						<f:convertNumber pattern="#0.000" />
+					</h:outputText>
+
+					<h:outputLabel value="Current MACD Line"/>
+                         <h:outputText value="#{alarm.currentMacdLine}">
+						<f:convertNumber pattern="#0.000" />
+					</h:outputText>
+
+					<h:outputLabel value="Current Signal Line"/>                         
+                         <h:outputText value="#{alarm.currentSignalLine}">
+						<f:convertNumber pattern="#0.000" />
+					</h:outputText>
+                         
+                         <h:outputLabel value="MACD Cross"/>
+                         <p:outputLabel value="#{alarm.macdCrosss}" />
+                         <h:outputLabel value="Good for entry"/>
+                         <p:outputLabel value="#{alarm.goodForEntry}" />
 					<h:outputLabel value="Last Candle"/>
 					<p:outputLabel value="#{alarm.lastClosingCandle}" />
 					<h:outputLabel value="Gap"/>
@@ -151,8 +163,8 @@
 					<p:outputLabel for="input6" value="Intervall"/>
 					<p:inputText id="input6" value="#{macdAlarmView.selectedAlarm.intervall}" />
 					
-					<p:outputLabel for="input7" value="Dema length"/>
-					<p:inputText id="input7" value="#{macdAlarmView.selectedAlarm.dema}"/>
+					<p:outputLabel for="input7" value="Ema length"/>
+					<p:inputText id="input7" value="#{macdAlarmView.selectedAlarm.ema}"/>
 					
 					<p:outputLabel for="input8" value="Min Gap"/>
 					<p:inputText id="input8" value="#{macdAlarmView.selectedAlarm.minGap}" />

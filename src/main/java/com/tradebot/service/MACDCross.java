@@ -1,18 +1,22 @@
 package com.tradebot.service;
 
 import com.binance.connector.client.impl.SpotClientImpl;
+import com.binance.connector.futures.client.exceptions.BinanceClientException;
+import com.binance.connector.futures.client.exceptions.BinanceConnectorException;
+import com.binance.connector.futures.client.exceptions.BinanceServerException;
 import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.binance.UMFuturesClientConfig;
+import com.tradebot.configuration.FuturesOrderParams;
+import com.tradebot.db.MACDAlarmDB;
 import com.tradebot.enums.ChartMode;
 import com.tradebot.model.MACDAlarm;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
 import org.ta4j.core.indicators.EMAIndicator;
@@ -28,7 +32,7 @@ public class MACDCross implements Runnable {
 
 	private BarSeries series;
 	private ClosePriceIndicator closePriceIndicator;
-	private MACDIndicator macd;
+	private MACDIndicator macdIndicator;
 
 	public MACDCross(MACDAlarm macdAlarm) {
 		if (macdAlarm.getChartMode() == ChartMode.SPOT) {
@@ -36,28 +40,98 @@ public class MACDCross implements Runnable {
 		} else if (macdAlarm.getChartMode() == ChartMode.FUTURES) {
 			umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLProd();
 		}
-		this.telegramBot = new TelegramBot();
+		telegramBot = new TelegramBot();
 		this.macdAlarm = macdAlarm;
 		
-		this.series = new BaseBarSeriesBuilder().withName("mySeries").build();
-		fillBarSeries(macdAlarm.getDema() * 2);
-		closePriceIndicator = new ClosePriceIndicator(this.series);
-		macd = new MACDIndicator(closePriceIndicator);
-		displayValues();
+		series = new BaseBarSeriesBuilder().withName("mySeries").build();
+          series.setMaximumBarCount(macdAlarm.getEma() * 2);		
+          updateValues(true);
+          calculateValues();
 	}
 
 	@Override
 	public void run() {
-		calculateNewValues();
-		displayValues();		
+          updateValues(false);
+          calculateValues();
 	}
-	
-	private void fillBarSeries(int limit) {
+
+     private void updateValues(boolean firstTime) {
+          if (firstTime) {
+               fetchBarSeries(macdAlarm.getEma() * 2);
+          } else {
+               fetchBarSeries(1);
+          }
+
+          closePriceIndicator = new ClosePriceIndicator(series);
+		macdIndicator = new MACDIndicator(closePriceIndicator);
+
+          macdAlarm.setCurrentMacdLine(
+                  macdIndicator.getValue(macdIndicator.getBarSeries().getEndIndex()).doubleValue()
+          );
+          macdAlarm.setCurrentSignalLine(
+                  new EMAIndicator(macdIndicator, 9).getValue(macdIndicator.getBarSeries().getEndIndex()).doubleValue()
+          );          
+          macdAlarm.setCurrentEma(
+                  new EMAIndicator(closePriceIndicator, macdAlarm.getEma()).getValue(closePriceIndicator.getBarSeries().getEndIndex()).doubleValue()          
+          );          
+          macdAlarm.setLastClosingCandle(closePriceIndicator.getValue(closePriceIndicator.getBarSeries().getEndIndex()).doubleValue());
+          
+          System.out.println("series size: " + series.getBarCount());
+          System.out.println("macd line:   " + macdAlarm.getCurrentMacdLine());
+          System.out.println("signal line: " + macdAlarm.getCurrentSignalLine());
+          System.out.println("ema line:    " + macdAlarm.getCurrentEma());
+          System.out.println("last candle: " + macdAlarm.getLastClosingCandle());
+          System.out.println("--------------------------");
+     }
+
+     private void calculateValues() {
+          System.out.println("Calculating values:");
+          System.out.println("--");
+          if (macdAlarm.getMacdCrosss() && macdAlarm.getCurrentMacdLine() > macdAlarm.getCurrentSignalLine()) {
+               macdAlarm.setMacdCrosss(false);
+               System.out.println("Macd Crosss is now false");
+               if (macdAlarm.getCurrentMacdLine() < 0 && macdAlarm.getCurrentSignalLine() < 0 && isPriceAboveEmaLine()) {
+                    macdAlarm.setGoodForEntry(true);
+                    System.out.println("Good for entry");
+                    try {
+                         telegramBot.sendMessage("Good for entry LONG");
+                    } catch (Exception e) {
+                         e.printStackTrace();
+                    }
+               } else {
+                    macdAlarm.setGoodForEntry(false);
+                    System.out.println("Not good for entry");
+               }
+
+          } else if (!macdAlarm.getMacdCrosss() && macdAlarm.getCurrentMacdLine() < macdAlarm.getCurrentSignalLine()) {
+               macdAlarm.setMacdCrosss(true);
+               System.out.println("Macd Crosss is now true");
+               if (macdAlarm.getCurrentMacdLine() > 0 && macdAlarm.getCurrentSignalLine() > 0 && !isPriceAboveEmaLine()) {
+                    macdAlarm.setGoodForEntry(true);
+                    System.out.println("Good for entry");
+                    try {
+                         telegramBot.sendMessage("Good for entry SHORT");
+                    } catch (Exception e) {
+                         e.printStackTrace();
+                    }
+               } else {
+                    macdAlarm.setGoodForEntry(false);
+                    System.out.println("Not good for entry");
+               }
+          }
+
+          try {
+               MACDAlarmDB.editAlarm(macdAlarm);
+          } catch (Exception ex) {
+               ex.printStackTrace();
+          }
+     }
+
+	private void fetchBarSeries(int limit) {
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
 		parameters.put("symbol", macdAlarm.getSymbol());
 		parameters.put("interval", macdAlarm.getIntervall());
 		parameters.put("limit", limit + 1);
-		List<Double> priceList = new ArrayList<>();
 
 		String result = "";		
 		
@@ -77,7 +151,7 @@ public class MACDCross implements Runnable {
 			Instant instant = Instant.ofEpochMilli(unixTimestampMillis);
 			ZonedDateTime utcZonedDateTime = instant.atZone(ZoneId.of("UTC"));
 
-			this.series.addBar(utcZonedDateTime,
+			series.addBar(utcZonedDateTime,
 				   candlestick.getString(1),
 				   candlestick.getString(2),
 				   candlestick.getString(3),
@@ -87,16 +161,32 @@ public class MACDCross implements Runnable {
 		}
 	}
 
-	private void displayValues() {
-		System.out.println("last macd  : " + this.macd.getValue(macd.getBarSeries().getEndIndex()));
-		System.out.println("last signal: " + new EMAIndicator(this.macd, 9).getValue(this.macd.getBarSeries().getEndIndex()));
-		System.out.println("last EMA  : " + new EMAIndicator(this.closePriceIndicator, 200).getValue(this.closePriceIndicator.getBarSeries().getEndIndex()));
-		System.out.println("------------------------------");
-	}
-	
-	private void calculateNewValues() {
-		fillBarSeries(1);
-		closePriceIndicator = new ClosePriceIndicator(this.series);
-		macd = new MACDIndicator(closePriceIndicator);
-	}
+     private Double fetchTickerPrice() {
+          String result = "";
+
+          try {
+               result = umFuturesClientImpl.market().tickerSymbol(
+                       FuturesOrderParams.getTickerParams(macdAlarm.getSymbol())
+               );
+          } catch (BinanceConnectorException e) {
+               System.out.println("BinanceConnectorException");
+               e.printStackTrace();
+          } catch (BinanceClientException e) {
+               System.out.println("BinanceClientException");
+               e.printStackTrace();
+          } catch (BinanceServerException e) {
+               System.out.println("BinanceServerException");
+               e.printStackTrace();
+          }
+          JSONObject jsonResult = new JSONObject(result);
+          return jsonResult.optDouble("price");
+     }
+
+     private boolean isPriceAboveEmaLine() {
+          double currentEma = new EMAIndicator(this.closePriceIndicator, macdAlarm.getEma())
+                  .getValue(this.closePriceIndicator.getBarSeries().getEndIndex()).doubleValue();
+          double currentPrice = fetchTickerPrice();
+
+          return currentPrice > currentEma;
+     }
 }
