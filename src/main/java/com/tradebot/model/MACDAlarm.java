@@ -25,6 +25,6 @@ public class MACDAlarm implements Serializable {
      private Double currentMacdLine = 0.0;
 	private Double currentSignalLine = 0.0;	
 	private Double lastClosingCandle = 0.0;
-	private Double minGap = 0.0;
-	private ChartMode chartMode = ChartMode.FUTURES;
+	private Double minGap = 5.0;
+	private ChartMode chartMode = ChartMode.FUTURES_BASE_URL_PROD;
 }

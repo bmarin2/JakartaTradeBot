@@ -32,12 +32,7 @@ public class TemaOneCrossTask implements Runnable {
 	private final double multiplierThirdDema;
 
 	public TemaOneCrossTask(Alarm alarm) throws Exception {
-		if (alarm.getChartMode() == ChartMode.SPOT) {
-			spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLProd();
-		} else if (alarm.getChartMode() == ChartMode.FUTURES) {
-			umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
-		}
-
+		initChartMode(alarm);
 		this.telegramBot = new TelegramBot();
 		this.alarm = alarm;
 		this.secondEma = 0;
@@ -173,9 +168,9 @@ public class TemaOneCrossTask implements Runnable {
 
 		String result = "";
 
-		if (alarm.getChartMode() == ChartMode.SPOT) {
+		if (alarm.getChartMode().name().startsWith("SPOT")) {
 			result = spotClientImpl.createMarket().klines(parameters);
-		} else if (alarm.getChartMode() == ChartMode.FUTURES) {
+		} else if (alarm.getChartMode().name().startsWith("FUTURES")) {
 			result = umFuturesClientImpl.market().klines(parameters);
 		}
 
@@ -198,9 +193,9 @@ public class TemaOneCrossTask implements Runnable {
 
 		String result = "";
 
-		if (alarm.getChartMode() == ChartMode.SPOT) {
+		if (alarm.getChartMode().name().startsWith("SPOT")) {
 			result = spotClientImpl.createMarket().klines(parameters);
-		} else if (alarm.getChartMode() == ChartMode.FUTURES) {
+		} else if (alarm.getChartMode().name().startsWith("FUTURES")) {
 			result = umFuturesClientImpl.market().klines(parameters);
 		}
 
@@ -227,6 +222,37 @@ public class TemaOneCrossTask implements Runnable {
 			AlarmDB.editAlarm(al);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+	
+	private void initChartMode(Alarm alarm) {
+		switch (alarm.getChartMode()) {
+			case SPOT_BASE_URL_PROD:
+				spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLProd();
+				break;
+			case SPOT_BASE_URL_TEST:
+				spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLTest();
+				break;
+			case SPOT_SIGNED_PROD:
+				spotClientImpl = SpotClientConfig.spotClientSignProd();
+				break;
+			case SPOT_SIGNED_TEST:
+				spotClientImpl = SpotClientConfig.spotClientSignTest();
+				break;
+			case FUTURES_BASE_URL_PROD:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLProd();
+				break;
+			case FUTURES_BASE_URL_TEST:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLTest();
+				break;
+			case FUTURES_SIGNED_PROD:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresSignedProd();
+				break;
+			case FUTURES_SIGNED_TEST:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
+				break;
+			default:
+				break;
 		}
 	}
 }

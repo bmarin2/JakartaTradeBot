@@ -9,7 +9,6 @@ import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.MACDAlarmDB;
-import com.tradebot.enums.ChartMode;
 import com.tradebot.model.MACDAlarm;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -35,14 +34,9 @@ public class MACDCross implements Runnable {
 	private MACDIndicator macdIndicator;
 
 	public MACDCross(MACDAlarm macdAlarm) {
-		if (macdAlarm.getChartMode() == ChartMode.SPOT) {
-			spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLProd();
-		} else if (macdAlarm.getChartMode() == ChartMode.FUTURES) {
-			umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLProd();
-		}
-		telegramBot = new TelegramBot();
 		this.macdAlarm = macdAlarm;
-		
+		initChartMode(macdAlarm);		
+		telegramBot = new TelegramBot();		
 		series = new BaseBarSeriesBuilder().withName("mySeries").build();
           series.setMaximumBarCount(macdAlarm.getEma() * 2);		
           updateValues(true);
@@ -87,38 +81,53 @@ public class MACDCross implements Runnable {
      private void calculateValues() {
           System.out.println("Calculating values:");
           System.out.println("--");
+
           if (macdAlarm.getMacdCrosss() && macdAlarm.getCurrentMacdLine() > macdAlarm.getCurrentSignalLine()) {
-               macdAlarm.setMacdCrosss(false);
-               System.out.println("Macd Crosss is now false");
-               if (macdAlarm.getCurrentMacdLine() < 0 && macdAlarm.getCurrentSignalLine() < 0 && isPriceAboveEmaLine()) {
-                    macdAlarm.setGoodForEntry(true);
-                    System.out.println("Good for entry");
-                    try {
-                         telegramBot.sendMessage("Good for entry LONG");
-                    } catch (Exception e) {
-                         e.printStackTrace();
-                    }
-               } else {
-                    macdAlarm.setGoodForEntry(false);
-                    System.out.println("Not good for entry");
-               }
+
+			double percentageIncrease = (macdAlarm.getMinGap() / 100) * macdAlarm.getCurrentSignalLine();
+			double incrisedSignalLine = macdAlarm.getCurrentSignalLine() + percentageIncrease;
+
+			if (macdAlarm.getCurrentMacdLine() > incrisedSignalLine) {
+				macdAlarm.setMacdCrosss(false);
+				System.out.println("Macd Crosss is now false");
+
+				if (macdAlarm.getCurrentMacdLine() < 0 && macdAlarm.getCurrentSignalLine() < 0 && isPriceAboveEmaLine()) {
+					macdAlarm.setGoodForEntry(true);
+					System.out.println("Good for entry");
+					try {
+						telegramBot.sendMessage("Good for entry LONG");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					macdAlarm.setGoodForEntry(false);
+					System.out.println("Not good for entry");
+				}
+			}
 
           } else if (!macdAlarm.getMacdCrosss() && macdAlarm.getCurrentMacdLine() < macdAlarm.getCurrentSignalLine()) {
-               macdAlarm.setMacdCrosss(true);
-               System.out.println("Macd Crosss is now true");
-               if (macdAlarm.getCurrentMacdLine() > 0 && macdAlarm.getCurrentSignalLine() > 0 && !isPriceAboveEmaLine()) {
-                    macdAlarm.setGoodForEntry(true);
-                    System.out.println("Good for entry");
-                    try {
-                         telegramBot.sendMessage("Good for entry SHORT");
-                    } catch (Exception e) {
-                         e.printStackTrace();
-                    }
-               } else {
-                    macdAlarm.setGoodForEntry(false);
-                    System.out.println("Not good for entry");
-               }
-          }
+			
+			double percentageIncrease = (macdAlarm.getMinGap() / 100) * macdAlarm.getCurrentSignalLine();
+			double incrisedSignalLine = macdAlarm.getCurrentSignalLine() - percentageIncrease;
+			
+			if (macdAlarm.getCurrentMacdLine() < incrisedSignalLine) {
+				macdAlarm.setMacdCrosss(true);
+				System.out.println("Macd Crosss is now true");
+
+				if (macdAlarm.getCurrentMacdLine() > 0 && macdAlarm.getCurrentSignalLine() > 0 && !isPriceAboveEmaLine()) {
+					macdAlarm.setGoodForEntry(true);
+					System.out.println("Good for entry");
+					try {
+						telegramBot.sendMessage("Good for entry SHORT");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					macdAlarm.setGoodForEntry(false);
+					System.out.println("Not good for entry");
+				}
+			}
+		}
 
           try {
                MACDAlarmDB.editAlarm(macdAlarm);
@@ -135,9 +144,9 @@ public class MACDCross implements Runnable {
 
 		String result = "";		
 		
-		if (macdAlarm.getChartMode() == ChartMode.SPOT) {
+		if (macdAlarm.getChartMode().name().startsWith("SPOT")) {
 			result = spotClientImpl.createMarket().klines(parameters);
-		} else if (macdAlarm.getChartMode() == ChartMode.FUTURES) {
+		} else if (macdAlarm.getChartMode().name().startsWith("FUTURES")) {
 			result = umFuturesClientImpl.market().klines(parameters);
 		}
 
@@ -189,4 +198,35 @@ public class MACDCross implements Runnable {
 
           return currentPrice > currentEma;
      }
+	
+	private void initChartMode(MACDAlarm macdAlarm) {
+		switch (macdAlarm.getChartMode()) {
+			case SPOT_BASE_URL_PROD:
+				spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLProd();
+				break;
+			case SPOT_BASE_URL_TEST:
+				spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLTest();
+				break;
+			case SPOT_SIGNED_PROD:
+				spotClientImpl = SpotClientConfig.spotClientSignProd();
+				break;
+			case SPOT_SIGNED_TEST:
+				spotClientImpl = SpotClientConfig.spotClientSignTest();
+				break;
+			case FUTURES_BASE_URL_PROD:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLProd();
+				break;
+			case FUTURES_BASE_URL_TEST:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLTest();
+				break;
+			case FUTURES_SIGNED_PROD:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresSignedProd();
+				break;
+			case FUTURES_SIGNED_TEST:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
+				break;
+			default:
+				break;
+		}
+	}
 }

@@ -4,10 +4,12 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.FuturesBotDB;
+import com.tradebot.enums.ChartMode;
 import com.tradebot.enums.FutresDemaStrategy;
 import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
+import com.tradebot.service.FuturesTaskMACDCross;
 import com.tradebot.service.FuturesTaskOneCross;
 import com.tradebot.service.FuturesTaskOneCrossBorder;
 import com.tradebot.service.FuturesTaskTwoCross;
@@ -79,6 +81,10 @@ public class FuturesView implements Serializable {
 	
 	public FutresDemaStrategy[] getStrategies() {
 		return FutresDemaStrategy.values();
+	}
+	
+	public ChartMode[] getChartModes() {
+		return ChartMode.values();
 	}
 
 	private void addMessage(String summary, String msg) {
@@ -171,6 +177,9 @@ public class FuturesView implements Serializable {
 
 			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.ONE_CROSS_BORDER){
 				task = new FuturesTaskOneCrossBorder(bot);
+
+			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.MACD_CROSS){
+				task = new FuturesTaskMACDCross(bot);
 			}
 
 			taskService.addTask(bot.getTaskId(),

@@ -36,11 +36,7 @@ public class TemaTwoCrossTask implements Runnable {
      private final double multiplierThirdDema;
 
      public TemaTwoCrossTask(Alarm alarm) throws Exception {
-          if (alarm.getChartMode() == ChartMode.SPOT) {
-               spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLProd();
-          } else if (alarm.getChartMode() == ChartMode.FUTURES) {
-               umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
-          }
+          initChartMode(alarm);
           this.telegramBot = new TelegramBot();
           this.alarm = alarm;
           this.firstEma = 0;
@@ -223,11 +219,11 @@ public class TemaTwoCrossTask implements Runnable {
 
           String result = "";
 
-          if (alarm.getChartMode() == ChartMode.SPOT) {
-               result = spotClientImpl.createMarket().klines(parameters);
-          } else if (alarm.getChartMode() == ChartMode.FUTURES) {
-               result = umFuturesClientImpl.market().klines(parameters);
-          }
+		if (alarm.getChartMode().name().startsWith("SPOT")) {
+			result = spotClientImpl.createMarket().klines(parameters);
+		} else if (alarm.getChartMode().name().startsWith("FUTURES")) {
+			result = umFuturesClientImpl.market().klines(parameters);
+		}
 
           JSONArray jsonArray = new JSONArray(result);
           jsonArray.remove(jsonArray.length() - 1);
@@ -248,11 +244,11 @@ public class TemaTwoCrossTask implements Runnable {
 
           String result = "";
 
-          if (alarm.getChartMode() == ChartMode.SPOT) {
-               result = spotClientImpl.createMarket().klines(parameters);
-          } else if (alarm.getChartMode() == ChartMode.FUTURES) {
-               result = umFuturesClientImpl.market().klines(parameters);
-          }
+		if (alarm.getChartMode().name().startsWith("SPOT")) {
+			result = spotClientImpl.createMarket().klines(parameters);
+		} else if (alarm.getChartMode().name().startsWith("FUTURES")) {
+			result = umFuturesClientImpl.market().klines(parameters);
+		}
 
           JSONArray jsonArray = new JSONArray(result);
 
@@ -279,4 +275,35 @@ public class TemaTwoCrossTask implements Runnable {
                e.printStackTrace();
           }
      }
+
+	private void initChartMode(Alarm alarm) {
+		switch (alarm.getChartMode()) {
+			case SPOT_BASE_URL_PROD:
+				spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLProd();
+				break;
+			case SPOT_BASE_URL_TEST:
+				spotClientImpl = SpotClientConfig.spotClientOnlyBaseURLTest();
+				break;
+			case SPOT_SIGNED_PROD:
+				spotClientImpl = SpotClientConfig.spotClientSignProd();
+				break;
+			case SPOT_SIGNED_TEST:
+				spotClientImpl = SpotClientConfig.spotClientSignTest();
+				break;
+			case FUTURES_BASE_URL_PROD:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLProd();
+				break;
+			case FUTURES_BASE_URL_TEST:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLTest();
+				break;
+			case FUTURES_SIGNED_PROD:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresSignedProd();
+				break;
+			case FUTURES_SIGNED_TEST:
+				umFuturesClientImpl = UMFuturesClientConfig.futuresSignedTest();
+				break;
+			default:
+				break;
+		}
+	}
 }

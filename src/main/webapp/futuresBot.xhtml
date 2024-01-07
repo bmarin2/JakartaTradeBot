@@ -124,6 +124,10 @@
 					<p:column sortBy="#{bot.stopLoss}" headerText="SL">
 						<h:outputText value="#{bot.stopLoss}" />
 					</p:column>
+					
+					<p:column sortBy="#{bot.takeProfit}" headerText="TP">
+						<h:outputText value="#{bot.takeProfit}" />
+					</p:column>
 
 					<p:column sortBy="#{bot.demaAlertTaskId}" headerText="Dema">
 						<h:outputText value="#{bot.demaAlertTaskId}" />
@@ -135,6 +139,10 @@
 					
 					<p:column sortBy="#{bot.futresDemaStrategy}" headerText="Strategy">
 						<h:outputText value="#{bot.futresDemaStrategy}" />
+					</p:column>
+
+					<p:column sortBy="#{bot.chartMode}" headerText="Chart Mode">
+						<h:outputText value="#{bot.chartMode}" />
 					</p:column>
 
 					<p:column>
@@ -179,14 +187,22 @@
 						</p:selectOneMenu>
 
 						<p:outputLabel for="input9" value="Stop Loss (%)"/>
-						<p:inputText id="input9" value="#{futuresView.selectedTradeBot.stopLoss}"/>						
+						<p:inputText id="input9" value="#{futuresView.selectedTradeBot.stopLoss}"/>
+						
+						<p:outputLabel for="input10" value="Take Profit (%)"/>
+						<p:inputText id="input10" value="#{futuresView.selectedTradeBot.takeProfit}"/>
 
-						<p:outputLabel for="input10" value="Dema TaskId"/>
-						<p:inputText id="input10" value="#{futuresView.selectedTradeBot.demaAlertTaskId}" />
+						<p:outputLabel for="input11" value="Dema TaskId"/>
+						<p:inputText id="input11" value="#{futuresView.selectedTradeBot.demaAlertTaskId}" />
 						
 						<p:outputLabel for="select3" value="Strategy"/>
 						<p:selectOneMenu value="#{futuresView.selectedTradeBot.futresDemaStrategy}" id="select3" style="width:100%">
 							<f:selectItems value="#{futuresView.strategies}" var="strategy" itemLabel="#{strategy}" itemValue="#{strategy}"/>
+						</p:selectOneMenu>
+						
+						<p:outputLabel for="select4" value="Chart Mode"/>
+						<p:selectOneMenu value="#{futuresView.selectedTradeBot.chartMode}" id="select4" style="width:100%">
+							<f:selectItems value="#{futuresView.chartModes}" var="chartMode" itemLabel="#{chartMode}" itemValue="#{chartMode}"/>
 						</p:selectOneMenu>
 						
 					</p:panelGrid>

@@ -33,6 +33,6 @@ public class Alarm implements Serializable {
 	private Boolean crosssBig = false;
 	private Double lastClosingCandle = 0.0;
 	private Double minGap = 0.0;
-	private ChartMode chartMode = ChartMode.SPOT;
+	private ChartMode chartMode = ChartMode.SPOT_BASE_URL_PROD;
 	private EmaCrossStrategy emaCrossStrategy = EmaCrossStrategy.ONE_CROSS_DEMA;
 }
