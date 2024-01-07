@@ -75,6 +75,7 @@ public class MACDCross implements Runnable {
           System.out.println("signal line: " + macdAlarm.getCurrentSignalLine());
           System.out.println("ema line:    " + macdAlarm.getCurrentEma());
           System.out.println("last candle: " + macdAlarm.getLastClosingCandle());
+          System.out.println("curr cross:  " + macdAlarm.getMacdCrosss());
           System.out.println("--------------------------");
      }
 
@@ -142,13 +143,24 @@ public class MACDCross implements Runnable {
 		parameters.put("interval", macdAlarm.getIntervall());
 		parameters.put("limit", limit + 1);
 
-		String result = "";		
-		
-		if (macdAlarm.getChartMode().name().startsWith("SPOT")) {
-			result = spotClientImpl.createMarket().klines(parameters);
-		} else if (macdAlarm.getChartMode().name().startsWith("FUTURES")) {
-			result = umFuturesClientImpl.market().klines(parameters);
-		}
+		String result = "";
+          
+          try {
+               if (macdAlarm.getChartMode().name().startsWith("SPOT")) {
+                    result = spotClientImpl.createMarket().klines(parameters);
+               } else if (macdAlarm.getChartMode().name().startsWith("FUTURES")) {
+                    result = umFuturesClientImpl.market().klines(parameters);
+               }               
+          } catch (BinanceConnectorException e) {
+               sendErrorMsg("BinanceConnectorException", e.getMessage());
+               e.printStackTrace();
+          } catch (BinanceClientException e) {
+			sendErrorMsg("BinanceClientException", e.getMessage());
+               e.printStackTrace();
+          } catch (BinanceServerException e) {
+			sendErrorMsg("BinanceServerException", e.getMessage());
+               e.printStackTrace();
+          }
 
 		JSONArray jsonArray = new JSONArray(result);
 		jsonArray.remove(jsonArray.length() - 1);
@@ -178,13 +190,13 @@ public class MACDCross implements Runnable {
                        FuturesOrderParams.getTickerParams(macdAlarm.getSymbol())
                );
           } catch (BinanceConnectorException e) {
-               System.out.println("BinanceConnectorException");
+               sendErrorMsg("BinanceConnectorException", e.getMessage());
                e.printStackTrace();
           } catch (BinanceClientException e) {
-               System.out.println("BinanceClientException");
+               sendErrorMsg("BinanceClientException", e.getMessage());
                e.printStackTrace();
           } catch (BinanceServerException e) {
-               System.out.println("BinanceServerException");
+               sendErrorMsg("BinanceServerException", e.getMessage());
                e.printStackTrace();
           }
           JSONObject jsonResult = new JSONObject(result);
@@ -229,4 +241,13 @@ public class MACDCross implements Runnable {
 				break;
 		}
 	}
+
+     private void sendErrorMsg(String type, String msg) {
+          try {
+               telegramBot.sendMessage("Futures MACD Cross task exception " + macdAlarm.getSymbol() + "\n"
+                       + type + "\n" + msg);
+          } catch (Exception e) {
+               e.printStackTrace();
+          }
+     }
 }
