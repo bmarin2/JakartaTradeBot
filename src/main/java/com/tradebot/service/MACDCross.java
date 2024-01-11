@@ -87,7 +87,7 @@ public class MACDCross implements Runnable {
 
 			double percentageIncrease = (macdAlarm.getMinGap() / 100) * macdAlarm.getCurrentSignalLine();
 			double incrisedSignalLine = macdAlarm.getCurrentSignalLine() + percentageIncrease;
-
+               
 			if (macdAlarm.getCurrentMacdLine() > incrisedSignalLine) {
 				macdAlarm.setMacdCrosss(false);
 				System.out.println("Macd Crosss is now false");
@@ -110,7 +110,7 @@ public class MACDCross implements Runnable {
 			
 			double percentageIncrease = (macdAlarm.getMinGap() / 100) * macdAlarm.getCurrentSignalLine();
 			double incrisedSignalLine = macdAlarm.getCurrentSignalLine() - percentageIncrease;
-			
+               
 			if (macdAlarm.getCurrentMacdLine() < incrisedSignalLine) {
 				macdAlarm.setMacdCrosss(true);
 				System.out.println("Macd Crosss is now true");
@@ -150,7 +150,7 @@ public class MACDCross implements Runnable {
                     result = spotClientImpl.createMarket().klines(parameters);
                } else if (macdAlarm.getChartMode().name().startsWith("FUTURES")) {
                     result = umFuturesClientImpl.market().klines(parameters);
-               }               
+               }
           } catch (BinanceConnectorException e) {
                sendErrorMsg("BinanceConnectorException", e.getMessage());
                e.printStackTrace();
@@ -161,24 +161,42 @@ public class MACDCross implements Runnable {
 			sendErrorMsg("BinanceServerException", e.getMessage());
                e.printStackTrace();
           }
-
+          
 		JSONArray jsonArray = new JSONArray(result);
 		jsonArray.remove(jsonArray.length() - 1);
-
+          
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONArray candlestick = jsonArray.getJSONArray(i);
 
 			long unixTimestampMillis = candlestick.getLong(6);
 			Instant instant = Instant.ofEpochMilli(unixTimestampMillis);
 			ZonedDateTime utcZonedDateTime = instant.atZone(ZoneId.of("UTC"));
+               try {
+                    series.addBar(utcZonedDateTime,
+                            candlestick.getString(1),
+                            candlestick.getString(2),
+                            candlestick.getString(3),
+                            candlestick.getString(4),
+                            candlestick.getString(5)
+                    );
+               } catch (IllegalArgumentException iae) {
+                    ZonedDateTime timePlusOneMin = series.getLastBar().getEndTime().plusMinutes(1);
+                    series.addBar(timePlusOneMin,
+                            candlestick.getString(1),
+                            candlestick.getString(2),
+                            candlestick.getString(3),
+                            candlestick.getString(4),
+                            candlestick.getString(5)
+                    );
 
-			series.addBar(utcZonedDateTime,
-				   candlestick.getString(1),
-				   candlestick.getString(2),
-				   candlestick.getString(3),
-				   candlestick.getString(4),
-				   candlestick.getString(5)
-			);
+                    try {
+                         telegramBot.sendMessage("in catch IllegalArgumentException\n corrected:\n" + timePlusOneMin);
+                    } catch (Exception e) {
+                         e.printStackTrace();
+                    }
+
+                    iae.printStackTrace();
+               }
 		}
 	}
 
