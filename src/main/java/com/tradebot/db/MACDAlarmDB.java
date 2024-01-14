@@ -2,7 +2,6 @@ package com.tradebot.db;
 
 import com.tradebot.enums.ChartMode;
 import com.tradebot.model.MACDAlarm;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,8 +21,9 @@ public class MACDAlarmDB {
 		long alarm_id = 0;
 
 		String query = "INSERT INTO MACD_ALARM (symbol, alarmId, initialDelay, delay, timeUnit, description,"
-			   + " intervall, ema, currentEma, macdCrosss, goodForEntry, currentMacdLine, currentSignalLine, lastClosingCandle, minGap, chartMode) "
-			   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			   + " intervall, ema, currentEma, macdCrosss, goodForEntry, currentMacdLine, currentSignalLine,"
+			   + " lastClosingCandle, minGap, chartMode, lastAtr)"
+			   + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 
@@ -43,6 +43,7 @@ public class MACDAlarmDB {
 			ps.setDouble(14, alarm.getLastClosingCandle());
 			ps.setDouble(15, alarm.getMinGap());
 			ps.setInt(16, alarm.getChartMode().ordinal());
+			ps.setDouble(17, alarm.getLastAtr());
 
 			ps.executeUpdate();
 
@@ -70,7 +71,7 @@ public class MACDAlarmDB {
 
 		String query = "UPDATE MACD_ALARM SET symbol=?, alarmId=?, initialDelay=?, delay=?, timeUnit=?, description=?,"
 			   + " intervall=?, ema=?, currentEma=?, macdCrosss=?, goodForEntry=?, currentMacdLine=?, currentSignalLine=?,"
-                  + " lastClosingCandle=?, minGap=?, chartMode=?"
+                  + " lastClosingCandle=?, minGap=?, chartMode=?, lastAtr=?"
 			   + " WHERE id = ?";
 		try {
 			ps = connection.prepareStatement(query);
@@ -91,7 +92,8 @@ public class MACDAlarmDB {
 			ps.setDouble(14, alarm.getLastClosingCandle());
 			ps.setDouble(15, alarm.getMinGap());
 			ps.setInt(16, alarm.getChartMode().ordinal());
-			ps.setLong(17, alarm.getId());
+			ps.setDouble(17, alarm.getLastAtr());
+			ps.setLong(18, alarm.getId());
 
 			ps.executeUpdate();
 
@@ -134,6 +136,7 @@ public class MACDAlarmDB {
 				alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				alarm.setLastAtr(rs.getDouble("lastAtr"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -176,6 +179,7 @@ public class MACDAlarmDB {
 				alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				alarm.setLastAtr(rs.getDouble("lastAtr"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -218,12 +222,40 @@ public class MACDAlarmDB {
 				alarm.setLastClosingCandle(rs.getDouble("lastClosingCandle"));
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				alarm.setLastAtr(rs.getDouble("lastAtr"));
 				alarms.add(alarm);
 			}
 			return alarms;
 		} catch (SQLException e) {
 			System.err.println(e);
 			return null;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+	
+	public static boolean getMacdCross(String taskId) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		boolean cross = false;
+		
+		String query = "SELECT MACDCROSSS FROM MACD_ALARM WHERE ALARMID=?";
+		
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setString(1, taskId);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				cross = rs.getBoolean(1);
+			}
+			return cross;
+		} catch (SQLException e) {
+			System.err.println(e);
+			return false;
 		} finally {
 			DBUtil.closeResultSet(rs);
 			DBUtil.closePreparedStatement(ps);

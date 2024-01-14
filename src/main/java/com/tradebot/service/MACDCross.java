@@ -14,10 +14,13 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
+import org.ta4j.core.indicators.ATRIndicator;
 import org.ta4j.core.indicators.EMAIndicator;
 import org.ta4j.core.indicators.MACDIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
@@ -69,13 +72,21 @@ public class MACDCross implements Runnable {
                   new EMAIndicator(closePriceIndicator, macdAlarm.getEma()).getValue(closePriceIndicator.getBarSeries().getEndIndex()).doubleValue()          
           );          
           macdAlarm.setLastClosingCandle(closePriceIndicator.getValue(closePriceIndicator.getBarSeries().getEndIndex()).doubleValue());
-          
+
+		macdAlarm.setLastAtr(new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue());
+
           System.out.println("series size: " + series.getBarCount());
           System.out.println("macd line:   " + macdAlarm.getCurrentMacdLine());
           System.out.println("signal line: " + macdAlarm.getCurrentSignalLine());
           System.out.println("ema line:    " + macdAlarm.getCurrentEma());
           System.out.println("last candle: " + macdAlarm.getLastClosingCandle());
           System.out.println("curr cross:  " + macdAlarm.getMacdCrosss());
+		System.out.println("last atr:  " + macdAlarm.getLastAtr());
+		try {
+			System.out.println("get cross:  " + MACDAlarmDB.getMacdCross(macdAlarm.getAlarmId()));
+		} catch (Exception ex) {
+			Logger.getLogger(MACDCross.class.getName()).log(Level.SEVERE, null, ex);
+		}
           System.out.println("--------------------------");
      }
 

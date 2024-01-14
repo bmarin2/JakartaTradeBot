@@ -120,5 +120,6 @@ CREATE TABLE MACD_ALARM (
     currentSignalLine DOUBLE,
     lastClosingCandle DOUBLE,
     minGap DOUBLE,
-    chartMode INT
+    chartMode INT,
+    lastAtr DOUBLE
 );

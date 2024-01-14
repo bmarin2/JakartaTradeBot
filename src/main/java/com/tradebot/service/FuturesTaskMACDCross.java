@@ -110,12 +110,6 @@ public class FuturesTaskMACDCross implements Runnable {
                }
           }
 
-		try {
-			macdAlarm = MACDAlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		System.out.println("Time: " + getTime());
 		System.out.println("SP order: " + currentSLOrder);
 		System.out.println("DB Cross: " + macdAlarm.getMacdCrosss());
@@ -128,7 +122,7 @@ public class FuturesTaskMACDCross implements Runnable {
 		System.out.println("--");
 		
 		if (currentPositionSide != PositionSide.NONE && !isDistantFromBorderPrice()) {
-			currentMACDCross = macdAlarm.getMacdCrosss();
+			currentMACDCross = checkMacdCross();
 			System.out.println("\nNOT DISTANT FROM BORDER PRICE!");
 			return;
 		}		
@@ -137,7 +131,14 @@ public class FuturesTaskMACDCross implements Runnable {
 
           // ====================================================================================
 
-          if (currentMACDCross != macdAlarm.getMacdCrosss()) {
+          if (currentMACDCross != checkMacdCross()) {
+
+			// update macdAlarm object
+			try {
+				macdAlarm = MACDAlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
                currentMACDCross = macdAlarm.getMacdCrosss();
                System.out.println("cross is now: " + currentMACDCross);
@@ -175,7 +176,7 @@ public class FuturesTaskMACDCross implements Runnable {
 					createShortOrder();
 					entryPrice = getEntryPrice();
 					borderPrice = calculateBorderPrice(PositionSide.SHORT);
-					createStopLoss(OrderSide.BUY, calctulateSP(PositionSide.SHORT));
+					createStopLossOrder(OrderSide.BUY, calculateSL(PositionSide.SHORT));
 					currentPositionSide = PositionSide.SHORT;
 				}
                } else { // if crossed UP
@@ -210,7 +211,7 @@ public class FuturesTaskMACDCross implements Runnable {
 					createLongOrder();
 					entryPrice = getEntryPrice();
 					borderPrice = calculateBorderPrice(PositionSide.LONG);
-					createStopLoss(OrderSide.SELL, calctulateSP(PositionSide.LONG));
+					createStopLossOrder(OrderSide.SELL, calculateSL(PositionSide.LONG));
 					currentPositionSide = PositionSide.LONG;
 				}
                }
@@ -256,7 +257,7 @@ public class FuturesTaskMACDCross implements Runnable {
           return orderId;
      }
 
-     private void createStopLoss(OrderSide orderSide, String stopPrice) {
+     private void createStopLossOrder(OrderSide orderSide, String stopPrice) {
           String orderResult = "";
 
           try {               
@@ -356,14 +357,13 @@ public class FuturesTaskMACDCross implements Runnable {
           return jsonResult.optDouble("price");
      }
 
-     private String calctulateSP(PositionSide positionSide) {
+     private String calculateSL(PositionSide positionSide) {
           Double price = entryPrice;
-          Double percent = (futuresBot.getStopLoss() / 100) * price;
           Double result = 0.0;
           if (positionSide == PositionSide.SHORT) {
-               result = price + percent;
+               result = price + macdAlarm.getLastAtr() * futuresBot.getStopLoss();
           } else if (positionSide == PositionSide.LONG){
-               result = price - percent;
+               result = price - macdAlarm.getLastAtr() * futuresBot.getStopLoss();
           }
           String resultFormated = String.format("%.2f", result);
           return resultFormated;
@@ -533,13 +533,12 @@ public class FuturesTaskMACDCross implements Runnable {
 
      private double calculateBorderPrice(PositionSide positionSide) {
           Double price = entryPrice;
-          Double percent = (futuresBot.getTakeProfit() / 100) * price;
           Double result = 0.0;
           
           if (positionSide == PositionSide.SHORT) {
-               result = price - percent;
+               result = price - macdAlarm.getLastAtr() * futuresBot.getStopLoss() * futuresBot.getTakeProfit();
           } else if (positionSide == PositionSide.LONG) {
-               result = price + percent;
+               result = price + macdAlarm.getLastAtr() * futuresBot.getStopLoss() * futuresBot.getTakeProfit();
           }
           return result;
      }
@@ -586,5 +585,14 @@ public class FuturesTaskMACDCross implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}	
+	}
+	
+	private boolean checkMacdCross() {
+		try {
+			return MACDAlarmDB.getMacdCross(futuresBot.getDemaAlertTaskId());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 }
