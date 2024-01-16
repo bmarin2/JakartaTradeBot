@@ -43,6 +43,13 @@ public class FuturesTaskMACDCross implements Runnable {
           if (currentPositionSide != PositionSide.NONE) {
                entryPrice = getEntryPrice();
                System.out.println("init entry price; " + entryPrice);
+               if (currentPositionSide == PositionSide.SHORT) {
+                    borderPrice = calculateBorderPrice(PositionSide.SHORT);
+                    System.out.println("border price; " + borderPrice);
+               } else if (currentPositionSide == PositionSide.LONG) {
+                    borderPrice = calculateBorderPrice(PositionSide.LONG);
+                    System.out.println("border price; " + borderPrice);
+               }               
           }
 
           telegramBot = new TelegramBot();
