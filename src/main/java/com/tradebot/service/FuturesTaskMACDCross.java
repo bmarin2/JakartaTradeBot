@@ -112,7 +112,7 @@ public class FuturesTaskMACDCross implements Runnable {
 
 		System.out.println("Time: " + getTime());
 		System.out.println("SP order: " + currentSLOrder);
-		System.out.println("DB Cross: " + macdAlarm.getMacdCrosss());
+		System.out.println("DB Cross: " + checkMacdCross());
 		System.out.println("MACD cross: " + currentMACDCross);
 		System.out.println("pos: " + currentPositionSide.toString());
 		System.out.println("----");
@@ -371,8 +371,7 @@ public class FuturesTaskMACDCross implements Runnable {
 
      private boolean initMACDCross() {
           try {
-               MACDAlarm macdAlarm = MACDAlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
-               return macdAlarm.getMacdCrosss();
+               return MACDAlarmDB.getMacdCross(futuresBot.getDemaAlertTaskId());
           } catch (Exception e) {
                e.printStackTrace();
 			return false;
@@ -592,7 +591,7 @@ public class FuturesTaskMACDCross implements Runnable {
 			return MACDAlarmDB.getMacdCross(futuresBot.getDemaAlertTaskId());
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+          }
 		return false;
 	}
 }

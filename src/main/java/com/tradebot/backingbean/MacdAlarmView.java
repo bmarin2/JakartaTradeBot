@@ -1,7 +1,5 @@
 package com.tradebot.backingbean;
 
-import com.binance.connector.client.impl.SpotClientImpl;
-import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.db.MACDAlarmDB;
 import com.tradebot.service.TaskService;
 import jakarta.annotation.PostConstruct;
@@ -35,7 +33,6 @@ public class MacdAlarmView implements Serializable {
 	private MACDAlarm selectedAlarm;
 	private boolean shouldEditAlarm;
 	private BigDecimal checkedPrice;
-	private SpotClientImpl spotClientImpl;
 	
 	@PostConstruct
 	private void init() {
@@ -44,10 +41,7 @@ public class MacdAlarmView implements Serializable {
 			alarms = MACDAlarmDB.getAllAlarms();
 		} catch (Exception ex) {
 			ex.printStackTrace();
-		}
-		
-		spotClientImpl = SpotClientConfig.spotClientSignTest();
-		
+		}		
 	}
 	
 	public TimeUnit[] getUnits() {

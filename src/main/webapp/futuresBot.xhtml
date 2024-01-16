@@ -28,7 +28,7 @@
 				$(tbody).each(function(index) {
 				    $(this).find("td:nth-child(3)").each(function() {
 					     if (myList.includes($(this).text())) {
-							$(this).parent().find("td:nth-child(11)").find("div:first")
+							$(this).parent().find("td:nth-child(14)").find("div:first")
 									.addClass('ui-toggleswitch-checked');
 						}
 				    });
@@ -133,16 +133,16 @@
 						<h:outputText value="#{bot.demaAlertTaskId}" />
 					</p:column>
 					
-					<p:column>
-						<p:toggleSwitch onchange="toggleSwitchRunning(this)"/>
-					</p:column>
-					
 					<p:column sortBy="#{bot.futresDemaStrategy}" headerText="Strategy">
 						<h:outputText value="#{bot.futresDemaStrategy}" />
 					</p:column>
 
 					<p:column sortBy="#{bot.chartMode}" headerText="Chart Mode">
 						<h:outputText value="#{bot.chartMode}" />
+					</p:column>
+
+                         <p:column>
+						<p:toggleSwitch onchange="toggleSwitchRunning(this)"/>
 					</p:column>
 
 					<p:column>

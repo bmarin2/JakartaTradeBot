@@ -174,9 +174,6 @@
 					<p:outputLabel for="input8" value="Min Gap"/>
 					<p:inputText id="input8" value="#{macdAlarmView.selectedAlarm.minGap}" />
 
-					<p:outputLabel for="input9" value="ATR"/>
-					<p:inputText id="input9" value="#{macdAlarmView.selectedAlarm.lastAtr}" />
-
 					<p:outputLabel for="select2" value="Chart Mode"/>
 					<p:selectOneMenu value="#{macdAlarmView.selectedAlarm.chartMode}" id="select2" style="width:100%">
 					    <f:selectItems value="#{macdAlarmView.chartModes}" var="mode" itemLabel="#{mode}" itemValue="#{mode}"/>
