@@ -43,6 +43,11 @@ public class FuturesTaskMACDCross implements Runnable {
           if (currentPositionSide != PositionSide.NONE) {
                entryPrice = getEntryPrice();
                System.out.println("init entry price; " + entryPrice);
+               try {
+                    macdAlarm = MACDAlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
+               } catch (Exception ex) {
+                    ex.printStackTrace();
+               }
                if (currentPositionSide == PositionSide.SHORT) {
                     borderPrice = calculateBorderPrice(PositionSide.SHORT);
                     System.out.println("border price; " + borderPrice);
@@ -61,12 +66,15 @@ public class FuturesTaskMACDCross implements Runnable {
                String status = getOrderStatus(currentSLOrder);
                if (status.equals("FILLED") || status.equals("CANCELED")) {
                     currentPositionSide = PositionSide.NONE;
+                    double pnl = getRealizedPNL(currentSLOrder);
                     currentSLOrder = "";
                     clearFields();
                     System.out.println("SP Triggered");
 
                     try {
-                         telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol());
+                         
+                         telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol() + "\n" 
+                                 + "PNL: " + pnl);
                     } catch (Exception e) {
                          e.printStackTrace();
                     }

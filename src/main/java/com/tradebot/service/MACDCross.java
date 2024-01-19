@@ -103,7 +103,7 @@ public class MACDCross implements Runnable {
 				macdAlarm.setMacdCrosss(false);
 				System.out.println("Macd Crosss is now false");
 
-				if (macdAlarm.getCurrentMacdLine() < 0 && macdAlarm.getCurrentSignalLine() < 0 && isPriceAboveEmaLine()) {
+				if (macdAlarm.getCurrentMacdLine() > 0 && macdAlarm.getCurrentSignalLine() > 0 && isPriceAboveEmaLine()) {
 					macdAlarm.setGoodForEntry(true);
 					System.out.println("Good for entry");
 					try {
@@ -126,7 +126,7 @@ public class MACDCross implements Runnable {
 				macdAlarm.setMacdCrosss(true);
 				System.out.println("Macd Crosss is now true");
 
-				if (macdAlarm.getCurrentMacdLine() > 0 && macdAlarm.getCurrentSignalLine() > 0 && !isPriceAboveEmaLine()) {
+				if (macdAlarm.getCurrentMacdLine() < 0 && macdAlarm.getCurrentSignalLine() < 0 && !isPriceAboveEmaLine()) {
 					macdAlarm.setGoodForEntry(true);
 					System.out.println("Good for entry");
 					try {
@@ -199,14 +199,6 @@ public class MACDCross implements Runnable {
                             candlestick.getString(4),
                             candlestick.getString(5)
                     );
-
-                    try {
-                         telegramBot.sendMessage("in catch IllegalArgumentException\n corrected:\n" + timePlusOneMin);
-                    } catch (Exception e) {
-                         e.printStackTrace();
-                    }
-
-                    iae.printStackTrace();
                }
 		}
 	}
