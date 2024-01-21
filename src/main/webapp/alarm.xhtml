@@ -24,11 +24,11 @@
                     runningStates();
                });
 			
-			function toggleSwitchRunning(element, isDema) {
+			function toggleSwitchRunning(element, alarmType) {
 				var isChecked = $(element).prop('checked');
 				var title = $(element).parent().parent().parent().parent();
 				var task = title.find('>span:nth-of-type(2)').text();
-				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}, {name: 'isDema', value: isDema}]);
+				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}, {name: 'alarmType', value: alarmType}]);
 			};
 			
 			function handleCompleteRunning(xhr, status, args) {
@@ -53,14 +53,20 @@
 		<div style="margin:0 auto;width:98%;">
 		
 		<p:commandButton value="Create Alarm" styleClass="ui-button-success" icon="pi pi-plus-circle"
-					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarm()}" update="manageAlarmsForm">
+					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarm('ALARM')}" update="manageAlarmsForm">
 			<p:resetInput target="manageAlarmsForm:manage-alarm" />
 		</p:commandButton>
 			
 		<p:commandButton value="Create Dema/Tema Alert" styleClass="ui-button-success" icon="pi pi-plus-circle" style="margin-left:15px;margin-bottom:10px"
-					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarmDema()}" update="manageAlarmsForm">
+					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarm('DEMA')}" update="manageAlarmsForm">
 			<p:resetInput target="manageAlarmsForm:manage-alarm" />
 		</p:commandButton>
+
+		<p:commandButton value="Create Three Bars Alert" styleClass="ui-button-success" icon="pi pi-plus-circle" style="margin-left:15px;margin-bottom:10px"
+					  oncomplete="PF('manageAlarm').show()" action="#{alarmView.newAlarm('THREE_BARS')}" update="manageAlarmsForm">
+			<p:resetInput target="manageAlarmsForm:manage-alarm" />
+		</p:commandButton>
+
 		<br/>
 		<p:outputLabel value="Max dema length is 500 | Set dema1 as 0 to calculate one dema cross (second + third), set all 3 demas to calculate two crosses (first + second and first + third)" style="margin-left:15px; font-size:1rem !important" />
 			
@@ -72,20 +78,41 @@
 		<h:form id="alarmListForm">
 			<p:repeat value="#{alarmView.alarms}" var="alarm">
 				
-                            <p:card style="margin-top:1em;margin-right:1em;display:inline-block;background-color:#{alarm.firstDema eq 0 ? '#e6ffe6' : '#cce0ff'};
+               <p:card style="margin-top:1em;margin-right:1em;display:inline-block;background-color:#{alarm.firstDema eq 0 ? '#e6ffe6' : '#cce0ff'};
                                     vertical-align: top;">
 				<f:facet name="title">
 					<span style="font-size:60%">#{alarm.symbol}</span>
 					<span style="font-size:55%;margin-right:6px">#{alarm.alarmId}</span>
 					<p:outputLabel style="font-size:60%;color: red" value="Sent!" rendered="#{alarm.msgSent}"/>
 					<div style="float:right">
-						<p:toggleSwitch onchange="toggleSwitchRunning(this, #{alarmView.isDemaAlert(alarm)})">
+						<p:toggleSwitch onchange="toggleSwitchRunning(this, '#{alarm.alarmType}')">
 							<p:ajax update="editId" />
 						</p:toggleSwitch>
 					</div>
 				</f:facet>
 				
-				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{!alarmView.isDemaAlert(alarm)}">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="margin-bottom: 12px;">
+					<h:outputLabel value="Alarm type: "/>
+					<p:outputLabel value="#{alarm.alarmType}" />
+				</p:panelGrid>
+				
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+					<h:outputLabel value="Initial Delay"/>
+					<p:outputLabel value="#{alarm.initialDelay}" />
+					<h:outputLabel value="Delay"/>
+					<p:outputLabel value="#{alarm.delay}" />
+                         <h:outputLabel value="Time Unit"/>
+					<p:outputLabel value="#{alarm.timeUnit}" />
+					<h:outputLabel value="Description"/>
+					<p:outputLabel value="#{alarm.description}" />
+				</p:panelGrid>
+				
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="margin-top: 6px; margin-bottom: 4px;">
+					<h:outputLabel value="Alarm Specific: "/>
+					<p:outputLabel value="" />
+				</p:panelGrid>
+				
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarm.alarmType == 'ALARM'}">
 					<h:outputLabel value="Last Price"/>
 					<p:outputLabel style="" value="#{alarmView.checkPrice(alarm.symbol)}">
 						<f:convertNumber pattern="#0.0000" />
@@ -96,22 +123,18 @@
 					</p:outputLabel>
 				</p:panelGrid>
 				
-				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarmView.isDemaAlert(alarm)}">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarm.alarmType == 'DEMA'}">
 					<h:outputLabel value="#{alarm.firstDema eq 0 ? '1x Cross (Spot)' : '2x Cross'}"
 								style="font-weight:bold"/>
 					<h:outputLabel value=""/>
+					<h:outputLabel value="Interval"/>
+					<p:outputLabel value="#{alarm.intervall}" />
 					<h:outputLabel value="First Dema"/>
 					<p:outputLabel value="#{alarm.firstDema}" />
 					<h:outputLabel value="Second Dema"/>
 					<p:outputLabel value="#{alarm.secondDema}" />
 					<h:outputLabel value="Third Dema"/>
 					<p:outputLabel value="#{alarm.thirdDema}" />
-					<h:outputLabel value="Interval"/>
-					<p:outputLabel value="#{alarm.intervall}" />
-					<h:outputLabel value="Delay"/>
-					<p:outputLabel value="#{alarm.delay}" />
-                                        <h:outputLabel value="Time Unit"/>
-					<p:outputLabel value="#{alarm.timeUnit}" />
 					<h:outputLabel value="Cross1"/>
 					<p:outputLabel value="#{alarm.crosss}" />
 					<h:outputLabel value="Cross2" rendered="#{alarm.firstDema ne 0}"/>
@@ -152,10 +175,23 @@
 
 					<h:outputLabel value="Ema Strategy"/>
 					<p:outputLabel value="#{alarm.emaCrossStrategy}" />
-				</p:panelGrid>	
+				</p:panelGrid>
+				
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{alarm.alarmType == 'THREE_BARS'}">
+					<h:outputLabel value="Interval"/>
+					<p:outputLabel value="#{alarm.intervall}" />
+					<h:outputLabel value="Enter Long"/>
+					<p:outputLabel value="#{alarm.enterLong}" />
+					<h:outputLabel value="Enter Short"/>
+					<p:outputLabel value="#{alarm.enterLong}" />
+					<h:outputLabel value="Ema (dema field used)"/>
+					<p:outputLabel value="#{alarm.firstDema}" />
+				</p:panelGrid>
 
 				<f:facet name="footer">
-					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()" disabled="#{alarmView.isBotRunning(alarm.alarmId)}" update="manageAlarmsForm" style="margin-right:5px;" action="#{alarmView.editAlarm(alarmView.isDemaAlert(alarm))}">
+					<p:commandButton id="editId" value="Edit" icon="pi pi-file" oncomplete="PF('manageAlarm').show()"
+								  disabled="#{alarmView.isBotRunning(alarm.alarmId)}" update="manageAlarmsForm" 
+								  style="margin-right:5px;" action="#{alarmView.editAlarm(alarm.alarmType)}">
 						<f:setPropertyActionListener value="#{alarm}" target="#{alarmView.selectedAlarm}" />
 					</p:commandButton>					
 				</f:facet>				
@@ -175,50 +211,53 @@
 					<p:outputLabel for="input1" value="Symbol"/>
 					<p:inputText id="input1" value="#{alarmView.selectedAlarm.symbol}" />
 
-					<p:outputLabel for="select2" value="Time Unit"/>
-					<p:selectOneMenu value="#{alarmView.selectedAlarm.timeUnit}" id="select2" style="width:100%">
+					<p:outputLabel for="select1" value="Time Unit"/>
+					<p:selectOneMenu value="#{alarmView.selectedAlarm.timeUnit}" id="select1" style="width:100%">
 						<f:selectItems value="#{alarmView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
 					</p:selectOneMenu>
 					
 					<p:outputLabel for="input2" value="Alarm Id"/>
 					<p:inputText id="input2" value="#{alarmView.selectedAlarm.alarmId}"/>
 
-					<p:outputLabel for="input3" value="Alarm Price" rendered="#{!alarmView.demaAlert}"/>
-					<p:inputText id="input3" value="#{alarmView.selectedAlarm.alarmPrice}" rendered="#{!alarmView.demaAlert}"/>
+					<p:outputLabel for="input3" value="Initial Delay"/>
+					<p:inputText id="input3" value="#{alarmView.selectedAlarm.initialDelay}" />
 
-					<p:outputLabel for="input4" value="Initial Delay"/>
-					<p:inputText id="input4" value="#{alarmView.selectedAlarm.initialDelay}" />
-
-					<p:outputLabel for="input5" value="Delay"/>
-					<p:inputText id="input5" value="#{alarmView.selectedAlarm.delay}" />
+					<p:outputLabel for="input4" value="Delay"/>
+					<p:inputText id="input4" value="#{alarmView.selectedAlarm.delay}" />
 					
-					<p:outputLabel for="input6" value="Intervall" rendered="#{alarmView.demaAlert}"/>
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input6" value="#{alarmView.selectedAlarm.intervall}" />
-					
-					<p:outputLabel for="input7" value="First Dema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input7" value="#{alarmView.selectedAlarm.firstDema}" style="background-color: #ccffcc"/>
-					
-					<p:outputLabel for="input8" value="Second Dema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input8" value="#{alarmView.selectedAlarm.secondDema}" style="background-color: #ccffcc"/>
-					
-					<p:outputLabel for="input9" value="Third Ema" rendered="#{alarmView.demaAlert}" />
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input9" value="#{alarmView.selectedAlarm.thirdDema}" style="background-color: #ccffcc"/>
-                                        
-                                        <p:outputLabel for="input10" value="Min Gap" rendered="#{alarmView.demaAlert}"/>
-					<p:inputText rendered="#{alarmView.demaAlert}" id="input10" value="#{alarmView.selectedAlarm.minGap}" />
-                                        
-					<p:outputLabel for="select3" value="Chart Mode" rendered="#{alarmView.demaAlert}"/>
-					<p:selectOneMenu value="#{alarmView.selectedAlarm.chartMode}" id="select3" style="width:100%" rendered="#{alarmView.demaAlert}">
+					<p:outputLabel for="select2" value="Chart Mode"/>
+					<p:selectOneMenu value="#{alarmView.selectedAlarm.chartMode}" id="select2" style="width:100%" >
 					    <f:selectItems value="#{alarmView.chartModes}" var="mode" itemLabel="#{mode}" itemValue="#{mode}"/>
-					</p:selectOneMenu>
-					
-					<p:outputLabel for="select4" value="Ema Strategy" rendered="#{alarmView.demaAlert}"/>
-					<p:selectOneMenu value="#{alarmView.selectedAlarm.emaCrossStrategy}" id="select4" style="width:100%" rendered="#{alarmView.demaAlert}">
-					    <f:selectItems value="#{alarmView.emaCrossStrategies}" var="strategy" itemLabel="#{strategy}" itemValue="#{strategy}"/>
+					</p:selectOneMenu>					
+
+					<p:outputLabel for="input5" value="Description"/>
+					<p:inputTextarea id="input5" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
+
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'ALARM'}" for="input6" value="Alarm Price" />
+					<p:inputText rendered="#{alarmView.currentAlarmType eq 'ALARM'}" id="input6" value="#{alarmView.selectedAlarm.alarmPrice}"/>					
+
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'DEMA'}" for="input7" value="Interval" />
+					<p:inputText rendered="#{alarmView.currentAlarmType eq 'DEMA'}" id="input7" value="#{alarmView.selectedAlarm.intervall}" />
+
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'DEMA' or alarmView.currentAlarmType eq 'THREE_BARS'}" for="input8" value="First Dema" />
+					<p:inputText rendered="#{alarmView.currentAlarmType eq 'DEMA' or alarmView.currentAlarmType eq 'THREE_BARS'}" id="input8" value="#{alarmView.selectedAlarm.firstDema}" style="background-color: #ccffcc"/>
+
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'DEMA'}" for="input9" value="Second Dema" />
+					<p:inputText rendered="#{alarmView.currentAlarmType eq 'DEMA'}" id="input9" value="#{alarmView.selectedAlarm.secondDema}" style="background-color: #ccffcc"/>
+
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'DEMA'}" for="input10" value="Third Ema" />
+					<p:inputText rendered="#{alarmView.currentAlarmType eq 'DEMA'}" id="input10" value="#{alarmView.selectedAlarm.thirdDema}" style="background-color: #ccffcc"/>
+
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'DEMA'}" for="input11" value="Min Gap" />
+					<p:inputText rendered="#{alarmView.currentAlarmType eq 'DEMA'}" id="input11" value="#{alarmView.selectedAlarm.minGap}" />
+
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'DEMA'}" for="select3" value="Ema Strategy" />
+					<p:selectOneMenu rendered="#{alarmView.currentAlarmType eq 'DEMA'}" value="#{alarmView.selectedAlarm.emaCrossStrategy}" id="select3" style="width:100%">
+						<f:selectItems value="#{alarmView.emaCrossStrategies}" var="strategy" itemLabel="#{strategy}" itemValue="#{strategy}"/>
 					</p:selectOneMenu>
 
-					<p:outputLabel for="input11" value="Description"/>
-					<p:inputTextarea id="input11" rows="4" cols="22" autoResize="false" value="#{alarmView.selectedAlarm.description}" />
+					<p:outputLabel rendered="#{alarmView.currentAlarmType eq 'THREE_BARS'}" for="input12" value="Interval" />
+					<p:inputText rendered="#{alarmView.currentAlarmType eq 'THREE_BARS'}" id="input12" value="#{alarmView.selectedAlarm.intervall}" />					
 					
 				</p:panelGrid>
 				<f:facet name="footer">

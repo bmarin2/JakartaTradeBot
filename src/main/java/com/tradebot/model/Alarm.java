@@ -1,5 +1,6 @@
 package com.tradebot.model;
 
+import com.tradebot.enums.AlarmType;
 import com.tradebot.enums.ChartMode;
 import com.tradebot.enums.EmaCrossStrategy;
 import com.tradebot.util.TaskCodeGeneratorService;
@@ -21,6 +22,7 @@ public class Alarm implements Serializable {
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
 	private String description;
 	private Boolean msgSent = false;
+	private AlarmType alarmType = AlarmType.ALARM;
 	// for dema alerts
 	private String intervall = "1m";
 	private Integer firstDema = 10;
@@ -35,4 +37,7 @@ public class Alarm implements Serializable {
 	private Double minGap = 0.0;
 	private ChartMode chartMode = ChartMode.SPOT_BASE_URL_PROD;
 	private EmaCrossStrategy emaCrossStrategy = EmaCrossStrategy.ONE_CROSS_DEMA;
+	// for three bars
+	private Boolean enterLong = false;
+	private Boolean enterShort = false;
 }

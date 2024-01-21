@@ -4,6 +4,7 @@ import com.binance.connector.client.impl.SpotClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.configuration.OrdersParams;
 import com.tradebot.db.AlarmDB;
+import com.tradebot.enums.AlarmType;
 import com.tradebot.model.Alarm;
 import com.tradebot.service.AlarmTask;
 import com.tradebot.service.DemaTwoCrossTask;
@@ -29,6 +30,7 @@ import com.tradebot.enums.ChartMode;
 import com.tradebot.enums.EmaCrossStrategy;
 import com.tradebot.service.TemaOneCrossTask;
 import com.tradebot.service.TemaTwoCrossTask;
+import com.tradebot.service.ThreeBarsTask;
 
 @Named
 @ViewScoped
@@ -44,6 +46,7 @@ public class AlarmView implements Serializable {
 	private BigDecimal checkedPrice;
 	private SpotClientImpl spotClientImpl;
 	private boolean demaAlert;
+	private AlarmType currentAlarmType;
 	
 	@PostConstruct
 	private void init() {
@@ -56,13 +59,6 @@ public class AlarmView implements Serializable {
 		
 		spotClientImpl = SpotClientConfig.spotClientSignTest();
 		
-	}
-	
-	public boolean isDemaAlert(Alarm alarm) {
-		if(alarm != null) {
-			return alarm.getIntervall() != null;
-		}
-		return false;
 	}
 	
 	public TimeUnit[] getUnits() {
@@ -100,25 +96,30 @@ public class AlarmView implements Serializable {
 		FacesContext.getCurrentInstance().addMessage(null, message);
 	}
 	
-	public void newAlarm() {
-		demaAlert = false;
+	public void newAlarm(String type) {
 		shouldEditAlarm = false;
 		selectedAlarm = new Alarm();
+		updateAlarmType(type);
+		selectedAlarm.setAlarmType(currentAlarmType);
 	}
 
-	public void editAlarm(boolean isDema) {
-		if(isDema) {
-			demaAlert = true;
-		} else {
-			demaAlert = false;
-		}
+	public void editAlarm(String type) {
 		shouldEditAlarm = true;
+		updateAlarmType(type);
 	}
 	
-	public void newAlarmDema() {
-		demaAlert = true;
-		shouldEditAlarm = false;
-		selectedAlarm = new Alarm();
+	public void updateAlarmType(String type) {
+		switch (type) {
+			case "ALARM":
+				currentAlarmType = AlarmType.ALARM;
+				break;
+			case "DEMA":
+				currentAlarmType = AlarmType.DEMA;
+				break;
+			case "THREE_BARS":
+				currentAlarmType = AlarmType.THREE_BARS;
+				break;
+		}
 	}
 	
 	public BigDecimal checkPrice(String symbol) {
@@ -134,8 +135,8 @@ public class AlarmView implements Serializable {
 		String runState = FacesContext.getCurrentInstance().
 			   getExternalContext().getRequestParameterMap().get("runState");
 		
-		String isDema = FacesContext.getCurrentInstance().
-			   getExternalContext().getRequestParameterMap().get("isDema");
+		String alarmType = FacesContext.getCurrentInstance().
+			   getExternalContext().getRequestParameterMap().get("alarmType");
 
 		if (Boolean.parseBoolean(runState)) {
 			if (taskService.getScheduledTasks().containsKey(taskId)) {
@@ -144,7 +145,7 @@ public class AlarmView implements Serializable {
 			
 			Alarm alarm = AlarmDB.getOneAlarm(taskId);
 			
-			if (Boolean.parseBoolean(isDema)) {
+			if (alarmType.equals("DEMA")) {
 				
 				Runnable task = null;
 
@@ -170,7 +171,8 @@ public class AlarmView implements Serializable {
 				);
 
 				addMessage("Alarm added", "id: " + alarm.getAlarmId());
-			} else {
+
+			} else if (alarmType.equals("ALARM")) {
 				BigDecimal currentPrice = checkPrice(alarm.getSymbol());
 
 				boolean greater = false;
@@ -187,7 +189,20 @@ public class AlarmView implements Serializable {
 					   alarm.getDelay(),
 					   alarm.getTimeUnit()
 				);
-				addMessage("Alarm added", "id: " + alarm.getAlarmId());				
+				addMessage("Alarm added", "id: " + alarm.getAlarmId());
+
+			} else if (alarmType.equals("THREE_BARS")) {
+
+				ThreeBarsTask threeBarsTask = new ThreeBarsTask(alarm);
+				
+				taskService.addTask(alarm.getAlarmId(),
+					   threeBarsTask,
+					   alarm.getInitialDelay(),
+					   alarm.getDelay(),
+					   alarm.getTimeUnit()
+				);
+
+				addMessage("Three Bars alarm added", "id: " + alarm.getAlarmId());
 			}
 			
 

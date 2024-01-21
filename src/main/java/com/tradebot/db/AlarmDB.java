@@ -1,5 +1,6 @@
 package com.tradebot.db;
 
+import com.tradebot.enums.AlarmType;
 import com.tradebot.model.Alarm;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,8 +23,9 @@ public class AlarmDB {
 
 		String query = "INSERT INTO ALARM (symbol, alarmId, alarmPrice, initialDelay, delay, timeUnit, description,"
 			   + " msgSent, intervall, firstDema, secondDema, thirdDema, crosss, currentFirstDema, currentSecondDema,"
-			   + " currentThirdDema, crosssBig, lastClosingCandle, minGap, chartMode, emaCrossStrategy) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			   + " currentThirdDema, crosssBig, lastClosingCandle, minGap, chartMode, emaCrossStrategy, alarmType,"
+			   + " enterLong, enterShort) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -48,6 +50,9 @@ public class AlarmDB {
 			ps.setDouble(19, alarm.getMinGap());
 			ps.setInt(20, alarm.getChartMode().ordinal());
 			ps.setInt(21, alarm.getEmaCrossStrategy().ordinal());
+			ps.setInt(22, alarm.getAlarmType().ordinal());
+			ps.setBoolean(23, alarm.getEnterLong());
+			ps.setBoolean(24, alarm.getEnterShort());
 			
 			ps.executeUpdate();
 			
@@ -65,6 +70,57 @@ public class AlarmDB {
 			pool.freeConnection(connection);
 		}
 		return alarm_id;
+	}
+
+	public static void editAlarm(Alarm alarm) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "UPDATE ALARM SET symbol=?, alarmId=?, alarmPrice=?, initialDelay=?, delay=?, timeUnit=?, description=?, "
+			   + "msgSent=?, intervall=?, firstDema=?, secondDema=?, thirdDema=?, crosss=?, currentFirstDema=?, "
+			   + "currentSecondDema=?, currentThirdDema=?, crosssBig=?, lastClosingCandle=?, minGap=?, chartMode=?,"
+			   + "emaCrossStrategy=?, alarmType=?, enterLong=?, enterShort=? WHERE id = ?";
+
+		try {
+			ps = connection.prepareStatement(query);
+			
+			ps.setString(1, alarm.getSymbol());
+			ps.setString(2, alarm.getAlarmId());			
+			ps.setBigDecimal(3, alarm.getAlarmPrice());
+			ps.setInt(4, alarm.getInitialDelay());
+			ps.setInt(5, alarm.getDelay());
+			ps.setInt(6, alarm.getTimeUnit().ordinal());
+			ps.setString(7, alarm.getDescription());
+			ps.setBoolean(8, alarm.getMsgSent());
+			ps.setString(9, alarm.getIntervall());
+			ps.setInt(10, alarm.getFirstDema());
+			ps.setInt(11, alarm.getSecondDema());
+			ps.setInt(12, alarm.getThirdDema());
+			ps.setBoolean(13, alarm.getCrosss());
+			ps.setDouble(14, alarm.getCurrentFirstDema());
+			ps.setDouble(15, alarm.getCurrentSecondDema());
+			ps.setDouble(16, alarm.getCurrentThirdDema());
+			ps.setBoolean(17, alarm.getCrosssBig());
+			ps.setDouble(18, alarm.getLastClosingCandle());
+			ps.setDouble(19, alarm.getMinGap());
+			ps.setInt(20, alarm.getChartMode().ordinal());
+			ps.setInt(21, alarm.getEmaCrossStrategy().ordinal());
+			ps.setInt(22, alarm.getAlarmType().ordinal());
+			ps.setBoolean(23, alarm.getEnterLong());
+			ps.setBoolean(24, alarm.getEnterShort());
+			ps.setLong(25, alarm.getId());
+			
+			ps.executeUpdate();
+
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
 	}
 	
 	public static Alarm getOneAlarm(long id) throws Exception {
@@ -102,6 +158,9 @@ public class AlarmDB {
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 				alarm.setEmaCrossStrategy(EmaCrossStrategy.values()[rs.getInt("emaCrossStrategy")]);
+				alarm.setAlarmType(AlarmType.values()[rs.getInt("alarmType")]);
+				alarm.setEnterLong(rs.getBoolean("enterLong"));
+				alarm.setEnterShort(rs.getBoolean("enterShort"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -149,6 +208,9 @@ public class AlarmDB {
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 				alarm.setEmaCrossStrategy(EmaCrossStrategy.values()[rs.getInt("emaCrossStrategy")]);
+				alarm.setAlarmType(AlarmType.values()[rs.getInt("alarmType")]);
+				alarm.setEnterLong(rs.getBoolean("enterLong"));
+				alarm.setEnterShort(rs.getBoolean("enterShort"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -196,6 +258,9 @@ public class AlarmDB {
 				alarm.setMinGap(rs.getDouble("minGap"));
 				alarm.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 				alarm.setEmaCrossStrategy(EmaCrossStrategy.values()[rs.getInt("emaCrossStrategy")]);
+				alarm.setAlarmType(AlarmType.values()[rs.getInt("alarmType")]);
+				alarm.setEnterLong(rs.getBoolean("enterLong"));
+				alarm.setEnterShort(rs.getBoolean("enterShort"));
 				alarms.add(alarm);
 			}
 			return alarms;
@@ -208,55 +273,7 @@ public class AlarmDB {
 			pool.freeConnection(connection);
 		}
 	}
-	
-	public static void editAlarm(Alarm alarm) throws Exception {
-		ConnectionPool pool = ConnectionPool.getInstance();
-		Connection connection = pool.getConnection();
-		PreparedStatement ps = null;
-		ResultSet rs = null;
 
-		String query = "UPDATE ALARM SET symbol=?, alarmId=?, alarmPrice=?, initialDelay=?, delay=?, timeUnit=?, description=?, "
-			   + "msgSent=?, intervall=?, firstDema=?, secondDema=?, thirdDema=?, crosss=?, currentFirstDema=?, "
-			   + "currentSecondDema=?, currentThirdDema=?, crosssBig=?, lastClosingCandle=?, minGap=?, chartMode=?,"
-			   + "emaCrossStrategy=? WHERE id = ?";
-
-		try {
-			ps = connection.prepareStatement(query);
-			
-			ps.setString(1, alarm.getSymbol());
-			ps.setString(2, alarm.getAlarmId());			
-			ps.setBigDecimal(3, alarm.getAlarmPrice());
-			ps.setInt(4, alarm.getInitialDelay());
-			ps.setInt(5, alarm.getDelay());
-			ps.setInt(6, alarm.getTimeUnit().ordinal());
-			ps.setString(7, alarm.getDescription());
-			ps.setBoolean(8, alarm.getMsgSent());
-			ps.setString(9, alarm.getIntervall());
-			ps.setInt(10, alarm.getFirstDema());
-			ps.setInt(11, alarm.getSecondDema());
-			ps.setInt(12, alarm.getThirdDema());
-			ps.setBoolean(13, alarm.getCrosss());
-			ps.setDouble(14, alarm.getCurrentFirstDema());
-			ps.setDouble(15, alarm.getCurrentSecondDema());
-			ps.setDouble(16, alarm.getCurrentThirdDema());
-			ps.setBoolean(17, alarm.getCrosssBig());
-			ps.setDouble(18, alarm.getLastClosingCandle());
-			ps.setDouble(19, alarm.getMinGap());
-			ps.setInt(20, alarm.getChartMode().ordinal());
-			ps.setInt(21, alarm.getEmaCrossStrategy().ordinal());
-			ps.setLong(22, alarm.getId());
-			
-			ps.executeUpdate();
-
-		} catch (SQLException e) {
-			System.err.println(e);
-		} finally {
-			DBUtil.closeResultSet(rs);
-			DBUtil.closePreparedStatement(ps);
-			pool.freeConnection(connection);
-		}
-	}
-	
 	public static void markMessageSent(long id) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();

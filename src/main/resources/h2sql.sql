@@ -100,7 +100,10 @@ CREATE TABLE ALARM (
     lastClosingCandle DOUBLE,
     minGap DOUBLE,
     chartMode INT,
-    emaCrossStrategy INT
+    emaCrossStrategy INT,
+    alarmType INT,
+    enterLong BOOLEAN,
+    enterShort BOOLEAN    
 );
 
 CREATE TABLE MACD_ALARM (
