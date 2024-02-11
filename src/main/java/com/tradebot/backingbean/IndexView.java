@@ -375,8 +375,16 @@ public class IndexView implements Serializable {
 	
 	public void createSellOrder(TradeBot bot, OrderTracker order, BigDecimal newPrice) throws Exception {
 		long timeStamp = System.currentTimeMillis();
-		
-		BigDecimal quoteQty = (new BigDecimal(bot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPrice);
+
+		BigDecimal quoteQty = BigDecimal.ZERO;		
+
+		if (bot.isProfitBase()) {
+			BigDecimal temp = new BigDecimal(bot.getQuoteOrderQty());
+			quoteQty = quoteQty.add(temp.setScale(8, RoundingMode.DOWN));
+		} else {
+			BigDecimal temp = (new BigDecimal(bot.getQuoteOrderQty()).divide(order.getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPrice);
+			quoteQty = quoteQty.add(temp.setScale(8, RoundingMode.DOWN));
+		}
 
 		String orderResult = spotClientImpl.createTrade().newOrder(OrdersParams.getOrderParams(
 			   bot.getSymbol(),
@@ -409,5 +417,31 @@ public class IndexView implements Serializable {
 		ErrorTrackerDB.removeErrors(id);
 		TradeBotDB.deleteTradeBot(id);
 		addMessage("Bot Removed", "");
+	}
+
+     public void deleteBotOrders(int id) throws Exception {
+		OrderDB.removeOrders(id);
+		addMessage("Orders deleted", "");
+	}
+
+	public int fetchOrderCount(int id) throws Exception {
+		return OrderDB.getOrderCount(id, false, false);
+	}
+
+	public void createSellAllOrders(TradeBot bot, BigDecimal newPrice) throws Exception {
+		List<OrderTracker> orders = OrderDB.getOrdersFromBot(false, bot.getId());
+
+		for (OrderTracker order : orders) {
+			createSellOrder(bot, order, newPrice);
+		}
+		addMessage("Orders sold for bot " + bot.getSymbol() + " " + bot.getTaskId(), "");
+	}
+
+	public void createSellOrdersFromAllBots() throws Exception {
+		List<TradeBot> bots = TradeBotDB.getAllTradeBots();
+		for (TradeBot bot : bots) {
+			checkPrice(bot.getSymbol());
+			createSellAllOrders(bot,checkedPrice);
+		}
 	}
 }

@@ -167,6 +167,15 @@
 
                     <p:commandButton styleClass="ui-button-success" value="Account Info" onclick="PF('accountDetails').show()" action="#{indexView.getAccountInfoAll()}"
                                      style="float:right;margin-right:5px;" update="accountForm:accountPanel"/>
+				
+				<p:commandButton styleClass="ui-button-success" value="Sell Orders from all bots" action="#{indexView.createSellOrdersFromAllBots()}"
+                                     style="float:right;margin-right:5px;" update="growl" >
+
+					<p:confirm header="Confirmation"
+							 message="Do you want to sell all bots orders?"
+							 icon="pi pi-info-circle"/>
+
+				</p:commandButton>
 
                     <p:outputLabel id="numberId" value="Running Tasks: #{indexView.getRunningTasksNumber()}" style="padding-top:10px;float:right;margin-right:15px"/>
 
@@ -433,6 +442,21 @@
                                    <p:commandButton id="stopId" update="txtId stopId runId growl headerForm:numberId botListForm" value="Stop Bot" styleClass="ui-button-warning"
                                                     action="#{indexView.removeTask}" style="float:left" oncomplete="runningStates();cycleStates();"
                                                     disabled="#{not indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
+							<p:commandButton id="removeOrdersId" update="growl detailsForm:botsTable" value="Delete All Orders"
+                                                    action="#{indexView.deleteBotOrders(indexView.selectedTradeBot.id)}" style="float:left"
+										  disabled="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" >
+
+								<p:confirm header="Confirmation"
+										 message="Do you want to delete all orders for this bot?"
+										 icon="pi pi-info-circle"/>
+
+							</p:commandButton>
+							
+							<p:commandButton value="Sell All Orders"
+										  oncomplete="PF('sellAllManually').show()" update="detailsForm:sellAllPanel"
+                                                    action="#{indexView.checkPrice(indexView.selectedTradeBot.symbol)}" style="float:left"
+										  disabled="#{indexView.isBotRunning(indexView.selectedTradeBot.taskId)}" />
+
                                    <p:commandButton value="Close" styleClass="ui-button-secondary" onclick="PF('botDetails').hide()"
                                                     class="ui-button-secondary" type="button" />
                               </div>
@@ -458,6 +482,24 @@
                                    <p:commandButton value="Sell" action="#{indexView.createSellOrder(indexView.selectedTradeBot,indexView.selectedOrder,indexView.checkedPrice)}" 
                                                     update="detailsForm:botsTable" style="float:left;margin-top: 15px;width:80px"/>
                                    <p:commandButton value="Refresh" update="priceId" action="#{indexView.checkPrice(indexView.selectedTradeBot.symbol)}" style="margin-top: 15px"/>
+                              </p:panelGrid>
+                         </p:outputPanel>
+                    </p:dialog>
+				
+				<p:dialog widgetVar="sellAllManually" height="auto" width="280px" modal="true">
+                         <f:facet name="header">
+                              Sell All Orders
+                         </f:facet>
+
+                         <p:outputPanel id="sellAllPanel">
+                              <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="display:inline-block" >
+							<p:outputLabel value="Number of orders: "/>
+							<p:outputLabel id="countId" value="#{indexView.fetchOrderCount(indexView.selectedTradeBot.id)}" style="font-weight: bold" />
+                                   <p:outputLabel value="Last Price: "/>
+                                   <p:outputLabel id="priceSellAllId" value="#{indexView.checkedPrice}" style="font-weight: bold" />
+                                   <p:commandButton value="Sell All" action="#{indexView.createSellAllOrders(indexView.selectedTradeBot,indexView.checkedPrice)}"
+                                                    update="detailsForm:botsTable growl" style="float:left;margin-top: 15px;width:80px"/>
+                                   <p:commandButton value="Refresh" update="priceSellAllId" action="#{indexView.checkPrice(indexView.selectedTradeBot.symbol)}" style="margin-top: 15px"/>
                               </p:panelGrid>
                          </p:outputPanel>
                     </p:dialog>
