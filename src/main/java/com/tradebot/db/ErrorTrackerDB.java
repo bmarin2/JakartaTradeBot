@@ -145,4 +145,25 @@ public class ErrorTrackerDB {
 			pool.freeConnection(connection);
 		}
 	}
+
+	public static void removeErrors(int botId) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "DELETE FROM ERROR_TRACKER WHERE TRADEBOT_ID = ?";
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setInt(1, botId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+
 }

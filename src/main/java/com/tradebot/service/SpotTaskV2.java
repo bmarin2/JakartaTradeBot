@@ -6,8 +6,10 @@ import com.binance.connector.client.exceptions.BinanceServerException;
 import com.binance.connector.client.impl.SpotClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.configuration.OrdersParams;
+import com.tradebot.db.AlarmDB;
 import com.tradebot.db.ErrorTrackerDB;
 import com.tradebot.db.OrderDB;
+import com.tradebot.model.Alarm;
 import com.tradebot.model.BotDTO;
 import com.tradebot.model.ErrorTracker;
 import com.tradebot.model.OrderSide;
@@ -25,7 +27,9 @@ import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
 
-public class TaskV2 implements Runnable {
+// spot task with emas
+
+public class SpotTaskV2 implements Runnable {
 
      private TradeBot tradeBot;
 
@@ -37,7 +41,9 @@ public class TaskV2 implements Runnable {
 
      private final TelegramBot telegramBot;
 	
-     public TaskV2(TradeBot tradeBot) throws Exception {
+	private boolean notified;
+	
+     public SpotTaskV2(TradeBot tradeBot) throws Exception {
           this.spotClientImpl = SpotClientConfig.spotClientSignTest();
           this.tradeBot = tradeBot;
           this.positions = convertOrdersToMap(tradeBot);
@@ -55,30 +61,61 @@ public class TaskV2 implements Runnable {
                if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
                     BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
                     botDTO.setLastPrice(newPosition);
-
-                    if (botDTO.isStopCycle() && !stopBotCycle) {
-                         stopBotCycle = true;
-                    } else if (!botDTO.isStopCycle() && stopBotCycle) {
-                         stopBotCycle = false;
-                    }
-
                     botDTO.setLastCheck(new Date());
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
                } else {
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false, new Date(), false));
                }
+			
+			boolean demaCross = getDemaCross();
 
                if (positions.isEmpty()) {
-                    if (!stopBotCycle) {
+                    if (!demaCross) {
                          createBuyOrder(newPosition);
+					telegramBot.sendMessage("(Spot) Started with trading, first position bought " + tradeBot.getSymbol());
                     } else {
                          return;
                     }
-               }
+               }	
 
-               if (tradeBot.isEnableStopLoss()) {
-                    checkStopLoss(newPosition);
-               }
+			if (demaCross) {
+				checkStopLoss(newPosition);
+				
+				if (!stopBotCycle) {
+					stopBotCycle = true;
+
+					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+					if (!botDTO.isStopCycle()) {
+						botDTO.setStopCycle(true);
+						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+					}
+				}
+
+				if (!notified) {
+					telegramBot.sendMessage("(Spot) Stopping buying (entering stop loss mode) " + tradeBot.getSymbol()
+						   + "\nDEMA: " + tradeBot.getDemaAlertTaskId());
+					notified = true;
+				}
+
+				return;
+
+			} else {
+				if (stopBotCycle) {
+					stopBotCycle = false;
+					
+					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
+					if (botDTO.isStopCycle()) {
+						botDTO.setStopCycle(false);
+						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
+					}
+				}
+				
+				if (notified) {
+					telegramBot.sendMessage("(Spot) Continuing with trading (exiting stop loss mode) " + tradeBot.getSymbol()
+						   + "\nDEMA: " + tradeBot.getDemaAlertTaskId());
+					notified = false;
+				}
+			}
 
                Long lastAddedKey = null;
 
@@ -176,7 +213,7 @@ public class TaskV2 implements Runnable {
           order.setBuyPrice(newPosition);
           order.setTradebot_id(tradeBot.getId());
           order.setBuyOrderId(orderResultJson.getLong("orderId"));
-          order.setStopLossPrice(calcStopLossPrice(newPosition));
+		order.setStopLossPrice(calcStopLossPrice(newPosition));
           long order_id = OrderDB.addOrder(order);
 		PositionDTO positionDTO = new PositionDTO(order.getBuyPrice(), order.getStopLossPrice());
           positions.put(order_id, positionDTO);
@@ -209,13 +246,8 @@ public class TaskV2 implements Runnable {
 		BigDecimal quoteSum = BigDecimal.ZERO;
 
 		for (Long tempOrder : tempOrders) {
-               if (tradeBot.isProfitBase()) {
-                    BigDecimal temp = new BigDecimal(tradeBot.getQuoteOrderQty());
-                    quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
-               } else {
-                    BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder).getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPosition);
-                    quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
-               }
+			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder).getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPosition);
+			quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
 		}
 
 		long timeStamp = System.currentTimeMillis();
@@ -266,5 +298,16 @@ public class TaskV2 implements Runnable {
 			telegramBot.sendMessage("Sold at loss of " + tradeBot.getStopLoss() + "% Number of orders sold: "
 				   + tempOrdersStopLoss.size() + " " + tradeBot.getSymbol() + " " + tradeBot.getTaskId());			
 		}
-	}	
+	}
+	
+	private boolean getDemaCross() {
+		try {
+			Alarm alarm = AlarmDB.getOneAlarm(tradeBot.getDemaAlertTaskId());
+			return alarm.getCrosss();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 }

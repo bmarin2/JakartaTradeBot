@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDB {
-	
+
 	public static long addOrder(OrderTracker order) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
@@ -23,7 +23,7 @@ public class OrderDB {
 		String query = "INSERT INTO ORDER_TRACKER (sell, buyPrice, sellPrice, profit, buyDate, sellDate, buyOrderId, sellOrderId, tradebot_id, stopLossPrice ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			
+
 			ps.setBoolean(1, order.getSell());
 			ps.setBigDecimal(2, order.getBuyPrice());
 			ps.setBigDecimal(3, order.getSellPrice());
@@ -34,15 +34,15 @@ public class OrderDB {
 			ps.setLong(8, order.getSellOrderId());
 			ps.setLong(9, order.getTradebot_id());
 			ps.setBigDecimal(10, order.getStopLossPrice());
-			
+
 			ps.executeUpdate();
-			
+
 			rs = ps.getGeneratedKeys();
 
 			if (rs.next()) {
 				order_id = rs.getLong(1);
 			}
-			
+
 		} catch (SQLException e) {
 			System.err.println(e);
 		} finally {
@@ -52,7 +52,7 @@ public class OrderDB {
 		}
 		return order_id;
 	}
-	
+
 	public static void updateOrder(OrderTracker order) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
@@ -62,7 +62,7 @@ public class OrderDB {
 		String query = "UPDATE ORDER_TRACKER SET sell=?, buyPrice=?, sellPrice=?, profit=?, buyDate=?, sellDate=?, buyOrderId=?, sellOrderId=?, tradebot_id=?, stopLossPrice=? WHERE id = ?";
 		try {
 			ps = connection.prepareStatement(query);
-			
+
 			ps.setBoolean(1, order.getSell());
 			ps.setBigDecimal(2, order.getBuyPrice());
 			ps.setBigDecimal(3, order.getSellPrice());
@@ -74,9 +74,9 @@ public class OrderDB {
 			ps.setLong(9, order.getTradebot_id());
 			ps.setBigDecimal(10, order.getStopLossPrice());
 			ps.setLong(11, order.getId());
-			
+
 			ps.executeUpdate();
-			
+
 		} catch (SQLException e) {
 			System.err.println(e);
 		} finally {
@@ -84,8 +84,8 @@ public class OrderDB {
 			DBUtil.closePreparedStatement(ps);
 			pool.freeConnection(connection);
 		}
-	}	
-	
+	}
+
 	public static OrderTracker getOneOrder(long id) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
@@ -121,7 +121,7 @@ public class OrderDB {
 			pool.freeConnection(connection);
 		}
 	}
-	
+
 	public static List<OrderTracker> getOrdersFromBot(boolean all, long botId) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
@@ -130,19 +130,19 @@ public class OrderDB {
 
 		String query = "SELECT * FROM ORDER_TRACKER WHERE tradebot_id=? AND sell=? ORDER BY buyDate";
 		String queryAll = "SELECT * FROM ORDER_TRACKER WHERE tradebot_id=? ORDER BY buyDate";
-		
+
 		try {
-			
+
 			ps = connection.prepareStatement(all == true ? queryAll : query);
-			
+
 			ps.setLong(1, botId);
-			
-			if(!all) {
+
+			if (!all) {
 				ps.setBoolean(2, false);
-			}			
-			
+			}
+
 			rs = ps.executeQuery();
-			
+
 			List<OrderTracker> orders = new ArrayList<>();
 			while (rs.next()) {
 				OrderTracker order = new OrderTracker();
@@ -176,10 +176,10 @@ public class OrderDB {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		int count = 0;
-		
+
 		String queryAll = "SELECT COUNT(*) FROM ORDER_TRACKER WHERE tradeBot_id=?";
 		String query = "SELECT COUNT(*) FROM ORDER_TRACKER WHERE tradeBot_id=? AND sell=" + sold;
-		
+
 		try {
 			ps = connection.prepareStatement(all == true ? queryAll : query);
 			ps.setLong(1, botId);
@@ -198,16 +198,16 @@ public class OrderDB {
 			pool.freeConnection(connection);
 		}
 	}
-	
+
 	public static BigDecimal getTadeBotProfits(long botId) throws Exception {
 		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		BigDecimal profits = null;
-		
+
 		String query = "SELECT SUM(profit) FROM ORDER_TRACKER WHERE tradeBot_id=?";
-		
+
 		try {
 			ps = connection.prepareStatement(query);
 			ps.setLong(1, botId);
@@ -216,9 +216,9 @@ public class OrderDB {
 			while (rs.next()) {
 				profits = rs.getBigDecimal(1);
 			}
-			
+
 			return profits;
-			
+
 		} catch (SQLException e) {
 			System.err.println(e);
 			return null;
@@ -228,19 +228,19 @@ public class OrderDB {
 			pool.freeConnection(connection);
 		}
 	}
-        
-        public static List<OrderTracker> getOrders24Hours() throws Exception {
-            	ConnectionPool pool = ConnectionPool.getInstance();
+
+	public static List<OrderTracker> getOrders24Hours() throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
 		Connection connection = pool.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 
 		String query = "SELECT * FROM ORDER_TRACKER WHERE BUYDATE >= DATEADD('HOUR', -24, NOW())";
-		
+
 		try {
-			
+
 			ps = connection.prepareStatement(query);
-			rs = ps.executeQuery();			
+			rs = ps.executeQuery();
 			List<OrderTracker> orders = new ArrayList<>();
 			while (rs.next()) {
 				OrderTracker order = new OrderTracker();
@@ -266,5 +266,26 @@ public class OrderDB {
 			DBUtil.closePreparedStatement(ps);
 			pool.freeConnection(connection);
 		}
-        }
+	}
+
+	public static void removeOrders(int botId) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		String query = "DELETE FROM ORDER_TRACKER WHERE TRADEBOT_ID = ?";
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setInt(1, botId);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			System.err.println(e);
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
+
 }

@@ -6,10 +6,8 @@ import com.binance.connector.client.exceptions.BinanceServerException;
 import com.binance.connector.client.impl.SpotClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.configuration.OrdersParams;
-import com.tradebot.db.AlarmDB;
 import com.tradebot.db.ErrorTrackerDB;
 import com.tradebot.db.OrderDB;
-import com.tradebot.model.Alarm;
 import com.tradebot.model.BotDTO;
 import com.tradebot.model.ErrorTracker;
 import com.tradebot.model.OrderSide;
@@ -27,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
 
-public class Task implements Runnable {
+public class SpotTask implements Runnable {
 
      private TradeBot tradeBot;
 
@@ -39,9 +37,7 @@ public class Task implements Runnable {
 
      private final TelegramBot telegramBot;
 	
-	private boolean notified;
-	
-     public Task(TradeBot tradeBot) throws Exception {
+     public SpotTask(TradeBot tradeBot) throws Exception {
           this.spotClientImpl = SpotClientConfig.spotClientSignTest();
           this.tradeBot = tradeBot;
           this.positions = convertOrdersToMap(tradeBot);
@@ -59,61 +55,46 @@ public class Task implements Runnable {
                if (BotExtraInfo.containsInfo(tradeBot.getTaskId())) {
                     BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
                     botDTO.setLastPrice(newPosition);
+
+				if (tradeBot.getPriceGridLimit() > 0.0) {
+					if (newPosition.doubleValue() > tradeBot.getPriceGridLimit() && !botDTO.isStopCycle()) {
+						botDTO.setStopCycle(true);
+
+						telegramBot.sendMessage("Price over grid limit, stopping buying\n"
+							   + tradeBot.getSymbol() + " " + tradeBot.getTaskId());
+
+					} else if (newPosition.doubleValue() < tradeBot.getPriceGridLimit() && botDTO.isStopCycle()) {
+
+						telegramBot.sendMessage("Price under grid limit, continuing buying\n"
+							   + tradeBot.getSymbol() + " " + tradeBot.getTaskId());
+
+						botDTO.setStopCycle(false);
+					}
+				}
+
+                    if (botDTO.isStopCycle() && !stopBotCycle) {
+                         stopBotCycle = true;
+                    } else if (!botDTO.isStopCycle() && stopBotCycle) {
+                         stopBotCycle = false;
+                    }
+
                     botDTO.setLastCheck(new Date());
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
                } else {
                     BotExtraInfo.putInfo(tradeBot.getTaskId(), new BotDTO(newPosition, false, new Date(), false));
                }
-			
-			boolean demaCross = getDemaCross();
 
                if (positions.isEmpty()) {
-                    if (!demaCross) {
+                    if (!stopBotCycle) {
                          createBuyOrder(newPosition);
-					telegramBot.sendMessage("(Spot) Started with trading, first position bought " + tradeBot.getSymbol());
                     } else {
                          return;
                     }
-               }	
+               }
 
-			if (demaCross) {
-				checkStopLoss(newPosition);
-				
-				if (!stopBotCycle) {
-					stopBotCycle = true;
-
-					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
-					if (!botDTO.isStopCycle()) {
-						botDTO.setStopCycle(true);
-						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
-					}
-				}
-
-				if (!notified) {
-					telegramBot.sendMessage("(Spot) Stopping buying (entering stop loss mode) " + tradeBot.getSymbol()
-						   + "\nDEMA: " + tradeBot.getDemaAlertTaskId());
-					notified = true;
-				}
-
-				return;
-
-			} else {
-				if (stopBotCycle) {
-					stopBotCycle = false;
-					
-					BotDTO botDTO = BotExtraInfo.getInfo(tradeBot.getTaskId());
-					if (botDTO.isStopCycle()) {
-						botDTO.setStopCycle(false);
-						BotExtraInfo.putInfo(tradeBot.getTaskId(), botDTO);
-					}
-				}
-				
-				if (notified) {
-					telegramBot.sendMessage("(Spot) Continuing with trading (exiting stop loss mode) " + tradeBot.getSymbol()
-						   + "\nDEMA: " + tradeBot.getDemaAlertTaskId());
-					notified = false;
-				}
-			}
+               if (tradeBot.isEnableStopLoss()) {
+                    checkStopLoss(newPosition);
+               }
 
                Long lastAddedKey = null;
 
@@ -211,7 +192,7 @@ public class Task implements Runnable {
           order.setBuyPrice(newPosition);
           order.setTradebot_id(tradeBot.getId());
           order.setBuyOrderId(orderResultJson.getLong("orderId"));
-		order.setStopLossPrice(calcStopLossPrice(newPosition));
+          order.setStopLossPrice(calcStopLossPrice(newPosition));
           long order_id = OrderDB.addOrder(order);
 		PositionDTO positionDTO = new PositionDTO(order.getBuyPrice(), order.getStopLossPrice());
           positions.put(order_id, positionDTO);
@@ -244,8 +225,13 @@ public class Task implements Runnable {
 		BigDecimal quoteSum = BigDecimal.ZERO;
 
 		for (Long tempOrder : tempOrders) {
-			BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder).getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPosition);
-			quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
+               if (tradeBot.isProfitBase()) {
+                    BigDecimal temp = new BigDecimal(tradeBot.getQuoteOrderQty());
+                    quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
+               } else {
+                    BigDecimal temp = (new BigDecimal(tradeBot.getQuoteOrderQty()).divide(positions.get(tempOrder).getBuyPrice(), 8, RoundingMode.DOWN)).multiply(newPosition);
+                    quoteSum = quoteSum.add(temp.setScale(8, RoundingMode.DOWN));
+               }
 		}
 
 		long timeStamp = System.currentTimeMillis();
@@ -297,15 +283,4 @@ public class Task implements Runnable {
 				   + tempOrdersStopLoss.size() + " " + tradeBot.getSymbol() + " " + tradeBot.getTaskId());			
 		}
 	}
-	
-	private boolean getDemaCross() {
-		try {
-			Alarm alarm = AlarmDB.getOneAlarm(tradeBot.getDemaAlertTaskId());
-			return alarm.getCrosss();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-	
 }

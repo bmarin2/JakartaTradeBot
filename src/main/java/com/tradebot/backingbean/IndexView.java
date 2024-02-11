@@ -12,10 +12,8 @@ import com.tradebot.model.OrderSide;
 import com.tradebot.model.OrderTracker;
 import com.tradebot.model.TradeBot;
 import com.tradebot.service.BotExtraInfo;
-import com.tradebot.service.ReportTask;
-import com.tradebot.service.Task;
 import com.tradebot.service.TaskService;
-import com.tradebot.service.TaskV2;
+import com.tradebot.service.SpotTask;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -243,10 +241,10 @@ public class IndexView implements Serializable {
 	}
 
 	public void addTask() throws Exception {
-		TaskV2 task = new TaskV2(selectedTradeBot);
+		SpotTask spotTask = new SpotTask(selectedTradeBot);
 
 		taskService.addTask(selectedTradeBot.getTaskId(),
-			   task,
+			   spotTask,
 			   selectedTradeBot.getInitialDelay(),
 			   selectedTradeBot.getDelay(),
 			   selectedTradeBot.getTimeUnit()
@@ -301,10 +299,20 @@ public class IndexView implements Serializable {
 	public void updateCycleState() {
 		String taskId = FacesContext.getCurrentInstance().
 			getExternalContext().getRequestParameterMap().get("taskId");
-		
+
 		String stopCycle = FacesContext.getCurrentInstance().
 			getExternalContext().getRequestParameterMap().get("stopCycle");
-		
+
+		String onlyRemove = FacesContext.getCurrentInstance().
+			getExternalContext().getRequestParameterMap().get("onlyRemove");
+
+		if (Boolean.parseBoolean(onlyRemove)) {
+			if (BotExtraInfo.containsInfo(taskId)) {
+				BotExtraInfo.getMap().remove(taskId);
+			}
+			return;
+		}
+
 		if (BotExtraInfo.containsInfo(taskId)) {
 			BotDTO botDTO = BotExtraInfo.getInfo(taskId);
 			if(botDTO.isStopCycle() == true && Boolean.parseBoolean(stopCycle) == true) {
@@ -341,7 +349,7 @@ public class IndexView implements Serializable {
 				return;
 			}
 			TradeBot bot = TradeBotDB.getOneTradeBot(taskId);
-			TaskV2 task = new TaskV2(bot);
+			SpotTask task = new SpotTask(bot);
 			taskService.addTask(bot.getTaskId(),
 				   task,
 				   bot.getInitialDelay(),
@@ -389,10 +397,17 @@ public class IndexView implements Serializable {
 		orderSave.setProfit(earnings.setScale(8, RoundingMode.DOWN));
 		OrderDB.updateOrder(orderSave);
 	}
-	
+
 	public void checkPrice(String symbol) {
 		String result = spotClientImpl.createMarket().tickerSymbol(OrdersParams.getTickerSymbolParams(symbol));
           JSONObject jsonObject = new JSONObject(result);
           checkedPrice = new BigDecimal(jsonObject.getString("price"));
+	}
+
+	public void deleteBot(int id) throws Exception {
+		OrderDB.removeOrders(id);
+		ErrorTrackerDB.removeErrors(id);
+		TradeBotDB.deleteTradeBot(id);
+		addMessage("Bot Removed", "");
 	}
 }

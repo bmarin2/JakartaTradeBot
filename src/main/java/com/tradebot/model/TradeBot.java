@@ -40,4 +40,6 @@ public class TradeBot implements Serializable {
      private boolean enableStopLoss = false;
      
      private boolean profitBase = false;
+	
+	private Double priceGridLimit = 0.0;
 }

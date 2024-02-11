@@ -121,19 +121,19 @@
                     var isChecked = $(element).prop('checked');
                     var title = $(element).parent().parent().parent().parent().siblings('.ui-card-title');
                     var task = title.find('>span:nth-of-type(2)').text();
-                    updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: isChecked}]);
+                    updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: isChecked}, {name: 'onlyRemove', value: false}]);
                }
                ;
 
                function toggleSwitchRunning(element) {
                     var isChecked = $(element).prop('checked');
                     var title = $(element).parent().parent().parent().parent();
-                    var task = title.find('>span:nth-of-type(2)').text();
-                    updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
+                    var task = title.find('>span:nth-of-type(2)').text();                    
                     if (!isChecked) {
-                         updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: false}]);
+                         updateCycleState([{name: 'taskId', value: task}, {name: 'stopCycle', value: false}, {name: 'onlyRemove', value: true}]);
                          $(element).parent().parent().parent().parent().siblings('.ui-card-footer').find('.ui-toggleswitch').removeClass('ui-toggleswitch-checked');
                     }
+				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
                }
                ;
 
@@ -172,6 +172,14 @@
 
                     <hr style="margin-bottom:10px;margin-top:15px"></hr>
                </h:form>
+			
+			<h:form>
+				<p:growl id="message" showDetail="true"/>
+				<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+					<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-flat"/>
+					<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" />
+				</p:confirmDialog>				
+			</h:form>
 
                <h:form id="botListForm">
                     <p:repeat value="#{indexView.bots}" var="bot">
@@ -182,6 +190,7 @@
                                    <div style="float:right">
                                         <p:toggleSwitch onchange="toggleSwitchRunning(this)">
                                              <p:ajax update="editId" />
+									<p:ajax update="removeId" />
                                         </p:toggleSwitch>
                                    </div>
                               </f:facet>
@@ -223,6 +232,20 @@
                                    <p:commandButton id="editId" icon="pi pi-file" oncomplete="PF('manageBot').show()" update="manageBotForm" style="margin-right:5px;" disabled="#{indexView.isBotRunning(bot.taskId)}" action="#{indexView.editBot()}">
                                         <f:setPropertyActionListener value="#{bot}" target="#{indexView.selectedTradeBot}" />
                                    </p:commandButton>
+							
+							<p:commandButton id="removeId" icon="pi pi-times"
+										  styleClass="ui-button-danger"
+										  style="margin-right:5px;"
+										  oncomplete="location.reload();runningStates();cycleStates();"
+										  disabled="#{indexView.isBotRunning(bot.taskId)}"
+										  action="#{indexView.deleteBot(bot.id)}">
+
+								<p:confirm header="Confirmation"
+										 message="Do you want to delete this bot?"
+										 icon="pi pi-info-circle"/>
+
+							</p:commandButton>
+
 
                                    <div style="display:inline-block;float:right"><p:toggleSwitch id="cycleId" onchange="toggleSwitchCycles(this)" disabled="#{!indexView.isBotRunning(bot.taskId)}" /></div>
                                    <p:outputLabel value="Stop Buy" style="float:right;margin-right:3px;margin-top:8px;font-weight:bold"/>
@@ -275,8 +298,11 @@
                               <p:outputLabel for="input10" value="Date Created"/>
                               <p:datePicker id="input10" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 
-                              <p:outputLabel for="input11" value="Description"/>
-                              <p:inputTextarea id="input11" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
+						<p:outputLabel for="input11" value="Price Grid Limit"/>
+                              <p:inputText id="input11" value="#{indexView.selectedTradeBot.priceGridLimit}" />
+
+                              <p:outputLabel for="input12" value="Description"/>
+                              <p:inputTextarea id="input12" rows="4" cols="22" autoResize="false" value="#{indexView.selectedTradeBot.description}" />
 
                               <p:selectBooleanCheckbox value="#{indexView.selectedTradeBot.enableStopLoss}" itemLabel="Enable Stop Loss"/>
                               
@@ -334,6 +360,8 @@
                               <h:outputText value="#{indexView.selectedTradeBot.stopLoss}"/>
                          </p:panelGrid>
                          <p:panelGrid columns="2" style="display:inline-block;">
+						<h:outputText value="Price Grid Limit"/>
+                              <h:outputText value="#{indexView.selectedTradeBot.priceGridLimit}"/>
                               <h:outputText value="Enable Stop Loss"/>
                               <h:outputText value="#{indexView.selectedTradeBot.enableStopLoss}"/>
                               <h:outputText value="Base Asset Profit"/>
