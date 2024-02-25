@@ -107,7 +107,9 @@ CREATE TABLE ALARM (
     emaCrossStrategy INT,
     alarmType INT,
     enterLong BOOLEAN,
-    enterShort BOOLEAN    
+    enterShort BOOLEAN,
+    goodForEntry BOOLEAN,
+    atr DOUBLE
 );
 
 CREATE TABLE MACD_ALARM (

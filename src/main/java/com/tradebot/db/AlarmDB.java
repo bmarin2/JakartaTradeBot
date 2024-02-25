@@ -24,8 +24,8 @@ public class AlarmDB {
 		String query = "INSERT INTO ALARM (symbol, alarmId, alarmPrice, initialDelay, delay, timeUnit, description,"
 			   + " msgSent, intervall, firstDema, secondDema, thirdDema, crosss, currentFirstDema, currentSecondDema,"
 			   + " currentThirdDema, crosssBig, lastClosingCandle, minGap, chartMode, emaCrossStrategy, alarmType,"
-			   + " enterLong, enterShort) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			   + " enterLong, enterShort, goodForEntry, atr) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -53,6 +53,8 @@ public class AlarmDB {
 			ps.setInt(22, alarm.getAlarmType().ordinal());
 			ps.setBoolean(23, alarm.getEnterLong());
 			ps.setBoolean(24, alarm.getEnterShort());
+			ps.setBoolean(25, alarm.getGoodForEntry());
+			ps.setDouble(26, alarm.getAtr());
 			
 			ps.executeUpdate();
 			
@@ -81,7 +83,7 @@ public class AlarmDB {
 		String query = "UPDATE ALARM SET symbol=?, alarmId=?, alarmPrice=?, initialDelay=?, delay=?, timeUnit=?, description=?, "
 			   + "msgSent=?, intervall=?, firstDema=?, secondDema=?, thirdDema=?, crosss=?, currentFirstDema=?, "
 			   + "currentSecondDema=?, currentThirdDema=?, crosssBig=?, lastClosingCandle=?, minGap=?, chartMode=?,"
-			   + "emaCrossStrategy=?, alarmType=?, enterLong=?, enterShort=? WHERE id = ?";
+			   + "emaCrossStrategy=?, alarmType=?, enterLong=?, enterShort=?, goodForEntry=?, atr=? WHERE id = ?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -110,7 +112,9 @@ public class AlarmDB {
 			ps.setInt(22, alarm.getAlarmType().ordinal());
 			ps.setBoolean(23, alarm.getEnterLong());
 			ps.setBoolean(24, alarm.getEnterShort());
-			ps.setLong(25, alarm.getId());
+			ps.setBoolean(25, alarm.getGoodForEntry());
+			ps.setDouble(26, alarm.getAtr());
+			ps.setLong(27, alarm.getId());
 			
 			ps.executeUpdate();
 
@@ -161,6 +165,8 @@ public class AlarmDB {
 				alarm.setAlarmType(AlarmType.values()[rs.getInt("alarmType")]);
 				alarm.setEnterLong(rs.getBoolean("enterLong"));
 				alarm.setEnterShort(rs.getBoolean("enterShort"));
+				alarm.setGoodForEntry(rs.getBoolean("goodForEntry"));
+				alarm.setAtr(rs.getDouble("atr"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -211,6 +217,8 @@ public class AlarmDB {
 				alarm.setAlarmType(AlarmType.values()[rs.getInt("alarmType")]);
 				alarm.setEnterLong(rs.getBoolean("enterLong"));
 				alarm.setEnterShort(rs.getBoolean("enterShort"));
+				alarm.setGoodForEntry(rs.getBoolean("goodForEntry"));
+				alarm.setAtr(rs.getDouble("atr"));
 			}
 			return alarm;
 		} catch (SQLException e) {
@@ -261,6 +269,8 @@ public class AlarmDB {
 				alarm.setAlarmType(AlarmType.values()[rs.getInt("alarmType")]);
 				alarm.setEnterLong(rs.getBoolean("enterLong"));
 				alarm.setEnterShort(rs.getBoolean("enterShort"));
+				alarm.setGoodForEntry(rs.getBoolean("goodForEntry"));
+				alarm.setAtr(rs.getDouble("atr"));
 				alarms.add(alarm);
 			}
 			return alarms;

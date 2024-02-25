@@ -40,4 +40,7 @@ public class Alarm implements Serializable {
 	// for three bars
 	private Boolean enterLong = false;
 	private Boolean enterShort = false;
+	// for Stoch RSO
+	private Boolean goodForEntry = false;
+	private Double atr = 0.0;
 }

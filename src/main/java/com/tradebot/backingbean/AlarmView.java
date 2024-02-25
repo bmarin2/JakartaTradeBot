@@ -28,6 +28,7 @@ import org.primefaces.PrimeFaces;
 import org.primefaces.context.PrimeRequestContext;
 import com.tradebot.enums.ChartMode;
 import com.tradebot.enums.EmaCrossStrategy;
+import com.tradebot.service.StochRsiEma;
 import com.tradebot.service.TemaOneCrossTask;
 import com.tradebot.service.TemaTwoCrossTask;
 import com.tradebot.service.ThreeBarsTask;
@@ -119,6 +120,9 @@ public class AlarmView implements Serializable {
 			case "THREE_BARS":
 				currentAlarmType = AlarmType.THREE_BARS;
 				break;
+			case "STOCH_RSI":
+				currentAlarmType = AlarmType.STOCH_RSI;
+				break;
 		}
 	}
 	
@@ -203,6 +207,19 @@ public class AlarmView implements Serializable {
 				);
 
 				addMessage("Three Bars alarm added", "id: " + alarm.getAlarmId());
+
+			} else if (alarmType.equals("STOCH_RSI")) {
+
+				StochRsiEma stochRsiEma = new StochRsiEma(alarm);
+				
+				taskService.addTask(alarm.getAlarmId(),
+					   stochRsiEma,
+					   alarm.getInitialDelay(),
+					   alarm.getDelay(),
+					   alarm.getTimeUnit()
+				);
+
+				addMessage("StochRsiEma alarm added", "id: " + alarm.getAlarmId());
 			}
 			
 
