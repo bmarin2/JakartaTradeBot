@@ -331,4 +331,31 @@ public class AlarmDB {
 			pool.freeConnection(connection);
 		}
 	}
+	
+	public static boolean getAlarmCross(String taskId) throws Exception {
+		ConnectionPool pool = ConnectionPool.getInstance();
+		Connection connection = pool.getConnection();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		boolean cross = false;
+		
+		String query = "SELECT CROSSS FROM ALARM WHERE ALARMID=?";
+		
+		try {
+			ps = connection.prepareStatement(query);
+			ps.setString(1, taskId);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				cross = rs.getBoolean(1);
+			}
+			return cross;
+		} catch (SQLException e) {
+			System.err.println(e);
+			return false;
+		} finally {
+			DBUtil.closeResultSet(rs);
+			DBUtil.closePreparedStatement(ps);
+			pool.freeConnection(connection);
+		}
+	}
 }

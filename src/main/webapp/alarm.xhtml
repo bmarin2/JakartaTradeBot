@@ -206,11 +206,23 @@
 					<h:outputText value="#{alarm.currentThirdDema}">
 						<f:convertNumber pattern="#0.00" />
 					</h:outputText>
+					
+					<h:outputLabel value="Last Candle"/>
+					<h:outputText value="#{alarm.lastClosingCandle}">
+						<f:convertNumber pattern="#0.00" />
+					</h:outputText>
 
 					<h:outputLabel value="Good For Entry"/>
 					<p:outputLabel value="#{alarm.goodForEntry}" />
+					
 					<h:outputLabel value="ATR"/>
-					<p:outputLabel value="#{alarm.atr}" />
+					<h:outputText value="#{alarm.atr}">
+						<f:convertNumber pattern="#0.0000" />
+					</h:outputText>
+
+					<h:outputLabel value="Gap"/>
+					<p:outputLabel value="#{alarm.minGap}" />
+
 				</p:panelGrid>
 
 				<f:facet name="footer">

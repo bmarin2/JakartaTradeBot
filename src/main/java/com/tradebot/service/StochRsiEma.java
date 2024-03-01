@@ -8,7 +8,7 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.SpotClientConfig;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
-import com.tradebot.db.MACDAlarmDB;
+import com.tradebot.db.AlarmDB;
 import com.tradebot.model.Alarm;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -34,6 +34,9 @@ public class StochRsiEma implements Runnable {
 	private UMFuturesClientImpl umFuturesClientImpl;
 	private SpotClientImpl spotClientImpl;
 	private final TelegramBot telegramBot;
+	
+	private double K;
+	private double D;
 
 	private BarSeries series;
 
@@ -64,43 +67,32 @@ public class StochRsiEma implements Runnable {
 
 		RSIIndicator r = new RSIIndicator(closePriceIndicator, 14);
 		Indicator sr = new StochasticRSIIndicator(r, 14);
-		Indicator k = new SMAIndicator(sr, 3); // blue
-		Indicator d = new SMAIndicator(k, 3); // yellow
+		SMAIndicator k = new SMAIndicator(sr, 3); // blue
+		SMAIndicator d = new SMAIndicator(k, 3); // yellow
 		
+		K = k.getValue(k.getBarSeries().getEndIndex()).doubleValue();
+		D = d.getValue(k.getBarSeries().getEndIndex()).doubleValue();
 		
-		EMAIndicator ema1 = new EMAIndicator(closePriceIndicator, alarm.getFirstDema());
-		System.out.println("ema1 close: " + ema1.getValue(ema1.getBarSeries().getEndIndex()));
-		
-		EMAIndicator ema2 = new EMAIndicator(closePriceIndicator, alarm.getSecondDema());
-		System.out.println("ema2 close: " + ema2.getValue(ema2.getBarSeries().getEndIndex()));
-		
-		EMAIndicator ema3 = new EMAIndicator(closePriceIndicator, alarm.getThirdDema());
-		System.out.println("ema3 close: " + ema3.getValue(ema3.getBarSeries().getEndIndex()));
-		
-		double atr = new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue();
-		System.out.println("atr: " + atr);
-		
-		System.out.println("Last Candle: " + closePriceIndicator.getValue(closePriceIndicator
-				.getBarSeries().getEndIndex()).doubleValue());
-		
-		System.out.println("k " + k.getValue(k.getBarSeries().getEndIndex()));
-		System.out.println("d " + d.getValue(d.getBarSeries().getEndIndex()));
+		System.out.println("K: " + K);
+		System.out.println("D: " + D);
 
-//          macdAlarm.setCurrentMacdLine(
-//                  macdIndicator.getValue(macdIndicator.getBarSeries().getEndIndex()).doubleValue()
-//          );
-//          macdAlarm.setCurrentSignalLine(
-//                  new EMAIndicator(macdIndicator, 9).getValue(macdIndicator.getBarSeries().getEndIndex()).doubleValue()
-//          );          
-//          macdAlarm.setCurrentEma(
-//                  new EMAIndicator(closePriceIndicator, macdAlarm.getEma()).getValue(closePriceIndicator.getBarSeries().getEndIndex()).doubleValue()          
-//          );          
-//          macdAlarm.setLastClosingCandle(closePriceIndicator.getValue(closePriceIndicator.getBarSeries().getEndIndex()).doubleValue());
-//
-//		macdAlarm.setLastAtr(new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue());
+		EMAIndicator ema1 = new EMAIndicator(closePriceIndicator, alarm.getFirstDema());
+		alarm.setCurrentFirstDema(ema1.getValue(ema1.getBarSeries().getEndIndex()).doubleValue());
+
+		EMAIndicator ema2 = new EMAIndicator(closePriceIndicator, alarm.getSecondDema());
+		alarm.setCurrentSecondDema(ema2.getValue(ema2.getBarSeries().getEndIndex()).doubleValue());
+
+		EMAIndicator ema3 = new EMAIndicator(closePriceIndicator, alarm.getThirdDema());
+		alarm.setCurrentThirdDema(ema3.getValue(ema3.getBarSeries().getEndIndex()).doubleValue());
+
+		double atr = new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue();
+		alarm.setAtr(atr);
+
+		alarm.setLastClosingCandle(closePriceIndicator.getValue(closePriceIndicator
+				.getBarSeries().getEndIndex()).doubleValue());
 
 		try {
-			System.out.println("get cross:  " + MACDAlarmDB.getMacdCross(alarm.getAlarmId()));
+			System.out.println("get cross:  " + AlarmDB.getAlarmCross(alarm.getAlarmId()));
 		} catch (Exception ex) {
 			Logger.getLogger(MACDCross.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -108,61 +100,56 @@ public class StochRsiEma implements Runnable {
      }
 
      private void calculateValues() {
-//          System.out.println("Calculating values:");
-//          System.out.println("--");
-//
-//          if (macdAlarm.getMacdCrosss() && macdAlarm.getCurrentMacdLine() > macdAlarm.getCurrentSignalLine()) {
-//
-//			double percentageIncrease = (macdAlarm.getMinGap() / 100) * macdAlarm.getCurrentSignalLine();
-//			double incrisedSignalLine = macdAlarm.getCurrentSignalLine() + percentageIncrease;
-//               
-//			if (macdAlarm.getCurrentMacdLine() > incrisedSignalLine) {
-//				macdAlarm.setMacdCrosss(false);
-//				System.out.println("Macd Crosss is now false");
-//
-//				if (macdAlarm.getCurrentMacdLine() > 0 && macdAlarm.getCurrentSignalLine() > 0 && isPriceAboveEmaLine()) {
-//					macdAlarm.setGoodForEntry(true);
-//					System.out.println("Good for entry");
-//					try {
-//						telegramBot.sendMessage("Good for entry LONG");
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				} else {
-//					macdAlarm.setGoodForEntry(false);
-//					System.out.println("Not good for entry");
-//				}
-//			}
-//
-//          } else if (!macdAlarm.getMacdCrosss() && macdAlarm.getCurrentMacdLine() < macdAlarm.getCurrentSignalLine()) {
-//			
-//			double percentageIncrease = (macdAlarm.getMinGap() / 100) * macdAlarm.getCurrentSignalLine();
-//			double incrisedSignalLine = macdAlarm.getCurrentSignalLine() - percentageIncrease;
-//               
-//			if (macdAlarm.getCurrentMacdLine() < incrisedSignalLine) {
-//				macdAlarm.setMacdCrosss(true);
-//				System.out.println("Macd Crosss is now true");
-//
-//				if (macdAlarm.getCurrentMacdLine() < 0 && macdAlarm.getCurrentSignalLine() < 0 && !isPriceAboveEmaLine()) {
-//					macdAlarm.setGoodForEntry(true);
-//					System.out.println("Good for entry");
-//					try {
-//						telegramBot.sendMessage("Good for entry SHORT");
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				} else {
-//					macdAlarm.setGoodForEntry(false);
-//					System.out.println("Not good for entry");
-//				}
-//			}
-//		}
-//
-//          try {
-//               MACDAlarmDB.editAlarm(macdAlarm);
-//          } catch (Exception ex) {
-//               ex.printStackTrace();
-//          }
+		if (alarm.getCrosss() && K > D) {
+
+			double increasedD = D + alarm.getMinGap();
+
+			if (K > increasedD) {
+				
+				alarm.setCrosss(false);
+				System.out.println("*** Cross is now FALSE ***\n");
+				
+				if (emasSetForLong() && (K < 0.2 || D < 0.2)) {
+					alarm.setGoodForEntry(true);
+					System.out.println("Good for entry long");
+
+					try {
+						telegramBot.sendMessage("Good for entry LONG");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					alarm.setGoodForEntry(false);
+				}
+			}
+          } else if (!alarm.getCrosss() && K < D) {
+
+			double decreasedD = D - alarm.getMinGap();
+
+			if (K < decreasedD) {
+				alarm.setCrosss(true);
+				System.out.println("*** Cross is now TRUE ***\n");
+
+				if (emasSetForShort() && (K > 0.8 || D > 0.8)) {
+					alarm.setGoodForEntry(true);
+					System.out.println("Good for entry short");
+
+					try {
+						telegramBot.sendMessage("Good for entry SHORT");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else {
+					alarm.setGoodForEntry(false);
+				}
+			}
+		}
+
+          try {
+               AlarmDB.editAlarm(alarm);
+          } catch (Exception ex) {
+               ex.printStackTrace();
+          }
      }
 
 	private void fetchBarSeries(int limit) {
@@ -248,6 +235,16 @@ public class StochRsiEma implements Runnable {
 //
 //          return currentPrice > currentEma;
 //     }
+
+	private boolean emasSetForLong() {
+		return alarm.getCurrentFirstDema() > alarm.getCurrentSecondDema()
+			&& alarm.getCurrentSecondDema() > alarm.getCurrentThirdDema();
+	}
+	
+	private boolean emasSetForShort() {
+		return alarm.getCurrentFirstDema() < alarm.getCurrentSecondDema()
+			&& alarm.getCurrentSecondDema() < alarm.getCurrentThirdDema();
+	}
 	
 	private void initChartMode(Alarm alarm) {
 		switch (alarm.getChartMode()) {
