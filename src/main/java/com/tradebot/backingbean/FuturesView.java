@@ -5,7 +5,7 @@ import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.FuturesBotDB;
 import com.tradebot.enums.ChartMode;
-import com.tradebot.enums.FutresDemaStrategy;
+import com.tradebot.enums.FutresStrategy;
 import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
@@ -15,6 +15,7 @@ import com.tradebot.service.FuturesTaskOneCrossBorder;
 import com.tradebot.service.FuturesTaskTwoCross;
 import com.tradebot.service.FuturesTaskTwoCrossTP;
 import com.tradebot.service.TaskService;
+import com.tradebot.service.futures.FuturesTaskStoRsi;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -24,6 +25,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
 import org.json.JSONArray;
@@ -79,8 +81,8 @@ public class FuturesView implements Serializable {
 		return TimeUnit.values();
 	}
 	
-	public FutresDemaStrategy[] getStrategies() {
-		return FutresDemaStrategy.values();
+	public FutresStrategy[] getStrategies() {
+		return FutresStrategy.values();
 	}
 	
 	public ChartMode[] getChartModes() {
@@ -113,9 +115,31 @@ public class FuturesView implements Serializable {
 		long timeStamp = System.currentTimeMillis();
 		
 		String orderResult = umFuturesClientImpl.account().newOrder(
-				FuturesOrderParams.getOrderParams("LTCUSDT", orderSide, OrderSide.BOTH, 0.73, timeStamp)		
+				FuturesOrderParams.getOrderParams("LTCUSDT", orderSide, OrderSide.BOTH, 1.0, timeStamp)
 		);
 		
+		System.out.println("Order Result:");
+		System.out.println(orderResult);
+	}
+	
+	public void createSLOrderSell() {
+		createStopLossOrder(OrderSide.SELL);
+	}
+	
+	public void createSLOrderBuy() {
+		createStopLossOrder(OrderSide.BUY);
+	}
+	
+	public void createStopLossOrder(OrderSide orderSide) {
+		long timeStamp = System.currentTimeMillis();
+
+		String orderResult = umFuturesClientImpl.account().newOrder(
+//			   FuturesOrderParams.getOrderParams("LTCUSDT", orderSide, OrderSide.BOTH, 0.73, timeStamp)
+			   
+			FuturesOrderParams.getStopLossParams("LTCUSDT",
+					orderSide, OrderSide.BOTH, 0.73, 70.12, timeStamp)
+		);
+
 		System.out.println("Order Result:");
 		System.out.println(orderResult);
 	}
@@ -166,20 +190,23 @@ public class FuturesView implements Serializable {
 			
 			Runnable task = null;
 			
-			if (bot.getFutresDemaStrategy() == FutresDemaStrategy.ONE_CROSS) {
+			if (bot.getFutresDemaStrategy() == FutresStrategy.ONE_CROSS) {
 				task = new FuturesTaskOneCross(bot);  
 
-			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.TWO_CROSS){
+			} else if (bot.getFutresDemaStrategy() == FutresStrategy.TWO_CROSS){
 				task = new FuturesTaskTwoCross(bot);
 
-			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.TWO_CROSS_TAKE_PROFIT){
+			} else if (bot.getFutresDemaStrategy() == FutresStrategy.TWO_CROSS_TAKE_PROFIT){
 				task = new FuturesTaskTwoCrossTP(bot);
 
-			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.ONE_CROSS_BORDER){
+			} else if (bot.getFutresDemaStrategy() == FutresStrategy.ONE_CROSS_BORDER){
 				task = new FuturesTaskOneCrossBorder(bot);
 
-			} else if (bot.getFutresDemaStrategy() == FutresDemaStrategy.MACD_CROSS){
+			} else if (bot.getFutresDemaStrategy() == FutresStrategy.MACD_CROSS){
 				task = new FuturesTaskMACDCross(bot);
+
+			} else if (bot.getFutresDemaStrategy() == FutresStrategy.STOCH_RSI){
+				task = new FuturesTaskStoRsi(bot);
 			}
 
 			taskService.addTask(bot.getTaskId(),

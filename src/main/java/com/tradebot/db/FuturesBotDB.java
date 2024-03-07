@@ -1,7 +1,7 @@
 package com.tradebot.db;
 
 import com.tradebot.enums.ChartMode;
-import com.tradebot.enums.FutresDemaStrategy;
+import com.tradebot.enums.FutresStrategy;
 import com.tradebot.model.FuturesBot;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -122,7 +122,7 @@ public class FuturesBotDB {
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setTakeProfit(rs.getDouble("takeProfit"));
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
-				bot.setFutresDemaStrategy(FutresDemaStrategy.values()[rs.getInt("futresDemaStrategy")]);
+				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
 				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 				bots.add(bot);
 			}
@@ -162,7 +162,7 @@ public class FuturesBotDB {
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setTakeProfit(rs.getDouble("takeProfit"));
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
-				bot.setFutresDemaStrategy(FutresDemaStrategy.values()[rs.getInt("futresDemaStrategy")]);
+				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
 				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 			}
 			return bot;
@@ -201,7 +201,7 @@ public class FuturesBotDB {
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setTakeProfit(rs.getDouble("takeProfit"));
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
-				bot.setFutresDemaStrategy(FutresDemaStrategy.values()[rs.getInt("futresDemaStrategy")]);
+				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
 				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
 			}
 			return bot;

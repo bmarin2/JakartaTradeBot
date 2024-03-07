@@ -257,7 +257,7 @@ public class FuturesTaskTwoCrossTP implements Runnable {
 		return orderId;
      }
      
-     private void createTakeProfit(OrderSide orderSide, String stopPrice) {
+     private void createTakeProfit(OrderSide orderSide, double stopPrice) {
           System.out.println("stopPrice TP: " + stopPrice);
           long timeStamp = System.currentTimeMillis();
 
@@ -272,7 +272,7 @@ public class FuturesTaskTwoCrossTP implements Runnable {
           System.out.println("Take Profit Order ID: " + currentTPOrder);
      }
 
-     private void createStopLoss(OrderSide orderSide, String stopPrice) {
+     private void createStopLoss(OrderSide orderSide, double stopPrice) {
           long timeStamp = System.currentTimeMillis();
 
           String orderResult = umFuturesClientImpl.account().newOrder(
@@ -313,7 +313,7 @@ public class FuturesTaskTwoCrossTP implements Runnable {
           return jsonResult.optDouble("price");
      }
 
-     private String calctulateSP(PositionSide positionSide) {
+     private double calctulateSP(PositionSide positionSide) {
           Double price = entryPrice;
           Double percent = (futuresBot.getStopLoss() / 100) * price;
           Double result = 0.0;
@@ -323,10 +323,10 @@ public class FuturesTaskTwoCrossTP implements Runnable {
                result = price - percent;
           }
           String resultFormated = String.format("%.2f", result);
-          return resultFormated;
+          return Double.parseDouble(resultFormated);
      }
      
-     private String calctulateTP(PositionSide positionSide) {
+     private double calctulateTP(PositionSide positionSide) {
           Double price = entryPrice;
           Double percent = (0.6 / 100) * price;
           Double result = 0.0;
@@ -336,7 +336,7 @@ public class FuturesTaskTwoCrossTP implements Runnable {
                result = price + percent;
           }
           String resultFormated = String.format("%.2f", result);
-          return resultFormated;
+          return Double.parseDouble(resultFormated);
      }
 
      private void initDemas() {

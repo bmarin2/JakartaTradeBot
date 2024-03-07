@@ -242,7 +242,7 @@ public class FuturesTaskTwoCross implements Runnable {
 		return orderId;
      }
 
-     private void createStopLoss(OrderSide orderSide, String stopPrice) {
+     private void createStopLoss(OrderSide orderSide, double stopPrice) {
           long timeStamp = System.currentTimeMillis();
 
           String orderResult = umFuturesClientImpl.account().newOrder(
@@ -283,7 +283,7 @@ public class FuturesTaskTwoCross implements Runnable {
           return jsonResult.optDouble("price");
      }
 
-     private String calctulateSP(PositionSide positionSide) {
+     private double calctulateSP(PositionSide positionSide) {
           Double price = entryPrice;
           Double percent = (futuresBot.getStopLoss() / 100) * price;
           Double result = 0.0;
@@ -293,7 +293,7 @@ public class FuturesTaskTwoCross implements Runnable {
                result = price - percent;
           }
           String resultFormated = String.format("%.2f", result);
-          return resultFormated;
+          return Double.parseDouble(resultFormated);
      }
 
      private void initDemas() {

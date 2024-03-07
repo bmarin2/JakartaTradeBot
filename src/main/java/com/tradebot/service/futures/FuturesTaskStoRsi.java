@@ -6,11 +6,11 @@ import com.binance.connector.futures.client.exceptions.BinanceServerException;
 import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
-import com.tradebot.db.MACDAlarmDB;
+import com.tradebot.db.AlarmDB;
 import com.tradebot.enums.ChartMode;
 import com.tradebot.enums.PositionSide;
+import com.tradebot.model.Alarm;
 import com.tradebot.model.FuturesBot;
-import com.tradebot.model.MACDAlarm;
 import com.tradebot.model.OrderSide;
 import com.tradebot.service.TelegramBot;
 import java.io.IOException;
@@ -25,19 +25,19 @@ public class FuturesTaskStoRsi implements Runnable {
      private UMFuturesClientImpl umFuturesClientImpl;
      private final TelegramBot telegramBot;
 
-     private boolean currentMACDCross;
+     private boolean currentCross;
 
      private String currentSLOrder = "";
      private PositionSide currentPositionSide;
      private Double entryPrice;
      private Double borderPrice;
      private boolean borderCrossed;
-	private MACDAlarm macdAlarm;
+	private Alarm alarm;
 
      public FuturesTaskStoRsi(FuturesBot futuresBot) {
           this.futuresBot = futuresBot;
 		umFuturesClientImpl = initChartMode(futuresBot.getChartMode());
-          currentMACDCross = initMACDCross();
+          currentCross = checkCross();
           currentSLOrder = initStopLossOrder();
           currentPositionSide = initExistingPosition();
           System.out.println("init side: " + currentPositionSide);
@@ -45,7 +45,7 @@ public class FuturesTaskStoRsi implements Runnable {
                entryPrice = getEntryPrice();
                System.out.println("init entry price; " + entryPrice);
                try {
-                    macdAlarm = MACDAlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
+                    alarm = AlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
                } catch (Exception ex) {
                     ex.printStackTrace();
                }
@@ -126,40 +126,40 @@ public class FuturesTaskStoRsi implements Runnable {
                }
           }
 
-		System.out.println("Time: " + getTime());
-		System.out.println("SP order: " + currentSLOrder);
-		System.out.println("DB Cross: " + checkMacdCross());
-		System.out.println("MACD cross: " + currentMACDCross);
-		System.out.println("pos: " + currentPositionSide.toString());
-		System.out.println("----");
-		System.out.println("entry price: " + entryPrice);
-		System.out.println("border crossed: " + borderCrossed);
-		System.out.println("border price: " + borderPrice);
-		System.out.println("--");
-		
+		if (currentPositionSide != PositionSide.NONE) {
+			System.out.println("Time: " + getTime());
+			System.out.println("SP order: " + currentSLOrder);
+			System.out.println("DB Cross: " + checkCross());
+			System.out.println("Cross: " + currentCross);
+			System.out.println("pos: " + currentPositionSide.toString());
+			System.out.println("----");
+			System.out.println("entry price: " + entryPrice);
+			System.out.println("border crossed: " + borderCrossed);
+			System.out.println("border price: " + borderPrice);
+			System.out.println("--");
+		}
+
 		if (currentPositionSide != PositionSide.NONE && !isDistantFromBorderPrice()) {
-			currentMACDCross = checkMacdCross();
+			currentCross = checkCross();
 			System.out.println("\nNOT DISTANT FROM BORDER PRICE!");
 			return;
 		}		
 
-          System.out.println("\nContinuing...");
-
           // ====================================================================================
 
-          if (currentMACDCross != checkMacdCross()) {
+          if (currentCross != checkCross()) {
 
 			// update macdAlarm object
 			try {
-				macdAlarm = MACDAlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
+				alarm = AlarmDB.getOneAlarm(futuresBot.getDemaAlertTaskId());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
-               currentMACDCross = macdAlarm.getMacdCrosss();
-               System.out.println("cross is now: " + currentMACDCross);
+               currentCross = alarm.getCrosss();
+               System.out.println("cross is now: " + currentCross);
 
-               if (currentMACDCross) { // if crossed DOWN
+               if (currentCross) { // if crossed DOWN
                     if (currentPositionSide == PositionSide.SHORT) {
                          return;
                     }
@@ -181,7 +181,7 @@ public class FuturesTaskStoRsi implements Runnable {
 					currentPositionSide = PositionSide.NONE;
                     }
 
-				if (currentPositionSide == PositionSide.NONE && macdAlarm.getGoodForEntry()) {
+				if (currentPositionSide == PositionSide.NONE && alarm.getGoodForEntry()) {
 
 					try {
 						telegramBot.sendMessage("Entering SHORT trade " + getTime());
@@ -216,7 +216,7 @@ public class FuturesTaskStoRsi implements Runnable {
 					currentPositionSide = PositionSide.NONE;
                     }
 
-				if (currentPositionSide == PositionSide.NONE && macdAlarm.getGoodForEntry()) {
+				if (currentPositionSide == PositionSide.NONE && alarm.getGoodForEntry()) {
 
 					try {
 						telegramBot.sendMessage("Entering LONG trade " + getTime());
@@ -273,16 +273,18 @@ public class FuturesTaskStoRsi implements Runnable {
           return orderId;
      }
 
-     private void createStopLossOrder(OrderSide orderSide, String stopPrice) {
+     private void createStopLossOrder(OrderSide orderSide, double stopPrice) {
           String orderResult = "";
-
-          try {               
+		System.out.println("createding SL Order");
+          try {
+			System.out.println("start of try");
                long timeStamp = System.currentTimeMillis();
                orderResult = umFuturesClientImpl.account().newOrder(
                        FuturesOrderParams.getStopLossParams(futuresBot.getSymbol(),
                                orderSide, OrderSide.BOTH, futuresBot.getQuantity(),
                                stopPrice, timeStamp)
                );
+			System.out.println("end of try");
           } catch (BinanceConnectorException e) {
                sendErrorMsg("BinanceConnectorException", e.getMessage());
                e.printStackTrace();
@@ -373,25 +375,18 @@ public class FuturesTaskStoRsi implements Runnable {
           return jsonResult.optDouble("price");
      }
 
-     private String calculateSL(PositionSide positionSide) {
+     private double calculateSL(PositionSide positionSide) {
           Double price = entryPrice;
           Double result = 0.0;
           if (positionSide == PositionSide.SHORT) {
-               result = price + macdAlarm.getLastAtr() * futuresBot.getStopLoss();
+               result = price + alarm.getAtr() * futuresBot.getStopLoss();
           } else if (positionSide == PositionSide.LONG){
-               result = price - macdAlarm.getLastAtr() * futuresBot.getStopLoss();
+               result = price - alarm.getAtr() * futuresBot.getStopLoss();
           }
-          String resultFormated = String.format("%.2f", result);
-          return resultFormated;
-     }
-
-     private boolean initMACDCross() {
-          try {
-               return MACDAlarmDB.getMacdCross(futuresBot.getDemaAlertTaskId());
-          } catch (Exception e) {
-               e.printStackTrace();
-			return false;
-          }
+          String resultFormated = String.format("%.2f", result).replace(',', '.');
+		System.out.println("SL String: " + resultFormated);
+		System.out.println("SL Double: " + Double.parseDouble(resultFormated));
+          return Double.parseDouble(resultFormated);
      }
 
      private PositionSide initExistingPosition() {
@@ -551,9 +546,9 @@ public class FuturesTaskStoRsi implements Runnable {
           Double result = 0.0;
           
           if (positionSide == PositionSide.SHORT) {
-               result = price - macdAlarm.getLastAtr() * futuresBot.getStopLoss() * futuresBot.getTakeProfit();
+               result = price - alarm.getAtr() * futuresBot.getStopLoss() * futuresBot.getTakeProfit();
           } else if (positionSide == PositionSide.LONG) {
-               result = price + macdAlarm.getLastAtr() * futuresBot.getStopLoss() * futuresBot.getTakeProfit();
+               result = price + alarm.getAtr() * futuresBot.getStopLoss() * futuresBot.getTakeProfit();
           }
           return result;
      }
@@ -602,9 +597,9 @@ public class FuturesTaskStoRsi implements Runnable {
 		}
 	}
 	
-	private boolean checkMacdCross() {
+	private boolean checkCross() {
 		try {
-			return MACDAlarmDB.getMacdCross(futuresBot.getDemaAlertTaskId());
+			return AlarmDB.getAlarmCross(futuresBot.getDemaAlertTaskId());
 		} catch (Exception e) {
 			e.printStackTrace();
           }

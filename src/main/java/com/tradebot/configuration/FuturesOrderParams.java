@@ -16,7 +16,7 @@ public class FuturesOrderParams {
 		parameters.put("side", side.toString());
 		parameters.put("positionSide", positionSide.toString());
 		parameters.put("type", "MARKET");
-		parameters.put("quantity", quantity);
+		parameters.put("quantity", String.valueOf(quantity));
 		parameters.put("timestamp", timeStamp);
 		return parameters;
 	}
@@ -46,7 +46,7 @@ public class FuturesOrderParams {
 												 OrderSide side,
 												 OrderSide positionSide,
 												 Double quantity,
-												 String stopPrice,
+												 Double stopPrice,
 												 long timeStamp)
 	{		
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
@@ -54,8 +54,8 @@ public class FuturesOrderParams {
 		parameters.put("side", side.toString());
 		parameters.put("positionSide", positionSide.toString());
 		parameters.put("type", "STOP_MARKET");
-		parameters.put("quantity", quantity);
-		parameters.put("stopPrice", stopPrice);
+		parameters.put("quantity", String.valueOf(quantity));
+		parameters.put("stopPrice", String.valueOf(stopPrice));
 		parameters.put("timestamp", timeStamp);
 		return parameters;
 	}
@@ -64,15 +64,15 @@ public class FuturesOrderParams {
                                                              OrderSide side,
                                                              OrderSide positionSide,
                                                              Double quantity,
-                                                             String stopPrice,
+                                                             Double stopPrice,
                                                              long timeStamp) {
           LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
           parameters.put("symbol", symbol);
           parameters.put("side", side.toString());
           parameters.put("positionSide", positionSide.toString());
           parameters.put("type", "TAKE_PROFIT_MARKET");
-          parameters.put("quantity", quantity);
-          parameters.put("stopPrice", stopPrice);
+          parameters.put("quantity", String.valueOf(quantity));
+          parameters.put("stopPrice", String.valueOf(stopPrice));
           parameters.put("timestamp", timeStamp);
           return parameters;
      }

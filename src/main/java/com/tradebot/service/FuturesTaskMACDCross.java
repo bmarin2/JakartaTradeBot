@@ -272,7 +272,7 @@ public class FuturesTaskMACDCross implements Runnable {
           return orderId;
      }
 
-     private void createStopLossOrder(OrderSide orderSide, String stopPrice) {
+     private void createStopLossOrder(OrderSide orderSide, double stopPrice) {
           String orderResult = "";
 
           try {               
@@ -372,7 +372,7 @@ public class FuturesTaskMACDCross implements Runnable {
           return jsonResult.optDouble("price");
      }
 
-     private String calculateSL(PositionSide positionSide) {
+     private double calculateSL(PositionSide positionSide) {
           Double price = entryPrice;
           Double result = 0.0;
           if (positionSide == PositionSide.SHORT) {
@@ -381,7 +381,7 @@ public class FuturesTaskMACDCross implements Runnable {
                result = price - macdAlarm.getLastAtr() * futuresBot.getStopLoss();
           }
           String resultFormated = String.format("%.2f", result);
-          return resultFormated;
+          return Double.parseDouble(resultFormated);
      }
 
      private boolean initMACDCross() {

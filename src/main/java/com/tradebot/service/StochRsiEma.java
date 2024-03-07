@@ -34,6 +34,7 @@ public class StochRsiEma implements Runnable {
 	private UMFuturesClientImpl umFuturesClientImpl;
 	private SpotClientImpl spotClientImpl;
 	private final TelegramBot telegramBot;
+	private long lastTimestamp;
 	
 	private double K;
 	private double D;
@@ -75,6 +76,9 @@ public class StochRsiEma implements Runnable {
 		
 		System.out.println("K: " + K);
 		System.out.println("D: " + D);
+		
+		System.out.println("Last Candle: " + closePriceIndicator.getValue(closePriceIndicator
+				.getBarSeries().getEndIndex()).doubleValue());
 
 		EMAIndicator ema1 = new EMAIndicator(closePriceIndicator, alarm.getFirstDema());
 		alarm.setCurrentFirstDema(ema1.getValue(ema1.getBarSeries().getEndIndex()).doubleValue());
@@ -176,10 +180,33 @@ public class StochRsiEma implements Runnable {
 			sendErrorMsg("BinanceServerException", e.getMessage());
                e.printStackTrace();
           }
-          
+		
 		JSONArray jsonArray = new JSONArray(result);
 		jsonArray.remove(jsonArray.length() - 1);
-          
+		
+		System.out.println("old timestamp: " + lastTimestamp);
+		
+		if (limit == 1) {
+			JSONArray array = jsonArray.getJSONArray(0);
+			long timestamp = array.getLong(6);
+			System.out.println("new timestamp limit 1: " + timestamp);
+			
+			if (lastTimestamp == timestamp) {
+				System.out.println("/// same value skipping");
+				return;
+			} else {
+				System.out.println("*** updating timestamp");
+				lastTimestamp = timestamp;
+			}
+		} else {
+			JSONArray array2 = jsonArray.getJSONArray(jsonArray.length() - 1);
+			long timestamp2 = array2.getLong(6);
+			System.out.println("first timestamp: " + timestamp2);
+			lastTimestamp = timestamp2;
+		}
+		
+		System.out.println("new timestamp: " + lastTimestamp);
+		
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONArray candlestick = jsonArray.getJSONArray(i);
 

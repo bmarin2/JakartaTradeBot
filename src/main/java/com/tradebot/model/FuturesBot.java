@@ -1,7 +1,7 @@
 package com.tradebot.model;
 
 import com.tradebot.enums.ChartMode;
-import com.tradebot.enums.FutresDemaStrategy;
+import com.tradebot.enums.FutresStrategy;
 import com.tradebot.util.TaskCodeGeneratorService;
 import java.io.Serializable;
 import java.util.Date;
@@ -37,7 +37,7 @@ public class FuturesBot implements Serializable {
 	
 	private String demaAlertTaskId;
 	
-	private FutresDemaStrategy futresDemaStrategy = FutresDemaStrategy.ONE_CROSS;
+	private FutresStrategy futresDemaStrategy = FutresStrategy.ONE_CROSS;
 	
 	private ChartMode chartMode = ChartMode.FUTURES_SIGNED_TEST;
 }
