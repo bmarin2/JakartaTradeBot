@@ -16,6 +16,7 @@ import com.tradebot.service.TelegramBot;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -27,7 +28,7 @@ public class FuturesTaskStoRsi implements Runnable {
 
      private boolean currentCross;
 
-     private String currentSLOrder = "";
+     private String currentSPOrder = "";
      private PositionSide currentPositionSide;
      private Double entryPrice;
      private Double borderPrice;
@@ -38,7 +39,7 @@ public class FuturesTaskStoRsi implements Runnable {
           this.futuresBot = futuresBot;
 		umFuturesClientImpl = initChartMode(futuresBot.getChartMode());
           currentCross = checkCross();
-          currentSLOrder = initStopLossOrder();
+          currentSPOrder = initStopLossOrder();
           currentPositionSide = initExistingPosition();
           System.out.println("init side: " + currentPositionSide);
           if (currentPositionSide != PositionSide.NONE) {
@@ -63,12 +64,13 @@ public class FuturesTaskStoRsi implements Runnable {
 
      @Override
      public void run() {
-          if (!currentSLOrder.isEmpty()) {
-               String status = getOrderStatus(currentSLOrder);
+		System.out.println("-- from run " + new Date());
+          if (!currentSPOrder.isEmpty()) {
+               String status = getOrderStatus(currentSPOrder);
                if (status.equals("FILLED") || status.equals("CANCELED")) {
                     currentPositionSide = PositionSide.NONE;
-                    double pnl = getRealizedPNL(currentSLOrder);
-                    currentSLOrder = "";
+                    double pnl = getRealizedPNL(currentSPOrder);
+                    currentSPOrder = "";
                     clearFields();
                     System.out.println("SP Triggered");
 
@@ -79,6 +81,7 @@ public class FuturesTaskStoRsi implements Runnable {
                     } catch (Exception e) {
                          e.printStackTrace();
                     }
+				return;
                }
           }
 
@@ -128,7 +131,7 @@ public class FuturesTaskStoRsi implements Runnable {
 
 		if (currentPositionSide != PositionSide.NONE) {
 			System.out.println("Time: " + getTime());
-			System.out.println("SP order: " + currentSLOrder);
+			System.out.println("SP order: " + currentSPOrder);
 			System.out.println("DB Cross: " + checkCross());
 			System.out.println("Cross: " + currentCross);
 			System.out.println("pos: " + currentPositionSide.toString());
@@ -297,8 +300,8 @@ public class FuturesTaskStoRsi implements Runnable {
           }
           
           JSONObject jsonResult = new JSONObject(orderResult);
-          currentSLOrder = jsonResult.optString("orderId");
-          System.out.println("SP Order ID: " + currentSLOrder);          
+          currentSPOrder = jsonResult.optString("orderId");
+          System.out.println("SP Order ID: " + currentSPOrder);          
      }
 
      private void cancelOrder(String orderId) {
@@ -321,10 +324,10 @@ public class FuturesTaskStoRsi implements Runnable {
      }
      
      private void cancelCurrentSPOrder() {
-          if (!currentSLOrder.isEmpty()) {
-               if (getOrderStatus(currentSLOrder).equals("NEW")) {
-                    cancelOrder(currentSLOrder);
-                    currentSLOrder = "";
+          if (!currentSPOrder.isEmpty()) {
+               if (getOrderStatus(currentSPOrder).equals("NEW")) {
+                    cancelOrder(currentSPOrder);
+                    currentSPOrder = "";
                }
           }
      }

@@ -132,11 +132,16 @@ public class IndexView implements Serializable {
 	public void getAccountInfoAll() {
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
 		parameters.put("timestamp", System.currentTimeMillis());
-		
-		String temp = spotClientImpl.createTrade().account(parameters);
-		JSONObject jsonObj = new JSONObject(temp);
-		JSONArray balancesArray = jsonObj.getJSONArray("balances");
-		balances = balancesArray;
+
+		try {
+			String temp = spotClientImpl.createTrade().account(parameters);
+			JSONObject jsonObj = new JSONObject(temp);
+			JSONArray balancesArray = jsonObj.getJSONArray("balances");
+			balances = balancesArray;
+		} catch (Exception e) {
+			System.out.println("error in spot test");
+		}
+
 	}
 	
 	public String getBalance(String symbol) {
@@ -155,6 +160,9 @@ public class IndexView implements Serializable {
 	
 	public String getBalanceUSDT() {
 		String formattedNumber = null;
+		if (balances == null) {
+			return null;
+		}
 		for (int i = 0; i < balances.length(); i++) {
 			JSONObject balance = balances.getJSONObject(i);
 			if (balance.getString("asset").equals("USDT")) {
