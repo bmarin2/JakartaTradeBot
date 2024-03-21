@@ -27,6 +27,7 @@ import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.ATRIndicator;
 import org.ta4j.core.indicators.EMAIndicator;
 import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.indicators.adx.ADXIndicator;
 
 public class StochRsiEma implements Runnable {
 
@@ -38,6 +39,7 @@ public class StochRsiEma implements Runnable {
 	
 	private double K;
 	private double D;
+	private double adx;
 
 	private BarSeries series;
 
@@ -71,11 +73,15 @@ public class StochRsiEma implements Runnable {
 		SMAIndicator k = new SMAIndicator(sr, 3); // blue
 		SMAIndicator d = new SMAIndicator(k, 3); // yellow
 		
+		ADXIndicator adxIndicator = new ADXIndicator(series, 14);
+		
 		K = k.getValue(k.getBarSeries().getEndIndex()).doubleValue();
 		D = d.getValue(k.getBarSeries().getEndIndex()).doubleValue();
+		adx = adxIndicator.getValue(adxIndicator.getBarSeries().getEndIndex()).doubleValue();
 		
-		System.out.println("K: " + K);
-		System.out.println("D: " + D);
+		System.out.println("K:   " + K);
+		System.out.println("D:   " + D);
+		System.out.println("ADX: " + adx);
 		
 		System.out.println("Last Candle: " + closePriceIndicator.getValue(closePriceIndicator
 				.getBarSeries().getEndIndex()).doubleValue());
@@ -113,15 +119,8 @@ public class StochRsiEma implements Runnable {
 				alarm.setCrosss(false);
 				System.out.println("*** Cross is now FALSE ***\n");
 				
-				if (emasSetForLong() && (K < 0.2 || D < 0.2)) {
+				if (emasSetForLong() && (K < 0.2 || D < 0.2) && (adx > 20)) {
 					alarm.setGoodForEntry(true);
-					System.out.println("Good for entry long");
-
-					try {
-						telegramBot.sendMessage("Good for entry LONG");
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
 				} else {
 					alarm.setGoodForEntry(false);
 				}
@@ -134,15 +133,8 @@ public class StochRsiEma implements Runnable {
 				alarm.setCrosss(true);
 				System.out.println("*** Cross is now TRUE ***\n");
 
-				if (emasSetForShort() && (K > 0.8 || D > 0.8)) {
+				if (emasSetForShort() && (K > 0.8 || D > 0.8) && (adx > 20)) {
 					alarm.setGoodForEntry(true);
-					System.out.println("Good for entry short");
-
-					try {
-						telegramBot.sendMessage("Good for entry SHORT");
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
 				} else {
 					alarm.setGoodForEntry(false);
 				}
@@ -254,14 +246,6 @@ public class StochRsiEma implements Runnable {
           JSONObject jsonResult = new JSONObject(result);
           return jsonResult.optDouble("price");
      }
-
-//     private boolean isPriceAboveEmaLine() {
-//          double currentEma = new EMAIndicator(this.closePriceIndicator, alarm.getEma())
-//                  .getValue(this.closePriceIndicator.getBarSeries().getEndIndex()).doubleValue();
-//          double currentPrice = fetchTickerPrice();
-//
-//          return currentPrice > currentEma;
-//     }
 
 	private boolean emasSetForLong() {
 		return alarm.getCurrentFirstDema() > alarm.getCurrentSecondDema()
