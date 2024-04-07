@@ -16,6 +16,7 @@ import com.tradebot.service.FuturesTaskTwoCross;
 import com.tradebot.service.FuturesTaskTwoCrossTP;
 import com.tradebot.service.TaskService;
 import com.tradebot.service.futures.FuturesTaskStoRsi;
+import com.tradebot.service.futures.FuturesTaskStoRsiTP;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -25,7 +26,6 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.Data;
 import org.json.JSONArray;
@@ -207,6 +207,9 @@ public class FuturesView implements Serializable {
 
 			} else if (bot.getFutresDemaStrategy() == FutresStrategy.STOCH_RSI){
 				task = new FuturesTaskStoRsi(bot);
+
+			} else if (bot.getFutresDemaStrategy() == FutresStrategy.STOCH_RSI_TP){
+				task = new FuturesTaskStoRsiTP(bot);
 			}
 
 			taskService.addTask(bot.getTaskId(),

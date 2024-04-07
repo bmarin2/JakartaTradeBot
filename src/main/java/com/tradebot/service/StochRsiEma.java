@@ -39,7 +39,7 @@ public class StochRsiEma implements Runnable {
 	
 	private double K;
 	private double D;
-	private double adx;
+	//private double adx;
 
 	private BarSeries series;
 
@@ -68,20 +68,19 @@ public class StochRsiEma implements Runnable {
 
 		ClosePriceIndicator closePriceIndicator = new ClosePriceIndicator(series);
 
-		RSIIndicator r = new RSIIndicator(closePriceIndicator, 14);
-		Indicator sr = new StochasticRSIIndicator(r, 14);
+		Indicator sr = new StochasticRSIIndicator(series, 15);
 		SMAIndicator k = new SMAIndicator(sr, 3); // blue
 		SMAIndicator d = new SMAIndicator(k, 3); // yellow
 		
-		ADXIndicator adxIndicator = new ADXIndicator(series, 14);
+		//ADXIndicator adxIndicator = new ADXIndicator(series, 14);
 		
 		K = k.getValue(k.getBarSeries().getEndIndex()).doubleValue();
 		D = d.getValue(k.getBarSeries().getEndIndex()).doubleValue();
-		adx = adxIndicator.getValue(adxIndicator.getBarSeries().getEndIndex()).doubleValue();
+		//adx = adxIndicator.getValue(adxIndicator.getBarSeries().getEndIndex()).doubleValue();
 		
 		System.out.println("K:   " + K);
 		System.out.println("D:   " + D);
-		System.out.println("ADX: " + adx);
+		//System.out.println("ADX: " + adx);
 		
 		System.out.println("Last Candle: " + closePriceIndicator.getValue(closePriceIndicator
 				.getBarSeries().getEndIndex()).doubleValue());
@@ -95,7 +94,7 @@ public class StochRsiEma implements Runnable {
 		EMAIndicator ema3 = new EMAIndicator(closePriceIndicator, alarm.getThirdDema());
 		alarm.setCurrentThirdDema(ema3.getValue(ema3.getBarSeries().getEndIndex()).doubleValue());
 
-		double atr = new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue();
+		double atr = new ATRIndicator(series, 16).getValue(series.getEndIndex()).doubleValue();
 		alarm.setAtr(atr);
 
 		alarm.setLastClosingCandle(closePriceIndicator.getValue(closePriceIndicator
@@ -119,7 +118,7 @@ public class StochRsiEma implements Runnable {
 				alarm.setCrosss(false);
 				System.out.println("*** Cross is now FALSE ***\n");
 				
-				if (emasSetForLong() && (K < 0.2 || D < 0.2) && (adx > 20)) {
+				if (emasSetForLong()) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
@@ -133,7 +132,7 @@ public class StochRsiEma implements Runnable {
 				alarm.setCrosss(true);
 				System.out.println("*** Cross is now TRUE ***\n");
 
-				if (emasSetForShort() && (K > 0.8 || D > 0.8) && (adx > 20)) {
+				if (emasSetForShort()) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
@@ -165,12 +164,15 @@ public class StochRsiEma implements Runnable {
           } catch (BinanceConnectorException e) {
                sendErrorMsg("BinanceConnectorException", e.getMessage());
                e.printStackTrace();
+			return;
           } catch (BinanceClientException e) {
 			sendErrorMsg("BinanceClientException", e.getMessage());
                e.printStackTrace();
+			return;
           } catch (BinanceServerException e) {
 			sendErrorMsg("BinanceServerException", e.getMessage());
                e.printStackTrace();
+			return;
           }
 		
 		JSONArray jsonArray = new JSONArray(result);
@@ -290,7 +292,7 @@ public class StochRsiEma implements Runnable {
 
      private void sendErrorMsg(String type, String msg) {
           try {
-               telegramBot.sendMessage("Futures MACD Cross task exception " + alarm.getSymbol() + "\n"
+               telegramBot.sendMessage("Futures StochRSI exception " + alarm.getSymbol() + "\n"
                        + type + "\n" + msg);
           } catch (Exception e) {
                e.printStackTrace();
