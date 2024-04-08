@@ -14,15 +14,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
 import org.ta4j.core.indicators.StochasticRSIIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.ATRIndicator;
 import org.ta4j.core.indicators.EMAIndicator;
@@ -36,54 +33,65 @@ public class StochRsiEma implements Runnable {
 	private SpotClientImpl spotClientImpl;
 	private final TelegramBot telegramBot;
 	private long lastTimestamp;
+	private long lastTimestampAdx5min;
+	private int counter = 0;
+	private boolean firstTime = true;
 	
 	private double K;
 	private double D;
-	//private double adx;
+	private double adx;
 
 	private BarSeries series;
+	private BarSeries seriesAdx5min;
 
 	public StochRsiEma(Alarm alarm) {
 		this.alarm = alarm;
 		initChartMode(alarm);		
 		telegramBot = new TelegramBot();		
 		series = new BaseBarSeriesBuilder().withName("mySeries").build();
-          series.setMaximumBarCount(100);
-          updateValues(true);
-          calculateValues();
+          series.setMaximumBarCount(alarm.getThirdDema() * 2);
+		seriesAdx5min = new BaseBarSeriesBuilder().withName("mySeriesAdx5min").build();
+		seriesAdx5min.setMaximumBarCount(100);		
+		runner();
+          calculateValues();		
 	}
 
 	@Override
 	public void run() {
-          updateValues(false);
+		runner();
           calculateValues();
 	}
+	
+	private void runner() {
+		if (firstTime) {
+			fetchBarSeries(alarm.getThirdDema() * 2);
+			fetchBarSeriesForADX(100);
+			firstTime = false;
+		} else {
+			fetchBarSeries(1);
 
-     private void updateValues(boolean firstTime) {
-          if (firstTime) {
-               fetchBarSeries(alarm.getThirdDema() * 2);
-          } else {
-               fetchBarSeries(1);
-          }
+			if (counter == 4) {
+				fetchBarSeriesForADX(1);
+				counter = 0;
+			} else {
+				counter++;
+			}
+		}
+	}
 
+     private void updateValues() {
 		ClosePriceIndicator closePriceIndicator = new ClosePriceIndicator(series);
 
-		Indicator sr = new StochasticRSIIndicator(series, 15);
+		Indicator sr = new StochasticRSIIndicator(series, 14);
 		SMAIndicator k = new SMAIndicator(sr, 3); // blue
-		SMAIndicator d = new SMAIndicator(k, 3); // yellow
-		
-		//ADXIndicator adxIndicator = new ADXIndicator(series, 14);
+		SMAIndicator d = new SMAIndicator(k, 3); // yellow		
 		
 		K = k.getValue(k.getBarSeries().getEndIndex()).doubleValue();
-		D = d.getValue(k.getBarSeries().getEndIndex()).doubleValue();
-		//adx = adxIndicator.getValue(adxIndicator.getBarSeries().getEndIndex()).doubleValue();
+		D = d.getValue(k.getBarSeries().getEndIndex()).doubleValue();		
 		
 		System.out.println("K:   " + K);
 		System.out.println("D:   " + D);
-		//System.out.println("ADX: " + adx);
-		
-		System.out.println("Last Candle: " + closePriceIndicator.getValue(closePriceIndicator
-				.getBarSeries().getEndIndex()).doubleValue());
+		System.out.println("ADX: " + adx);
 
 		EMAIndicator ema1 = new EMAIndicator(closePriceIndicator, alarm.getFirstDema());
 		alarm.setCurrentFirstDema(ema1.getValue(ema1.getBarSeries().getEndIndex()).doubleValue());
@@ -94,7 +102,7 @@ public class StochRsiEma implements Runnable {
 		EMAIndicator ema3 = new EMAIndicator(closePriceIndicator, alarm.getThirdDema());
 		alarm.setCurrentThirdDema(ema3.getValue(ema3.getBarSeries().getEndIndex()).doubleValue());
 
-		double atr = new ATRIndicator(series, 16).getValue(series.getEndIndex()).doubleValue();
+		double atr = new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue();
 		alarm.setAtr(atr);
 
 		alarm.setLastClosingCandle(closePriceIndicator.getValue(closePriceIndicator
@@ -103,10 +111,15 @@ public class StochRsiEma implements Runnable {
 		try {
 			System.out.println("get cross:  " + AlarmDB.getAlarmCross(alarm.getAlarmId()));
 		} catch (Exception ex) {
-			Logger.getLogger(MACDCross.class.getName()).log(Level.SEVERE, null, ex);
+			ex.printStackTrace();
 		}
           System.out.println("--------------------------");
      }
+	
+	private void updateAdxValues() {
+		ADXIndicator adxIndicator = new ADXIndicator(seriesAdx5min, 14);
+		adx = adxIndicator.getValue(adxIndicator.getBarSeries().getEndIndex()).doubleValue();
+	}
 
      private void calculateValues() {
 		if (alarm.getCrosss() && K > D) {
@@ -118,7 +131,7 @@ public class StochRsiEma implements Runnable {
 				alarm.setCrosss(false);
 				System.out.println("*** Cross is now FALSE ***\n");
 				
-				if (emasSetForLong()) {
+				if (emasSetForLong() && (K < 0.5 || D < 0.5) && (adx > 22)) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
@@ -132,7 +145,7 @@ public class StochRsiEma implements Runnable {
 				alarm.setCrosss(true);
 				System.out.println("*** Cross is now TRUE ***\n");
 
-				if (emasSetForShort()) {
+				if (emasSetForShort() && (K > 0.5 || D > 0.5) && (adx > 22)) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
@@ -174,22 +187,19 @@ public class StochRsiEma implements Runnable {
                e.printStackTrace();
 			return;
           }
-		
+
 		JSONArray jsonArray = new JSONArray(result);
 		jsonArray.remove(jsonArray.length() - 1);
-		
-		System.out.println("old timestamp: " + lastTimestamp);
-		
+
 		if (limit == 1) {
 			JSONArray array = jsonArray.getJSONArray(0);
 			long timestamp = array.getLong(6);
-			System.out.println("new timestamp limit 1: " + timestamp);
-			
+
 			if (lastTimestamp == timestamp) {
-				System.out.println("/// same value skipping");
+				System.out.println("// same timestamp skipping");
 				return;
 			} else {
-				System.out.println("*** updating timestamp");
+				System.out.println("** updating timestamp");
 				lastTimestamp = timestamp;
 			}
 		} else {
@@ -198,8 +208,6 @@ public class StochRsiEma implements Runnable {
 			System.out.println("first timestamp: " + timestamp2);
 			lastTimestamp = timestamp2;
 		}
-		
-		System.out.println("new timestamp: " + lastTimestamp);
 		
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONArray candlestick = jsonArray.getJSONArray(i);
@@ -226,6 +234,83 @@ public class StochRsiEma implements Runnable {
                     );
                }
 		}
+		updateValues();
+	}
+	
+	private void fetchBarSeriesForADX(int limit) {
+		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
+		parameters.put("symbol", alarm.getSymbol());
+		parameters.put("interval", "5m");
+		parameters.put("limit", limit + 1);
+
+		String result = "";
+          
+          try {
+               if (alarm.getChartMode().name().startsWith("SPOT")) {
+                    result = spotClientImpl.createMarket().klines(parameters);
+               } else if (alarm.getChartMode().name().startsWith("FUTURES")) {
+                    result = umFuturesClientImpl.market().klines(parameters);
+               }
+          } catch (BinanceConnectorException e) {
+               sendErrorMsg("BinanceConnectorException ADX 5min", e.getMessage());
+               e.printStackTrace();
+			return;
+          } catch (BinanceClientException e) {
+			sendErrorMsg("BinanceClientException ADX 5min", e.getMessage());
+               e.printStackTrace();
+			return;
+          } catch (BinanceServerException e) {
+			sendErrorMsg("BinanceServerException ADX 5min", e.getMessage());
+               e.printStackTrace();
+			return;
+          }
+		
+		JSONArray jsonArray = new JSONArray(result);
+		jsonArray.remove(jsonArray.length() - 1);
+		
+		if (limit == 1) {
+			JSONArray array = jsonArray.getJSONArray(0);
+			long timestamp = array.getLong(6);
+			
+			if (lastTimestampAdx5min == timestamp) {
+				System.out.println("/ADX same timestamp skipping");
+				return;
+			} else {
+				System.out.println("*ADX updating timestamp ADX");
+				lastTimestampAdx5min = timestamp;
+			}
+		} else {
+			JSONArray array2 = jsonArray.getJSONArray(jsonArray.length() - 1);
+			long timestamp2 = array2.getLong(6);
+			lastTimestampAdx5min = timestamp2;
+		}
+		
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONArray candlestick = jsonArray.getJSONArray(i);
+
+			long unixTimestampMillis = candlestick.getLong(6);
+			Instant instant = Instant.ofEpochMilli(unixTimestampMillis);
+			ZonedDateTime utcZonedDateTime = instant.atZone(ZoneId.of("UTC"));
+               try {
+                    seriesAdx5min.addBar(utcZonedDateTime,
+                            candlestick.getString(1),
+                            candlestick.getString(2),
+                            candlestick.getString(3),
+                            candlestick.getString(4),
+                            candlestick.getString(5)
+                    );
+               } catch (IllegalArgumentException iae) {
+                    ZonedDateTime timePlusOneMin = seriesAdx5min.getLastBar().getEndTime().plusMinutes(1);
+                    seriesAdx5min.addBar(timePlusOneMin,
+                            candlestick.getString(1),
+                            candlestick.getString(2),
+                            candlestick.getString(3),
+                            candlestick.getString(4),
+                            candlestick.getString(5)
+                    );
+               }
+		}
+		updateAdxValues();
 	}
 
      private Double fetchTickerPrice() {
