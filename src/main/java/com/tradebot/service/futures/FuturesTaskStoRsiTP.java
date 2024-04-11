@@ -33,6 +33,7 @@ public class FuturesTaskStoRsiTP implements Runnable {
      private PositionSide currentPositionSide;
      private Double entryPrice;
 	private Alarm alarm;
+	private int counter;
 
      public FuturesTaskStoRsiTP(FuturesBot futuresBot) {
           this.futuresBot = futuresBot;
@@ -60,48 +61,57 @@ public class FuturesTaskStoRsiTP implements Runnable {
 		System.out.println("-- from run " + new Date());
 		
 		if (currentPositionSide != PositionSide.NONE) {
-			if (!currentSLOrder.isEmpty()) {
-				String status = getOrderStatus(currentSLOrder);
-				if (status.equals("FILLED") || status.equals("CANCELED")) {
-					currentPositionSide = PositionSide.NONE;
-					double pnl = getRealizedPNL(currentSLOrder);
-					currentSLOrder = "";
-					cancelOrder(currentTPOrder);
-					currentTPOrder = "";
-					entryPrice = null;
-					System.out.println("SP Triggered");
 
-					try {
+			if (counter == 1) {
 
-						telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol() + "\n"
-							   + "PNL: " + pnl);
-					} catch (Exception e) {
-						e.printStackTrace();
+				if (!currentSLOrder.isEmpty()) {
+					String status = getOrderStatus(currentSLOrder);
+					if (status.equals("FILLED") || status.equals("CANCELED")) {
+						currentPositionSide = PositionSide.NONE;
+						double pnl = getRealizedPNL(currentSLOrder);
+						currentSLOrder = "";
+						cancelOrder(currentTPOrder);
+						currentTPOrder = "";
+						entryPrice = null;
+						System.out.println("SP Triggered");
+
+						try {
+
+							telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol() + "\n"
+								   + "PNL: " + pnl);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						return;
 					}
-					return;
 				}
-			}
 
-			if (!currentTPOrder.isEmpty()) {
-				String status = getOrderStatus(currentTPOrder);
-				if (status.equals("FILLED")) {
-					currentPositionSide = PositionSide.NONE;
-					double pnl = getRealizedPNL(currentTPOrder);
-					currentTPOrder = "";
-					cancelOrder(currentSLOrder);
-					currentSLOrder = "";
-					entryPrice = null;
-					System.out.println("TP Triggered");
+				if (!currentTPOrder.isEmpty()) {
+					String status = getOrderStatus(currentTPOrder);
+					if (status.equals("FILLED")) {
+						currentPositionSide = PositionSide.NONE;
+						double pnl = getRealizedPNL(currentTPOrder);
+						currentTPOrder = "";
+						cancelOrder(currentSLOrder);
+						currentSLOrder = "";
+						entryPrice = null;
+						System.out.println("TP Triggered");
 
-					try {
+						try {
 
-						telegramBot.sendMessage("Take Profit triggered " + futuresBot.getSymbol() + "\n"
-							   + "PNL: " + pnl);
-					} catch (Exception e) {
-						e.printStackTrace();
+							telegramBot.sendMessage("Take Profit triggered " + futuresBot.getSymbol() + "\n"
+								   + "PNL: " + pnl);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+						return;
 					}
-					return;
 				}
+
+				counter = 0;
+
+			} else {
+				counter++;
 			}
 		}
 
