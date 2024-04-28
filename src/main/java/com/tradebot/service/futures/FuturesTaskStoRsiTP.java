@@ -204,14 +204,17 @@ public class FuturesTaskStoRsiTP implements Runnable {
                                OrderSide.BOTH, futuresBot.getQuantity(), timeStamp)
                );
           } catch (BinanceConnectorException e) {
-               sendErrorMsg("BinanceConnectorException", e.getMessage());
+               sendErrorMsg("BinanceConnectorException createOrder", e.getMessage());
                e.printStackTrace();
+			return "";
           } catch (BinanceClientException e) {
-			sendErrorMsg("BinanceClientException", e.getMessage());
+			sendErrorMsg("BinanceClientException createOrder", e.getMessage());
                e.printStackTrace();
+			return "";
           } catch (BinanceServerException e) {
-			sendErrorMsg("BinanceServerException", e.getMessage());
+			sendErrorMsg("BinanceServerException createOrder", e.getMessage());
                e.printStackTrace();
+			return "";
           }
 
           JSONObject jsonResult = new JSONObject(orderResult);
@@ -235,14 +238,17 @@ public class FuturesTaskStoRsiTP implements Runnable {
                );
 			System.out.println("end of try");
           } catch (BinanceConnectorException e) {
-               sendErrorMsg("BinanceConnectorException", e.getMessage());
+               sendErrorMsg("BinanceConnectorException createStopLossOrder", e.getMessage());
                e.printStackTrace();
+			return;
           } catch (BinanceClientException e) {
-			sendErrorMsg("BinanceClientException", e.getMessage());
+			sendErrorMsg("BinanceClientException createStopLossOrder", e.getMessage());
                e.printStackTrace();
+			return;
           } catch (BinanceServerException e) {
-			sendErrorMsg("BinanceServerException", e.getMessage());
+			sendErrorMsg("BinanceServerException createStopLossOrder", e.getMessage());
                e.printStackTrace();
+			return;
           }
           
           JSONObject jsonResult = new JSONObject(orderResult);
@@ -253,12 +259,28 @@ public class FuturesTaskStoRsiTP implements Runnable {
 	private void createTakeProfit(OrderSide orderSide, double stopPrice) {
           System.out.println("stopPrice TP: " + stopPrice);
           long timeStamp = System.currentTimeMillis();
-
-          String orderResult = umFuturesClientImpl.account().newOrder(
-                  FuturesOrderParams.getTakeProfitParams(futuresBot.getSymbol(),
-                          orderSide, OrderSide.BOTH, futuresBot.getQuantity(),
-                          stopPrice, timeStamp)
-          );
+		
+		 String orderResult = "";
+		
+		try {
+			orderResult = umFuturesClientImpl.account().newOrder(
+				   FuturesOrderParams.getTakeProfitParams(futuresBot.getSymbol(),
+						 orderSide, OrderSide.BOTH, futuresBot.getQuantity(),
+						 stopPrice, timeStamp)
+			);			
+		} catch (BinanceConnectorException e) {
+               sendErrorMsg("BinanceConnectorException create take profit", e.getMessage());
+               e.printStackTrace();
+			return;
+          } catch (BinanceClientException e) {
+			sendErrorMsg("BinanceClientException create take profit", e.getMessage());
+               e.printStackTrace();
+			return;
+          } catch (BinanceServerException e) {
+			sendErrorMsg("BinanceServerException create take profit", e.getMessage());
+               e.printStackTrace();
+			return;
+          }
           System.out.println("orderResult TP: " + orderResult);
           JSONObject jsonResult = new JSONObject(orderResult);
           currentTPOrder = jsonResult.optString("orderId");
@@ -273,14 +295,17 @@ public class FuturesTaskStoRsiTP implements Runnable {
                                orderId, timeStamp)
                );
           } catch (BinanceConnectorException e) {
-               sendErrorMsg("BinanceConnectorException", e.getMessage());
+               sendErrorMsg("BinanceConnectorException cancel order", e.getMessage());
                e.printStackTrace();
+			return;
           } catch (BinanceClientException e) {
-			sendErrorMsg("BinanceClientException", e.getMessage());
+			sendErrorMsg("BinanceClientException cancel order", e.getMessage());
                e.printStackTrace();
+			return;
           } catch (BinanceServerException e) {
-			sendErrorMsg("BinanceServerException", e.getMessage());
+			sendErrorMsg("BinanceServerException cancel order", e.getMessage());
                e.printStackTrace();
+			return;
           }
      }
      
@@ -303,14 +328,18 @@ public class FuturesTaskStoRsiTP implements Runnable {
                                orderId, timeStamp)
                );
           } catch (BinanceConnectorException e) {
-               sendErrorMsg("BinanceConnectorException", e.getMessage());
+               sendErrorMsg("BinanceConnectorException getOrderStatus", e.getMessage());
                e.printStackTrace();
+			return "";
           } catch (BinanceClientException e) {
-			sendErrorMsg("BinanceClientException", e.getMessage());
+			System.out.println("getErrMsg: " + e.getErrMsg());
+			sendErrorMsg("BinanceClientException getOrderStatus", e.getMessage());
                e.printStackTrace();
+			return "";
           } catch (BinanceServerException e) {
-			sendErrorMsg("BinanceServerException", e.getMessage());
+			sendErrorMsg("BinanceServerException getOrderStatus", e.getMessage());
                e.printStackTrace();
+			return "";
           }
           
           JSONObject jsonResult = new JSONObject(orderResult);
@@ -318,26 +347,26 @@ public class FuturesTaskStoRsiTP implements Runnable {
           return status; 
      }
 
-     private Double getTickerPrice() {
-          String result = "";
-
-          try {               
-               result = umFuturesClientImpl.market().tickerSymbol(
-                       FuturesOrderParams.getTickerParams(futuresBot.getSymbol())
-               );
-          } catch (BinanceConnectorException e) {
-               sendErrorMsg("BinanceConnectorException", e.getMessage());
-               e.printStackTrace();
-          } catch (BinanceClientException e) {
-			sendErrorMsg("BinanceClientException", e.getMessage());
-               e.printStackTrace();
-          } catch (BinanceServerException e) {
-			sendErrorMsg("BinanceServerException", e.getMessage());
-               e.printStackTrace();
-          }
-          JSONObject jsonResult = new JSONObject(result);
-          return jsonResult.optDouble("price");
-     }
+//     private Double getTickerPrice() {
+//          String result = "";
+//
+//          try {               
+//               result = umFuturesClientImpl.market().tickerSymbol(
+//                       FuturesOrderParams.getTickerParams(futuresBot.getSymbol())
+//               );
+//          } catch (BinanceConnectorException e) {
+//               sendErrorMsg("BinanceConnectorException", e.getMessage());
+//               e.printStackTrace();
+//          } catch (BinanceClientException e) {
+//			sendErrorMsg("BinanceClientException", e.getMessage());
+//               e.printStackTrace();
+//          } catch (BinanceServerException e) {
+//			sendErrorMsg("BinanceServerException", e.getMessage());
+//               e.printStackTrace();
+//          }
+//          JSONObject jsonResult = new JSONObject(result);
+//          return jsonResult.optDouble("price");
+//     }
 
      private double calculateSL(PositionSide positionSide) {
           Double price = entryPrice;

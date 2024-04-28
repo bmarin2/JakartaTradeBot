@@ -14,6 +14,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.ta4j.core.BarSeries;
@@ -40,34 +42,39 @@ public class StochRsiEma implements Runnable {
 	private double K;
 	private double D;
 //	private double adx;
-//	private double ema200Adx;
-	private boolean aboveAdxLine;
-	private boolean isRising;
-	private double lastAdxValue;
+	private double ema4;
+//	private boolean aboveAdxLine;
+//	private boolean isRising;
+//	private double lastAdxValue;
 
 	private BarSeries series;
 //	private BarSeries seriesAdx5min;
+	private Queue<Double> queue;
+	private int maxQueueSize = 20; // horizontal box
+	private double verticalPercent = 0.09; // vertical box, calculated 2x
+	private double upperLimit;
+	private double lowerLimit;
 
 	public StochRsiEma(Alarm alarm) {
 		this.alarm = alarm;
-		initChartMode(alarm);	
-		telegramBot = new TelegramBot();		
+		initChartMode(alarm);
+		telegramBot = new TelegramBot();
 		series = new BaseBarSeriesBuilder().withName("mySeries").build();
-          series.setMaximumBarCount(alarm.getThirdDema() * 2);
+          series.setMaximumBarCount(420);
 //		seriesAdx5min = new BaseBarSeriesBuilder().withName("mySeriesAdx5min").build();
 //		seriesAdx5min.setMaximumBarCount(400);
+		queue = new LinkedList<>();
 		runner();
-          calculateValues();
 	}
 
 	@Override
 	public void run() {
 		runner();
 	}
-	
+
 	private void runner() {
 		if (firstTime) {
-			fetchBarSeries(alarm.getThirdDema() * 2);
+			fetchBarSeries(420);
 			firstTime = false;
 		} else {
 			fetchBarSeries(1);
@@ -76,7 +83,7 @@ public class StochRsiEma implements Runnable {
 
      private void updateValues() {
 		ClosePriceIndicator closePriceIndicator = new ClosePriceIndicator(series);
-
+		
 		Indicator sr = new StochasticRSIIndicator(series, 14);
 		SMAIndicator k = new SMAIndicator(sr, 3); // blue
 		SMAIndicator d = new SMAIndicator(k, 3); // yellow		
@@ -90,22 +97,22 @@ public class StochRsiEma implements Runnable {
 		System.out.println("K:   " + K);
 		System.out.println("D:   " + D);
 		System.out.println("ADX: " + currentAdx);
+//		System.out.println("aboveAdxLine: " + aboveAdxLine);
+//		System.out.println("isRising      " + isRising);
 		
-		if (!aboveAdxLine && currentAdx > 21) {
-			aboveAdxLine = true;
-		} else if (aboveAdxLine && currentAdx < 21) {
-			aboveAdxLine = false;
-		}
+//		if (!aboveAdxLine && currentAdx > 18) {
+//			aboveAdxLine = true;
+//		} else if (aboveAdxLine && currentAdx < 18) {
+//			aboveAdxLine = false;
+//		}
 		
-		if (currentAdx > lastAdxValue) {
-			isRising = true;
-			System.out.println("ADX Rising");
-		} else if (currentAdx < lastAdxValue) {
-			System.out.println("ADX Faling");
-			isRising = false;
-		}
-		
-		lastAdxValue = currentAdx;
+//		if (currentAdx > lastAdxValue) {
+//			isRising = true;
+//		} else if (currentAdx < lastAdxValue) {
+//			isRising = false;
+//		}
+//		
+//		lastAdxValue = currentAdx;
 
 		EMAIndicator ema1 = new EMAIndicator(closePriceIndicator, alarm.getFirstDema());
 		alarm.setCurrentFirstDema(ema1.getValue(ema1.getBarSeries().getEndIndex()).doubleValue());
@@ -115,6 +122,35 @@ public class StochRsiEma implements Runnable {
 
 		EMAIndicator ema3 = new EMAIndicator(closePriceIndicator, alarm.getThirdDema());
 		alarm.setCurrentThirdDema(ema3.getValue(ema3.getBarSeries().getEndIndex()).doubleValue());
+		
+		EMAIndicator ema4_tmp = new EMAIndicator(closePriceIndicator, 200);
+		ema4 = ema4_tmp.getValue(ema4_tmp.getBarSeries().getEndIndex()).doubleValue();
+
+		if (firstTime) {
+			int candleCounter = 400;
+
+			for (int i = 0; i < maxQueueSize; i++) {
+				ClosePriceIndicator closePricesSub = new ClosePriceIndicator(series.getSubSeries(0, candleCounter));
+				EMAIndicator emaTmp = new EMAIndicator(closePricesSub, 200);
+				queue.offer(emaTmp.getValue(emaTmp.getBarSeries().getEndIndex()).doubleValue());
+				candleCounter++;
+			}
+		} else {
+			if (queue.size() == maxQueueSize) {
+				queue.poll();
+			}
+			queue.offer(ema4);
+		}
+		
+		double oldest = queue.peek();
+		
+		double percentValue = oldest * (verticalPercent / 100);
+		upperLimit = oldest + percentValue;
+		lowerLimit = oldest - percentValue;
+
+		System.out.println("oldest " + oldest);
+		System.out.println("upperLimit " + upperLimit);
+		System.out.println("lowerLimit " + lowerLimit);		
 
 		double atr = new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue();
 		alarm.setAtr(atr);
@@ -142,8 +178,8 @@ public class StochRsiEma implements Runnable {
 			if (K > increasedD) {
 				
 				alarm.setCrosss(false);
-				
-				if (emasSetForLong() && isAdxSet()) {
+				// && (K < 0.5 || D < 0.5)
+				if (emasSetForLong() && (K < 0.5 || D < 0.5) && (ema4 > upperLimit)) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
@@ -156,7 +192,7 @@ public class StochRsiEma implements Runnable {
 			if (K < decreasedD) {
 				alarm.setCrosss(true);
 
-				if (emasSetForShort() && isAdxSet()) {
+				if (emasSetForShort() && (K > 0.5 || D > 0.5) && (ema4 < lowerLimit)) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
@@ -207,16 +243,13 @@ public class StochRsiEma implements Runnable {
 			long timestamp = array.getLong(6);
 
 			if (lastTimestamp == timestamp) {
-				System.out.println("// same timestamp skipping");
 				return;
 			} else {
-				System.out.println("** updating timestamp");
 				lastTimestamp = timestamp;
 			}
 		} else {
 			JSONArray array2 = jsonArray.getJSONArray(jsonArray.length() - 1);
 			long timestamp2 = array2.getLong(6);
-			System.out.println("first timestamp: " + timestamp2);
 			lastTimestamp = timestamp2;
 		}
 		
@@ -349,17 +382,19 @@ public class StochRsiEma implements Runnable {
 
 	private boolean emasSetForLong() {
 		return alarm.getCurrentFirstDema() > alarm.getCurrentSecondDema()
-			&& alarm.getCurrentSecondDema() > alarm.getCurrentThirdDema();
+			&& alarm.getCurrentSecondDema() > alarm.getCurrentThirdDema()
+			&& alarm.getCurrentThirdDema() > ema4;
 	}
 	
 	private boolean emasSetForShort() {
 		return alarm.getCurrentFirstDema() < alarm.getCurrentSecondDema()
-			&& alarm.getCurrentSecondDema() < alarm.getCurrentThirdDema();
+			&& alarm.getCurrentSecondDema() < alarm.getCurrentThirdDema()
+			&& alarm.getCurrentThirdDema() < ema4;
 	}
 	
-	private boolean isAdxSet() {
-		return aboveAdxLine && isRising;
-	}
+//	private boolean isAdxSet() {
+//		return aboveAdxLine && isRising;
+//	}
 	
 	private void initChartMode(Alarm alarm) {
 		switch (alarm.getChartMode()) {
