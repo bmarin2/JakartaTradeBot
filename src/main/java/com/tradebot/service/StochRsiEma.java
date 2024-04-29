@@ -91,12 +91,12 @@ public class StochRsiEma implements Runnable {
 		K = k.getValue(k.getBarSeries().getEndIndex()).doubleValue();
 		D = d.getValue(k.getBarSeries().getEndIndex()).doubleValue();
 		
-		ADXIndicator adxIndicator = new ADXIndicator(series, 14);
-		double currentAdx = adxIndicator.getValue(adxIndicator.getBarSeries().getEndIndex()).doubleValue();
+//		ADXIndicator adxIndicator = new ADXIndicator(series, 14);
+//		double currentAdx = adxIndicator.getValue(adxIndicator.getBarSeries().getEndIndex()).doubleValue();
 		
 		System.out.println("K:   " + K);
 		System.out.println("D:   " + D);
-		System.out.println("ADX: " + currentAdx);
+//		System.out.println("ADX: " + currentAdx);
 //		System.out.println("aboveAdxLine: " + aboveAdxLine);
 //		System.out.println("isRising      " + isRising);
 		
@@ -150,7 +150,8 @@ public class StochRsiEma implements Runnable {
 
 		System.out.println("oldest " + oldest);
 		System.out.println("upperLimit " + upperLimit);
-		System.out.println("lowerLimit " + lowerLimit);		
+		System.out.println("lowerLimit " + lowerLimit);
+		System.out.println("ema4 " + ema4);
 
 		double atr = new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue();
 		alarm.setAtr(atr);
