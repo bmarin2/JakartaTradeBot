@@ -50,8 +50,8 @@ public class StochRsiEma implements Runnable {
 	private BarSeries series;
 //	private BarSeries seriesAdx5min;
 	private Queue<Double> queue;
-	private int maxQueueSize = 20; // horizontal box
-	private double verticalPercent = 0.09; // vertical box, calculated 2x
+	private int maxQueueSize = 18; // horizontal box
+	private double verticalPercent = 0.13; // vertical box, calculated 2x
 	private double upperLimit;
 	private double lowerLimit;
 
@@ -60,7 +60,7 @@ public class StochRsiEma implements Runnable {
 		initChartMode(alarm);
 		telegramBot = new TelegramBot();
 		series = new BaseBarSeriesBuilder().withName("mySeries").build();
-          series.setMaximumBarCount(420);
+          series.setMaximumBarCount(418);
 //		seriesAdx5min = new BaseBarSeriesBuilder().withName("mySeriesAdx5min").build();
 //		seriesAdx5min.setMaximumBarCount(400);
 		queue = new LinkedList<>();
@@ -74,7 +74,7 @@ public class StochRsiEma implements Runnable {
 
 	private void runner() {
 		if (firstTime) {
-			fetchBarSeries(420);
+			fetchBarSeries(418);
 			firstTime = false;
 		} else {
 			fetchBarSeries(1);
@@ -180,7 +180,7 @@ public class StochRsiEma implements Runnable {
 				
 				alarm.setCrosss(false);
 				// && (K < 0.5 || D < 0.5)
-				if (emasSetForLong() && (K < 0.5 || D < 0.5) && (ema4 > upperLimit)) {
+				if (emasSetForLong() && (K < 0.4 || D < 0.4) && (ema4 > upperLimit)) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
@@ -193,7 +193,7 @@ public class StochRsiEma implements Runnable {
 			if (K < decreasedD) {
 				alarm.setCrosss(true);
 
-				if (emasSetForShort() && (K > 0.5 || D > 0.5) && (ema4 < lowerLimit)) {
+				if (emasSetForShort() && (K > 0.6 || D > 0.6) && (ema4 < lowerLimit)) {
 					alarm.setGoodForEntry(true);
 				} else {
 					alarm.setGoodForEntry(false);
