@@ -15,7 +15,6 @@ import com.tradebot.service.FuturesTaskOneCrossBorder;
 import com.tradebot.service.FuturesTaskTwoCross;
 import com.tradebot.service.FuturesTaskTwoCrossTP;
 import com.tradebot.service.TaskService;
-import com.tradebot.service.futures.FuturesTaskStoRsi;
 import com.tradebot.service.futures.FuturesTaskStoRsiTP;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -205,10 +204,7 @@ public class FuturesView implements Serializable {
 			} else if (bot.getFutresDemaStrategy() == FutresStrategy.MACD_CROSS){
 				task = new FuturesTaskMACDCross(bot);
 
-			} else if (bot.getFutresDemaStrategy() == FutresStrategy.STOCH_RSI){
-				task = new FuturesTaskStoRsi(bot);
-
-			} else if (bot.getFutresDemaStrategy() == FutresStrategy.STOCH_RSI_TP){
+			} else if (bot.getFutresDemaStrategy() == FutresStrategy.FUTURES_STOCH_RSI_TP){
 				task = new FuturesTaskStoRsiTP(bot);
 			}
 
