@@ -22,8 +22,9 @@ public class FuturesBotDB {
 		long order_id = 0;
 
 		String query = "INSERT INTO FUTURES_BOT (symbol, createdDate, taskId, quantity, description, initialDelay, "
-			   + "delay, timeUnit, stopLoss, takeProfit, demaAlertTaskId, futresDemaStrategy, chartMode) "
-			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			   + "delay, timeUnit, stopLoss, takeProfit, demaAlertTaskId, futresDemaStrategy, chartMode, "
+			   + "intervall) "
+			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -40,6 +41,7 @@ public class FuturesBotDB {
 			ps.setString(11, bot.getDemaAlertTaskId());
 			ps.setInt(12, bot.getFutresDemaStrategy().ordinal());
 			ps.setInt(13, bot.getChartMode().ordinal());
+			ps.setString(14, bot.getIntervall());
 			
 			ps.executeUpdate();
 			
@@ -66,7 +68,8 @@ public class FuturesBotDB {
 		ResultSet rs = null;
 
 		String query = "UPDATE FUTURES_BOT SET symbol=?, createdDate=?, taskId=?, quantity=?, description=?, initialDelay=?,"
-			   + " delay=?, timeUnit=?, stopLoss=?, takeProfit=?, demaAlertTaskId=?, futresDemaStrategy=?, chartMode=? WHERE id=?";
+			   + " delay=?, timeUnit=?, stopLoss=?, takeProfit=?, demaAlertTaskId=?, futresDemaStrategy=?, chartMode=?,"
+			   + " intervall=? WHERE id=?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -84,7 +87,8 @@ public class FuturesBotDB {
 			ps.setString(11, bot.getDemaAlertTaskId());
 			ps.setInt(12, bot.getFutresDemaStrategy().ordinal());
 			ps.setInt(13, bot.getChartMode().ordinal());
-			ps.setLong(14, bot.getId());
+			ps.setString(14, bot.getIntervall());
+			ps.setLong(15, bot.getId());
 			
 			ps.executeUpdate();
 
@@ -124,6 +128,7 @@ public class FuturesBotDB {
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
 				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				bot.setIntervall(rs.getString("intervall"));
 				bots.add(bot);
 			}
 			return bots;
@@ -164,6 +169,7 @@ public class FuturesBotDB {
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
 				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				bot.setIntervall(rs.getString("intervall"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -203,6 +209,7 @@ public class FuturesBotDB {
 				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
 				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
 				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				bot.setIntervall(rs.getString("intervall"));
 			}
 			return bot;
 		} catch (SQLException e) {

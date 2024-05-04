@@ -28,7 +28,7 @@
 				$(tbody).each(function(index) {
 				    $(this).find("td:nth-child(3)").each(function() {
 					     if (myList.includes($(this).text())) {
-							$(this).parent().find("td:nth-child(14)").find("div:first")
+							$(this).parent().find("td:nth-child(15)").find("div:first")
 									.addClass('ui-toggleswitch-checked');
 						}
 				    });
@@ -113,6 +113,10 @@
 						<h:outputText value="#{bot.initialDelay}" />
 					</p:column>
 
+					<p:column sortBy="#{bot.intervall}" headerText="Interval">
+						<h:outputText value="#{bot.intervall}" />
+					</p:column>
+
 					<p:column sortBy="#{bot.delay}" headerText="Delay">
 						<h:outputText value="#{bot.delay}" />
 					</p:column>
@@ -180,6 +184,9 @@
 
 						<p:outputLabel for="input7" value="Delay"/>
 						<p:inputText id="input7" value="#{futuresView.selectedTradeBot.delay}"/>
+						
+						<p:outputLabel for="input8" value="Interval"/>
+						<p:inputText id="input8" value="#{futuresView.selectedTradeBot.intervall}"/>
 
 						<p:outputLabel for="select2" value="Time Unit"/>
 						<p:selectOneMenu value="#{futuresView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">

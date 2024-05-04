@@ -54,7 +54,8 @@ CREATE TABLE FUTURES_BOT (
     takeProfit DOUBLE,
     demaAlertTaskId VARCHAR(255),
     futresDemaStrategy INT,
-    chartMode INT
+    chartMode INT,
+    intervall VARCHAR(255)
 );
 
 
