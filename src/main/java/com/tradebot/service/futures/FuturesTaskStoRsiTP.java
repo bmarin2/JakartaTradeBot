@@ -70,7 +70,9 @@ public class FuturesTaskStoRsiTP implements Runnable {
 	private boolean inConsolidation;
 	private int consolidationStartLength = 20;
 	private int consolidationCounter;
-	private double lastRSIValue;
+
+	private boolean overbought;
+	private boolean oversold;
 
 	public FuturesTaskStoRsiTP(FuturesBot futuresBot) {
 		this.futuresBot = futuresBot;
@@ -298,7 +300,7 @@ public class FuturesTaskStoRsiTP implements Runnable {
 			} else {
 				consolidationCounter++;
 			}
-		} else if (inConsolidation && currentEma3 > upperLimit && currentEma3 < lowerLimit) {
+		} else if (inConsolidation && currentEma3 > upperLimit || currentEma3 < lowerLimit) {
 			inConsolidation = false;
 			consolidationCounter = 0;
 			sendTelegramMessage("in trending", "");
@@ -315,25 +317,21 @@ public class FuturesTaskStoRsiTP implements Runnable {
 			RSIIndicator rsiIndicator = new RSIIndicator(closePriceIndicator, 14);
 			double currentRsi = rsiIndicator.getValue(rsiIndicator.getBarSeries().getEndIndex()).doubleValue();
 			System.out.println("rsiIndicator: " + currentRsi);
-			
-			if (currentRsi > 69) {
-				if (lastRSIValue == 0.0 || currentRsi > lastRSIValue) {
-					lastRSIValue = currentRsi;
-				} else if (currentRsi < lastRSIValue) {
-					if (currentPositionSide == PositionSide.NONE) {
-						sendTelegramMessage("entering SHORT from RSI", "");
-					}
-					lastRSIValue = 0.0;
+
+			if (!overbought && currentRsi > 70) {
+				overbought = true;
+			} else if (overbought && currentRsi < 70) {
+				if (currentPositionSide == PositionSide.NONE) {
+					sendTelegramMessage("entering SHORT from RSI", "");
 				}
-			} else if (currentRsi < 31) {
-				if (lastRSIValue == 0.0 || currentRsi < lastRSIValue) {
-					lastRSIValue = currentRsi;
-				} else if (currentRsi > lastRSIValue) {
-					if (currentPositionSide == PositionSide.NONE) {
-						sendTelegramMessage("entering LONG from RSI", "");
-					}
-					lastRSIValue = 0.0;
+				overbought = false;
+			} else if (!oversold && currentRsi < 30) {
+				oversold = true;
+			} else if (oversold && currentRsi > 30) {
+				if (currentPositionSide == PositionSide.NONE) {
+					sendTelegramMessage("entering LONG from RSI", "");
 				}
+				oversold = false;
 			}
 		}
 
