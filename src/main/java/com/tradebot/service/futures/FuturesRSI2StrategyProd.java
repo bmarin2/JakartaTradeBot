@@ -7,74 +7,85 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.enums.Environment;
+import static com.tradebot.enums.Environment.FUTURES_BASE_URL_PROD;
+import static com.tradebot.enums.Environment.FUTURES_BASE_URL_TEST;
+import static com.tradebot.enums.Environment.FUTURES_SIGNED_PROD;
+import static com.tradebot.enums.Environment.FUTURES_SIGNED_TEST;
 import com.tradebot.enums.PositionSide;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
 import com.tradebot.service.TelegramBot;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
-import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.ATRIndicator;
-import org.ta4j.core.indicators.EMAIndicator;
 import org.ta4j.core.indicators.RSIIndicator;
-import org.ta4j.core.indicators.SMAIndicator;
-import org.ta4j.core.indicators.StochasticRSIIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 
-public class FuturesTaskStoRsiTP implements Runnable {
-
+@Data
+public class FuturesRSI2StrategyProd implements Runnable {
+	
+	
 	private FuturesBot futuresBot;
 	private UMFuturesClientImpl umFuturesClientImpl;
 	private final TelegramBot telegramBot;
 
 	private String currentSLOrder = "";
 	private String currentTPOrder = "";
-	private PositionSide currentPositionSide;
-	private Double entryPrice;
 
+	private double currentStopLossPrice;
+	private double currentTakeProfitPrice;
+	private PositionSide currentPositionSide;
 	private long lastTimestamp;
+	private long lastTimestamp2;
 	private boolean firstTime = true;
-	private double K;
-	private double D;
+
 	private BarSeries series;
-	private Queue<Double> queue;
-	private int maxQueueSize = 20; // horizontal box
-	private double verticalPercent = 0.09; // vertical box, calculated 2x
-	private double upperLimit;
-	private double lowerLimit;
+	private BarSeries series2;
+	private Bar currentBar;
+	private Bar currentBar2;
 	private ClosePriceIndicator closePriceIndicator;
+	private ClosePriceIndicator closePriceIndicator2;
+
 	private double atr;
 
-	private double minGap = 0.02;
+	private int sma1 = 5;
+	private int sma2 = 100;
+	private double currentSma1;
+	private double currentSma2;
 
-	private int ema1 = 8;
-	private int ema2 = 14;
-	private int ema3 = 150;
-	private double currentEma1;
-	private double currentEma2;
-	private double currentEma3;
+	private int win;
+	private int lose;
 
-	private boolean stochasticCross;
+	private double lossSum;
+	private double gainSum;
+
+	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+	private Double entryPrice;
 	
-	private boolean inConsolidation;
-	private int consolidationStartLength = 20;
-	private int consolidationCounter;
+	private double currentAdx;
+	private double lastAdx;
+	private boolean fallingAdx;
+	
+	private double currentRsi;
+	private double currentRsi2;
+	private double currentAw;
+	
+	DecimalFormat df = new DecimalFormat("0.0000");
 
-	private boolean overbought;
-	private boolean oversold;
-
-	public FuturesTaskStoRsiTP(FuturesBot futuresBot) {
+	public FuturesRSI2StrategyProd(FuturesBot futuresBot) {
 		this.futuresBot = futuresBot;
 		telegramBot = new TelegramBot();
 		umFuturesClientImpl = initEnvironment(futuresBot.getEnvironment());
@@ -86,18 +97,16 @@ public class FuturesTaskStoRsiTP implements Runnable {
 			entryPrice = getEntryPrice();
 			System.out.println("Entry price: " + entryPrice);
 		}
-
 		series = new BaseBarSeriesBuilder().withName("mySeries").build();
-		series.setMaximumBarCount(400 + maxQueueSize);
-		queue = new LinkedList<>();
-		runner();
+		series.setMaximumBarCount(300);
+		
+		series2 = new BaseBarSeriesBuilder().withName("mySeries2").build();
+		series2.setMaximumBarCount(300);
 	}
-
+	
 	@Override
-	public void run() {
-
+	public void run() {		
 		if (currentPositionSide != PositionSide.NONE) {
-
 			if (!currentSLOrder.isEmpty()) {
 				String status = getOrderStatus(currentSLOrder);
 				if (status.equals("FILLED") || status.equals("CANCELED")) {
@@ -150,24 +159,28 @@ public class FuturesTaskStoRsiTP implements Runnable {
 			System.out.println("entry price: " + entryPrice);
 		}
 		
-		runner();
+		fetchSeries();
+		updateValues();
+		updateValues2();
+		enterTrade();
+		
 	}
-
-	// ==========================================================================================
-
-	private void runner() {
+	
+	private void fetchSeries() {
 		if (firstTime) {
-			fetchBarSeries(400 + maxQueueSize);
+			fetchBarSeries(300, futuresBot.getIntervall(), series, lastTimestamp);
+			fetchBarSeries(300, futuresBot.getIntervall2(), series2, lastTimestamp2);
 			firstTime = false;
 		} else {
-			fetchBarSeries(1);
+			fetchBarSeries(1, futuresBot.getIntervall(), series, lastTimestamp);
+			fetchBarSeries(1, futuresBot.getIntervall2(), series2, lastTimestamp2);
 		}
 	}
 
-	private void fetchBarSeries(int limit) {
+	private void fetchBarSeries(int limit, String interval, BarSeries barSeries, long lastTime) {
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
 		parameters.put("symbol", futuresBot.getSymbol());
-		parameters.put("interval", futuresBot.getIntervall());
+		parameters.put("interval", interval);
 		parameters.put("limit", limit + 1);
 
 		String result = "";
@@ -195,15 +208,15 @@ public class FuturesTaskStoRsiTP implements Runnable {
 			JSONArray array = jsonArray.getJSONArray(0);
 			long timestamp = array.getLong(6);
 
-			if (lastTimestamp == timestamp) {
+			if (lastTime == timestamp) {
 				return;
 			} else {
-				lastTimestamp = timestamp;
+				lastTime = timestamp;
 			}
 		} else {
 			JSONArray array2 = jsonArray.getJSONArray(jsonArray.length() - 1);
 			long timestamp2 = array2.getLong(6);
-			lastTimestamp = timestamp2;
+			lastTime = timestamp2;
 		}
 
 		for (int i = 0; i < jsonArray.length(); i++) {
@@ -213,7 +226,7 @@ public class FuturesTaskStoRsiTP implements Runnable {
 			Instant instant = Instant.ofEpochMilli(unixTimestampMillis);
 			ZonedDateTime utcZonedDateTime = instant.atZone(ZoneId.of("UTC"));
 			try {
-				series.addBar(utcZonedDateTime,
+				barSeries.addBar(utcZonedDateTime,
 					   candlestick.getString(1),
 					   candlestick.getString(2),
 					   candlestick.getString(3),
@@ -221,8 +234,8 @@ public class FuturesTaskStoRsiTP implements Runnable {
 					   candlestick.getString(5)
 				);
 			} catch (IllegalArgumentException iae) {
-				ZonedDateTime timePlusOneMin = series.getLastBar().getEndTime().plusMinutes(1);
-				series.addBar(timePlusOneMin,
+				ZonedDateTime timePlusOneMin = barSeries.getLastBar().getEndTime().plusMinutes(1);
+				barSeries.addBar(timePlusOneMin,
 					   candlestick.getString(1),
 					   candlestick.getString(2),
 					   candlestick.getString(3),
@@ -231,144 +244,33 @@ public class FuturesTaskStoRsiTP implements Runnable {
 				);
 			}
 		}
-		updateValues();
-		compareValues();
 	}
 
 	private void updateValues() {
 		closePriceIndicator = new ClosePriceIndicator(series);
-
-		Indicator sr = new StochasticRSIIndicator(series, 14);
-		SMAIndicator k = new SMAIndicator(sr, 3); // blue
-		SMAIndicator d = new SMAIndicator(k, 3); // yellow		
-
-		K = k.getValue(k.getBarSeries().getEndIndex()).doubleValue();
-		D = d.getValue(k.getBarSeries().getEndIndex()).doubleValue();
-
-		System.out.println("K:   " + K);
-		System.out.println("D:   " + D);
-
-		EMAIndicator ema1_tmp = new EMAIndicator(closePriceIndicator, ema1);
-		currentEma1 = ema1_tmp.getValue(ema1_tmp.getBarSeries().getEndIndex()).doubleValue();
-
-		EMAIndicator ema2_tmp = new EMAIndicator(closePriceIndicator, ema2);
-		currentEma2 = ema2_tmp.getValue(ema2_tmp.getBarSeries().getEndIndex()).doubleValue();
-
-		EMAIndicator ema3_tmp = new EMAIndicator(closePriceIndicator, ema3);
-		currentEma3 = ema3_tmp.getValue(ema3_tmp.getBarSeries().getEndIndex()).doubleValue();
-		
 		atr = new ATRIndicator(series, 14).getValue(series.getEndIndex()).doubleValue();
-
-		if (firstTime) {
-			int candleCounter = 400;
-
-			for (int i = 0; i < maxQueueSize; i++) {
-				ClosePriceIndicator closePricesSub = new ClosePriceIndicator(series.getSubSeries(0, candleCounter));
-				EMAIndicator emaTmp = new EMAIndicator(closePricesSub, ema3);
-				queue.offer(emaTmp.getValue(emaTmp.getBarSeries().getEndIndex()).doubleValue());
-				candleCounter++;
-			}
-		} else {
-			if (queue.size() == maxQueueSize) {
-				queue.poll();
-			}
-			queue.offer(currentEma3);
-		}
-
-		double oldest = queue.peek();
-
-		double percentValue = oldest * (verticalPercent / 100);
-		upperLimit = oldest + percentValue;
-		lowerLimit = oldest - percentValue;
-
-		System.out.println("oldest " + oldest);
-		System.out.println("upperLimit " + upperLimit);
-		System.out.println("lowerLimit " + lowerLimit);
-		System.out.println("---");
-		System.out.println("currentEma1 " + currentEma1);
-		System.out.println("currentEma2 " + currentEma2);
-		System.out.println("currentEma3 " + currentEma3);
-		System.out.println("---");
-		System.out.println("stochasticCross " + stochasticCross);		
-		System.out.println("atr: " + atr);
-
-		if (!inConsolidation && currentEma3 < upperLimit && currentEma3 > lowerLimit) {
-			if (consolidationCounter == consolidationStartLength) {
-				inConsolidation = true;
-				consolidationCounter = 0;
-				sendTelegramMessage("in consolidation", "");
-			} else {
-				consolidationCounter++;
-			}
-		} else if (inConsolidation && currentEma3 > upperLimit || currentEma3 < lowerLimit) {
-			inConsolidation = false;
-			consolidationCounter = 0;
-			sendTelegramMessage("in trending", "");
-		}
-
-		System.out.println("in Consolidation " + inConsolidation);
-
-		System.out.println("--------------------------");
-	}
-
-	private void compareValues() {
-
-		if (inConsolidation) {
-			RSIIndicator rsiIndicator = new RSIIndicator(closePriceIndicator, 14);
-			double currentRsi = rsiIndicator.getValue(rsiIndicator.getBarSeries().getEndIndex()).doubleValue();
-			System.out.println("rsiIndicator: " + currentRsi);
-
-			if (!overbought && currentRsi > 70) {
-				overbought = true;
-			} else if (overbought && currentRsi < 70) {
-				if (currentPositionSide == PositionSide.NONE) {
-					sendTelegramMessage("entering SHORT from RSI", "");
-				}
-				overbought = false;
-			} else if (!oversold && currentRsi < 30) {
-				oversold = true;
-			} else if (oversold && currentRsi > 30) {
-				if (currentPositionSide == PositionSide.NONE) {
-					sendTelegramMessage("entering LONG from RSI", "");
-				}
-				oversold = false;
-			}
-		}
-
-		if (stochasticCross && K > D) {
-			double increasedD = D + minGap;
-			if (K > increasedD) {
-
-				stochasticCross = false;
-				// && (K < 0.5 || D < 0.5)
-				if (currentPositionSide == PositionSide.NONE && emasSetForLong()
-					   && (K < 0.6 || D < 0.6) && (currentEma3 > upperLimit)) {
-					sendTelegramMessage("entering long", "");
-					//prepareLongOrder();
-				}
-			}
-		} else if (!stochasticCross && K < D) {
-			double decreasedD = D - minGap;
-			if (K < decreasedD) {
-
-				stochasticCross = true;
-				if (currentPositionSide == PositionSide.NONE && emasSetForShort()
-					   && (K > 0.4 || D > 0.4) && (currentEma3 < lowerLimit)) {
-					sendTelegramMessage("entering short", "");
-					//prepareShortOrder();
-				}
-			}
-		}
+		
+		RSIIndicator rsiIndicator1 = new RSIIndicator(closePriceIndicator, 2);
+		currentRsi = rsiIndicator1.getValue(rsiIndicator1.getBarSeries().getEndIndex()).doubleValue();
 	}
 	
-	private boolean emasSetForLong() {
-		return currentEma1 > currentEma2
-			  && currentEma2 > currentEma3;
+	private void updateValues2() {
+		closePriceIndicator2 = new ClosePriceIndicator(series2);
+		
+		RSIIndicator rsiIndicator2 = new RSIIndicator(closePriceIndicator2, 2);
+		currentRsi2 = rsiIndicator2.getValue(rsiIndicator2.getBarSeries().getEndIndex()).doubleValue();
+		
 	}
+	
+	private void enterTrade() {
+		if (currentPositionSide == PositionSide.NONE && currentRsi2 > 60 && currentRsi < 10 ) {
+			
+			prepareLongOrder();
 
-	private boolean emasSetForShort() {
-		return currentEma1 < currentEma2
-			  && currentEma2 < currentEma3;
+		} else if (currentPositionSide == PositionSide.NONE && currentRsi2 < 40 && currentRsi > 90 ) {
+			
+			prepareShortOrder();
+		}
 	}
 
 	private void prepareLongOrder() {
@@ -398,8 +300,8 @@ public class FuturesTaskStoRsiTP implements Runnable {
 		createStopLossOrder(OrderSide.BUY, calculateSL(PositionSide.SHORT));
 		createTakeProfit(OrderSide.BUY, calculateTP(PositionSide.SHORT));
 		currentPositionSide = PositionSide.SHORT;
-	}
-
+	}	
+	
 	private String createLongOrder() {
 		return createOrder(OrderSide.BUY);
 	}
@@ -576,7 +478,70 @@ public class FuturesTaskStoRsiTP implements Runnable {
 		String resultFormated = String.format("%.2f", result).replace(',', '.');
 		return Double.parseDouble(resultFormated);
 	}
+	
+	private UMFuturesClientImpl initEnvironment(Environment environment) {
+		switch (environment) {
+			case FUTURES_BASE_URL_PROD:
+				return UMFuturesClientConfig.futuresBaseURLProd();
+			case FUTURES_BASE_URL_TEST:
+				return UMFuturesClientConfig.futuresBaseURLTest();
+			case FUTURES_SIGNED_PROD:
+				return UMFuturesClientConfig.futuresSignedProd();
+			case FUTURES_SIGNED_TEST:
+				return UMFuturesClientConfig.futuresSignedTest();
+			default:
+				return null;
+		}
+	}
+	
+	private double getRealizedPNL(String orderId) {
+		String jsonResult = "";
 
+		try {
+			long timeStamp = System.currentTimeMillis();
+			jsonResult = umFuturesClientImpl.account().accountTradeList(
+				   FuturesOrderParams.getQueryOrderParams(futuresBot.getSymbol(), orderId, timeStamp)
+			);
+		} catch (BinanceConnectorException e) {
+			sendTelegramMessage("BinanceConnectorException", e.getMessage());
+			e.printStackTrace();
+		} catch (BinanceClientException e) {
+			sendTelegramMessage("BinanceClientException", e.getMessage());
+			e.printStackTrace();
+		} catch (BinanceServerException e) {
+			sendTelegramMessage("BinanceServerException", e.getMessage());
+			e.printStackTrace();
+		}
+
+		JSONArray tradeList = new JSONArray(jsonResult);
+		JSONObject tradeObject = tradeList.getJSONObject(0);
+
+		return tradeObject.optDouble("realizedPnl");
+	}
+	
+	private double getEntryPrice() {
+		String jsonResult = "";
+
+		try {
+			long timeStamp = System.currentTimeMillis();
+			jsonResult = umFuturesClientImpl.account().positionInformation(
+				   FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp)
+			);
+		} catch (BinanceConnectorException e) {
+			sendTelegramMessage("BinanceConnectorException", e.getMessage());
+			e.printStackTrace();
+		} catch (BinanceClientException e) {
+			sendTelegramMessage("BinanceClientException", e.getMessage());
+			e.printStackTrace();
+		} catch (BinanceServerException e) {
+			sendTelegramMessage("BinanceServerException", e.getMessage());
+			e.printStackTrace();
+		}
+
+		JSONObject positionObject = new JSONArray(jsonResult).getJSONObject(0);
+		return positionObject.optDouble("entryPrice");
+	}
+	
 	private PositionSide initExistingPosition() {
 		String jsonResult = "";
 
@@ -611,7 +576,7 @@ public class FuturesTaskStoRsiTP implements Runnable {
 		}
 		return PositionSide.NONE;
 	}
-
+	
 	private String fetchPositionSide() {
 		String jsonResult = "";
 
@@ -640,7 +605,7 @@ public class FuturesTaskStoRsiTP implements Runnable {
 		}
 
 	}
-
+	
 	private String initStopLossOrder() {
 		String orderId = "";
 		String jsonResult = "";
@@ -695,76 +660,7 @@ public class FuturesTaskStoRsiTP implements Runnable {
 		System.out.println("init TP order: " + orderId);
 		return orderId;
 	}
-
-	private double getEntryPrice() {
-		String jsonResult = "";
-
-		try {
-			long timeStamp = System.currentTimeMillis();
-			jsonResult = umFuturesClientImpl.account().positionInformation(
-				   FuturesOrderParams.getParams(futuresBot.getSymbol(), timeStamp)
-			);
-		} catch (BinanceConnectorException e) {
-			sendTelegramMessage("BinanceConnectorException", e.getMessage());
-			e.printStackTrace();
-		} catch (BinanceClientException e) {
-			sendTelegramMessage("BinanceClientException", e.getMessage());
-			e.printStackTrace();
-		} catch (BinanceServerException e) {
-			sendTelegramMessage("BinanceServerException", e.getMessage());
-			e.printStackTrace();
-		}
-
-		JSONObject positionObject = new JSONArray(jsonResult).getJSONObject(0);
-		return positionObject.optDouble("entryPrice");
-	}
-
-	private String getTime() {
-		LocalDateTime currentDateTime = LocalDateTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-		return currentDateTime.format(formatter);
-	}
-
-	private double getRealizedPNL(String orderId) {
-		String jsonResult = "";
-
-		try {
-			long timeStamp = System.currentTimeMillis();
-			jsonResult = umFuturesClientImpl.account().accountTradeList(
-				   FuturesOrderParams.getQueryOrderParams(futuresBot.getSymbol(), orderId, timeStamp)
-			);
-		} catch (BinanceConnectorException e) {
-			sendTelegramMessage("BinanceConnectorException", e.getMessage());
-			e.printStackTrace();
-		} catch (BinanceClientException e) {
-			sendTelegramMessage("BinanceClientException", e.getMessage());
-			e.printStackTrace();
-		} catch (BinanceServerException e) {
-			sendTelegramMessage("BinanceServerException", e.getMessage());
-			e.printStackTrace();
-		}
-
-		JSONArray tradeList = new JSONArray(jsonResult);
-		JSONObject tradeObject = tradeList.getJSONObject(0);
-
-		return tradeObject.optDouble("realizedPnl");
-	}
-
-	private UMFuturesClientImpl initEnvironment(Environment environment) {
-		switch (environment) {
-			case FUTURES_BASE_URL_PROD:
-				return UMFuturesClientConfig.futuresBaseURLProd();
-			case FUTURES_BASE_URL_TEST:
-				return UMFuturesClientConfig.futuresBaseURLTest();
-			case FUTURES_SIGNED_PROD:
-				return UMFuturesClientConfig.futuresSignedProd();
-			case FUTURES_SIGNED_TEST:
-				return UMFuturesClientConfig.futuresSignedTest();
-			default:
-				return null;
-		}
-	}
-
+	
 	private void sendTelegramMessage(String title, String msg) {
 		try {
 			telegramBot.sendMessage(title + "\n" + msg);
@@ -772,4 +668,11 @@ public class FuturesTaskStoRsiTP implements Runnable {
 			e.printStackTrace();
 		}
 	}
+
+	private String getTime() {
+		LocalDateTime currentDateTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+		return currentDateTime.format(formatter);
+	}
+	
 }

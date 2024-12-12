@@ -16,10 +16,16 @@
 		<h:body>
 			<ui:include src="template/header.xhtml" />
 
-			<div style="margin:0 auto;width:100%;">				
-				<p:commandButton value="Fetch bars to file" action="#{backtestBean.fetchBarSeriesToFile}" style="margin-right:15px;" />
-				<p:commandButton value="Start Backtest" action="#{backtestBean.startBacktest}" style="margin-right:15px;" />
-			</div>			
+			<h:form id="form">
+
+				<p:commandButton value="Start Backtest" icon="pi pi-play" styleClass="ui-button-success" action="#{backtestBean.startBacktest}" style="margin-right:10px;" />
+				<p:commandButton value="Start Fetching Manual" styleClass="ui-button-warning" action="#{backtestBean.fetchManual}" style="margin-right: 10px;"/>
+				<p:commandButton value="Start Fetching Auto" styleClass="ui-button-danger" action="#{backtestBean.startFetching}" />			
+
+				<!-- Polling every 5 seconds -->
+				<p:poll id="pollId" widgetVar="pollw" interval="5" listener="#{backtestBean.fetchAuto}" autoStart="false"/>
+
+			</h:form>
 		</h:body>		
 	</h:head>
 </html>

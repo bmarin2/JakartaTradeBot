@@ -2,7 +2,8 @@ package com.tradebot.backingbean;
 
 import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
-import com.tradebot.service.futures.FuturesStoBacktest;
+import com.tradebot.data.BarsLTCUSDT;
+import com.tradebot.service.futures.FuturesRSI2Strategy;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
@@ -17,12 +18,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.primefaces.PrimeFaces;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBar;
@@ -35,86 +36,225 @@ public class BacktestBean implements Serializable {
 	
 	private UMFuturesClientImpl umFuturesClientImpl;
 	private BarSeries series;
+	private BarSeries series2;
 	private List<String> files;
+	private List<String> files2;
+	
+	// For fetching auto
+	private int year = 2024;
+	private int month = 4;
+	private int startDay = 17;
+	private int endDay = 29;
+	private String saveLocation = "output-bars/ltc/2024/1h/apr/";
+	
+	private String pair = "LTCUSDT";
+	private String timePeriod = "1h";
+	private int numberOfBars = 24; // 1440 1min, 288 5min, 24 1h, 48 30m, 6 4h
 
 	@PostConstruct
 	private void init() {
 		umFuturesClientImpl = UMFuturesClientConfig.futuresBaseURLProd();
 
 		series = new BaseBarSeriesBuilder().withName("myTestSeries").build();
-		series.setMaximumBarCount(1440);
+		series.setMaximumBarCount(288);
 		
-		files = new ArrayList<>();
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-5-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-6-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-7-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-8-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-9-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-10-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-11-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-12-5-2024.json");		
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-13-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-14-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-15-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-16-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-17-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-18-5-2024.json");
-		files.add(System.getProperty("user.home") + "/output-bars" + "/bars-19-5-2024.json");
+		series2 = new BaseBarSeriesBuilder().withName("myTestSeries2").build();
+		series2.setMaximumBarCount(200);
+		
+		files = BarsLTCUSDT.getBars_5m_JAN_2024();
+		files2 = BarsLTCUSDT.getBars_1h_JAN_2024();
+	}
+	
+	public void fetchManual() {
+		LocalDateTime targetDateTime1 = LocalDateTime.of(2024, 4, 30, 0, 0); // <-- for this date
+		LocalDateTime targetDateTime2 = LocalDateTime.of(2024, 5, 1, 0, 0);
+
+		long startTime = targetDateTime1.toEpochSecond(ZoneOffset.UTC) * 1000;
+		long endTime = targetDateTime2.toEpochSecond(ZoneOffset.UTC) * 1000;
+
+		fetchBarSeriesToFile(pair, timePeriod, numberOfBars, startTime, endTime, targetDateTime1, "bars");
+	}
+
+	public void startFetching() {		
+		PrimeFaces.current().executeScript("PF('pollw').start()");
 	}
 
 	public void startBacktest() {
 		System.out.println("Backtest started..\n\n");
+//
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/5min/avg/" + "bars-31-8-2024.json", series);
+
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/avg/" + "bars-28-8-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/avg/" + "bars-29-8-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/avg/" + "bars-30-8-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/avg/" + "bars-31-8-2024.json", series2);
+
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/avg/" + "bars-27-8-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/avg/" + "bars-28-8-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/avg/" + "bars-29-8-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/avg/" + "bars-30-8-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/avg/" + "bars-31-8-2024.json", series2);
+
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/5min/sep/" + "bars-30-9-2024.json", series);
+//
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/sep/" + "bars-26-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/sep/" + "bars-27-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/sep/" + "bars-28-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/sep/" + "bars-29-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/sep/" + "bars-30-9-2024.json", series2);
+//
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/sep/" + "bars-26-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/sep/" + "bars-27-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/sep/" + "bars-28-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/sep/" + "bars-29-9-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/sep/" + "bars-30-9-2024.json", series2);
+
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/5min/okt/" + "bars-31-10-2024.json", series);
+//
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/okt/" + "bars-27-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/okt/" + "bars-28-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/okt/" + "bars-29-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/okt/" + "bars-30-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/30m/okt/" + "bars-31-10-2024.json", series2);
+
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/okt/" + "bars-27-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/okt/" + "bars-28-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/okt/" + "bars-29-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/okt/" + "bars-30-10-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/btc/2024/1h/okt/" + "bars-31-10-2024.json", series2);
+
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2024/5min/apr/" + "bars-30-4-2024.json", series);
 		
-		fillBarsFromFile(System.getProperty("user.home") + "/output-bars" + "/init-4-5-2024.json");
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2024/1h/apr/" + "bars-26-4-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2024/1h/apr/" + "bars-27-4-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2024/1h/apr/" + "bars-28-4-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2024/1h/apr/" + "bars-29-4-2024.json", series2);
+//		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2024/1h/apr/" + "bars-30-4-2024.json", series2);
 
-		FuturesStoBacktest futuresStoBacktest = new FuturesStoBacktest(series);
+		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2023/5min/dec/" + "bars-31-12-2023.json", series);
+		
+		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2023/1h/dec/" + "bars-27-12-2023.json", series2);
+		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2023/1h/dec/" + "bars-28-12-2023.json", series2);
+		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2023/1h/dec/" + "bars-29-12-2023.json", series2);
+		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2023/1h/dec/" + "bars-30-12-2023.json", series2);
+		fillBarsFromFile(System.getProperty("user.home") + "/output-bars/ltc/2023/1h/dec/" + "bars-31-12-2023.json", series2);
 
-		for (String file : files) {
+//		FuturesRsiTrendStrategy futures = new FuturesRsiTrendStrategy(series, series2);
+		FuturesRSI2Strategy futures = new FuturesRSI2Strategy(series, series2);
+//		FuturesWilliamsKLStrategy futures = new FuturesWilliamsKLStrategy(series, series2);
+
+		for (int i=0 ; i < files.size() ; i++) {
 			
-			JSONArray jsonArray = readJsonFile(file);
+			int counter = 0;
+			int counterSeries2 = 0;
+			
+			JSONArray jsonArray = readJsonFile(files.get(i));
+			JSONArray jsonArray2 = readJsonFile(files2.get(i));
 
-			for (int i = 0; i < jsonArray.length(); i++) {
-				JSONArray candlestick = jsonArray.getJSONArray(i);
+			for (int j = 0; j < jsonArray.length(); j++) {
+				JSONArray candlestick = jsonArray.getJSONArray(j);
+				JSONArray candlestick2 = jsonArray2.getJSONArray(counterSeries2);
 
 				long unixTimestampMillis = candlestick.getLong(6);
 				Instant instant = Instant.ofEpochMilli(unixTimestampMillis);
 				ZonedDateTime utcZonedDateTime = instant.atZone(ZoneId.of("UTC"));
 				
-				Bar bar = new BaseBar(Duration.ofMinutes(1), utcZonedDateTime,
+				Bar bar = new BaseBar(Duration.ofMinutes(5), utcZonedDateTime,  // < ******************
 					   candlestick.getString(1),
 					   candlestick.getString(2),
 					   candlestick.getString(3),
 					   candlestick.getString(4),
 					   candlestick.getString(5)
 				);
-				futuresStoBacktest.runner(bar);
+				
+				if (counter == 0) {
+					long unixTimestampMillis2 = candlestick2.getLong(6);
+					Instant instant2 = Instant.ofEpochMilli(unixTimestampMillis2);
+					ZonedDateTime utcZonedDateTime2 = instant2.atZone(ZoneId.of("UTC"));
+
+					Bar bar2 = new BaseBar(Duration.ofHours(1), utcZonedDateTime2,  // < *******************
+						   candlestick2.getString(1),
+						   candlestick2.getString(2),
+						   candlestick2.getString(3),
+						   candlestick2.getString(4),
+						   candlestick2.getString(5)
+					);
+					futures.runner2(bar2);
+				}
+				
+				if (counter == 11) { // < ******************
+					counter = 0;
+					counterSeries2++;
+				} else {
+					counter++;
+				}
+				
+				futures.runner(bar);
+				
 			}
 		}
-		System.out.println("-");
-		System.out.println("-");
-		System.out.println("Win:   " + futuresStoBacktest.getWin());
-		System.out.println("Lose:  " + futuresStoBacktest.getLose() + "\n");
-		System.out.println("Total: " + (futuresStoBacktest.getLose() + futuresStoBacktest.getWin()) + "\n");
+		
+//		for (int i=0 ; i < files.size() ; i++) {			
+//			JSONArray jsonArray = readJsonFile(files.get(i));
+//
+//			for (int j = 0; j < jsonArray.length(); j++) {
+//				JSONArray candlestick = jsonArray.getJSONArray(j);
+//
+//				long unixTimestampMillis = candlestick.getLong(6);
+//				Instant instant = Instant.ofEpochMilli(unixTimestampMillis);
+//				ZonedDateTime utcZonedDateTime = instant.atZone(ZoneId.of("UTC"));
+//				
+//				Bar bar = new BaseBar(Duration.ofHours(1), utcZonedDateTime,
+//					   candlestick.getString(1),
+//					   candlestick.getString(2),
+//					   candlestick.getString(3),
+//					   candlestick.getString(4),
+//					   candlestick.getString(5)
+//				);				
+//				futures.runner2(bar);				
+//			}
+//		}
+		
 
-		double winPercentage = (double) futuresStoBacktest.getWin() 
-			   / (futuresStoBacktest.getWin() + futuresStoBacktest.getLose()) * 100;
+		System.out.println("-");
+		System.out.println("Win:   " + futures.getWin());
+		System.out.println("Lose:  " + futures.getLose()+ "\n\n");
+		System.out.println("diff:  " + (futures.getWin() - futures.getLose()) + "\n");
+		double total = futures.getLose() + futures.getWin();
+		System.out.println("Total: " + total + "\n");
+
+		double winPercentage = (double) futures.getWin() 
+			   / (futures.getWin() + futures.getLose()) * 100;
 		
 		System.out.println("-");
-		System.out.println("Loss sum: " + futuresStoBacktest.getLossSum());
-		System.out.println("Gain sum: " + futuresStoBacktest.getGainSum());
+		System.out.println("Loss sum in $: " + futures.getLossSum());
+		System.out.println("Gain sum in $: " + futures.getGainSum());
+		
+		double profit = futures.getGainSum() - futures.getLossSum();
+		double profitWithFees = profit - (total * 0.03);
 
-		System.out.println("Win percentage: " + winPercentage + " %");
+		System.out.println("Profit: " + profitWithFees + " (including fees $30 risk)");
+		System.out.println("Win percentage: " + winPercentage + " %\n");
+	}
+	
+	public void fetchAuto() {
+		if(startDay < endDay + 1) {
+			fetchBarSeriesToFile(year, month, startDay, startDay + 1);
+			startDay++;
+		} else {
+			System.out.println("stopping..");
+			PrimeFaces.current().executeScript("PF('pollw').stop()");
+		}
 	}
 
-	public void fetchBarSeriesToFile() {
-		LocalDateTime targetDateTime1 = LocalDateTime.of(2024, 5, 19, 0, 0); // <-- for this date
-		LocalDateTime targetDateTime2 = LocalDateTime.of(2024, 5, 20, 0, 0);
+	public void fetchBarSeriesToFile(int year, int month, int startDay, int endDay) {
+		LocalDateTime targetDateTime1 = LocalDateTime.of(year, month, startDay, 0, 0); // <-- for this date
+		LocalDateTime targetDateTime2 = LocalDateTime.of(year, month, endDay, 0, 0);
 
 		long startTime = targetDateTime1.toEpochSecond(ZoneOffset.UTC) * 1000;
 		long endTime = targetDateTime2.toEpochSecond(ZoneOffset.UTC) * 1000;
 
-		// 1440 bars covers 24h
-		fetchBarSeriesToFile("LTCUSDT", "1m", 1440, startTime, endTime, targetDateTime1, "bars"); // bars / init
+		fetchBarSeriesToFile(pair, timePeriod, numberOfBars, startTime, endTime, targetDateTime1, "bars");
 	}
 	
 	public void fetchBarSeriesToFile(String symbol, String interval, int limit, long startTime, long endTime, LocalDateTime localDate, String prefix) {
@@ -131,7 +271,7 @@ public class BacktestBean implements Serializable {
 
 		// define home path
 		String homeDirectory = System.getProperty("user.home");
-		String homePath = homeDirectory + "/" + "output-bars" + "/" + prefix;
+		String homePath = homeDirectory + "/" + saveLocation + prefix;
 
 		// Save JSON array to a file
 		try {
@@ -144,7 +284,7 @@ public class BacktestBean implements Serializable {
 		}
 	}
 
-	public void fillBarsFromFile(String filePath) {
+	public void fillBarsFromFile(String filePath, BarSeries s) {
 		JSONArray jsonArray = readJsonFile(filePath);
 
 		for (int i = 0; i < jsonArray.length(); i++) {
@@ -154,7 +294,7 @@ public class BacktestBean implements Serializable {
 			Instant instant = Instant.ofEpochMilli(unixTimestampMillis);
 			ZonedDateTime utcZonedDateTime = instant.atZone(ZoneId.of("UTC"));
 
-			series.addBar(utcZonedDateTime,
+			s.addBar(utcZonedDateTime,
 				   candlestick.getString(1),
 				   candlestick.getString(2),
 				   candlestick.getString(3),

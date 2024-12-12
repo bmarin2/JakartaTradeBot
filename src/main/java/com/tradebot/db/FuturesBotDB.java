@@ -1,6 +1,6 @@
 package com.tradebot.db;
 
-import com.tradebot.enums.ChartMode;
+import com.tradebot.enums.Environment;
 import com.tradebot.enums.FutresStrategy;
 import com.tradebot.model.FuturesBot;
 import java.sql.Connection;
@@ -22,8 +22,8 @@ public class FuturesBotDB {
 		long order_id = 0;
 
 		String query = "INSERT INTO FUTURES_BOT (symbol, createdDate, taskId, quantity, description, initialDelay, "
-			   + "delay, timeUnit, stopLoss, takeProfit, demaAlertTaskId, futresDemaStrategy, chartMode, "
-			   + "intervall) "
+			   + "delay, timeUnit, stopLoss, takeProfit, futresStrategy, environment, "
+			   + "intervall, intervall2) "
 			+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -38,10 +38,10 @@ public class FuturesBotDB {
 			ps.setInt(8, bot.getTimeUnit().ordinal());
 			ps.setDouble(9, bot.getStopLoss());
 			ps.setDouble(10, bot.getTakeProfit());
-			ps.setString(11, bot.getDemaAlertTaskId());
-			ps.setInt(12, bot.getFutresDemaStrategy().ordinal());
-			ps.setInt(13, bot.getChartMode().ordinal());
-			ps.setString(14, bot.getIntervall());
+			ps.setInt(11, bot.getFutresStrategy().ordinal());
+			ps.setInt(12, bot.getEnvironment().ordinal());
+			ps.setString(13, bot.getIntervall());
+			ps.setString(14, bot.getIntervall2());
 			
 			ps.executeUpdate();
 			
@@ -68,8 +68,8 @@ public class FuturesBotDB {
 		ResultSet rs = null;
 
 		String query = "UPDATE FUTURES_BOT SET symbol=?, createdDate=?, taskId=?, quantity=?, description=?, initialDelay=?,"
-			   + " delay=?, timeUnit=?, stopLoss=?, takeProfit=?, demaAlertTaskId=?, futresDemaStrategy=?, chartMode=?,"
-			   + " intervall=? WHERE id=?";
+			   + " delay=?, timeUnit=?, stopLoss=?, takeProfit=?, futresStrategy=?, environment=?,"
+			   + " intervall=?, intervall2=? WHERE id=?";
 
 		try {
 			ps = connection.prepareStatement(query);
@@ -84,10 +84,10 @@ public class FuturesBotDB {
 			ps.setInt(8, bot.getTimeUnit().ordinal());
 			ps.setDouble(9, bot.getStopLoss());
 			ps.setDouble(10, bot.getTakeProfit());
-			ps.setString(11, bot.getDemaAlertTaskId());
-			ps.setInt(12, bot.getFutresDemaStrategy().ordinal());
-			ps.setInt(13, bot.getChartMode().ordinal());
-			ps.setString(14, bot.getIntervall());
+			ps.setInt(11, bot.getFutresStrategy().ordinal());
+			ps.setInt(12, bot.getEnvironment().ordinal());
+			ps.setString(13, bot.getIntervall());
+			ps.setString(14, bot.getIntervall2());
 			ps.setLong(15, bot.getId());
 			
 			ps.executeUpdate();
@@ -125,10 +125,10 @@ public class FuturesBotDB {
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setTakeProfit(rs.getDouble("takeProfit"));
-				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
-				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
-				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				bot.setFutresStrategy(FutresStrategy.values()[rs.getInt("futresStrategy")]);
+				bot.setEnvironment(Environment.values()[rs.getInt("environment")]);
 				bot.setIntervall(rs.getString("intervall"));
+				bot.setIntervall2(rs.getString("intervall2"));
 				bots.add(bot);
 			}
 			return bots;
@@ -166,10 +166,10 @@ public class FuturesBotDB {
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setTakeProfit(rs.getDouble("takeProfit"));
-				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
-				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
-				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				bot.setFutresStrategy(FutresStrategy.values()[rs.getInt("futresStrategy")]);
+				bot.setEnvironment(Environment.values()[rs.getInt("environment")]);
 				bot.setIntervall(rs.getString("intervall"));
+				bot.setIntervall2(rs.getString("intervall2"));
 			}
 			return bot;
 		} catch (SQLException e) {
@@ -206,10 +206,10 @@ public class FuturesBotDB {
 				bot.setTimeUnit(TimeUnit.values()[rs.getInt("timeUnit")]);
 				bot.setStopLoss(rs.getDouble("stopLoss"));
 				bot.setTakeProfit(rs.getDouble("takeProfit"));
-				bot.setDemaAlertTaskId(rs.getString("demaAlertTaskId"));
-				bot.setFutresDemaStrategy(FutresStrategy.values()[rs.getInt("futresDemaStrategy")]);
-				bot.setChartMode(ChartMode.values()[rs.getInt("chartMode")]);
+				bot.setFutresStrategy(FutresStrategy.values()[rs.getInt("futresStrategy")]);
+				bot.setEnvironment(Environment.values()[rs.getInt("environment")]);
 				bot.setIntervall(rs.getString("intervall"));
+				bot.setIntervall2(rs.getString("intervall2"));
 			}
 			return bot;
 		} catch (SQLException e) {

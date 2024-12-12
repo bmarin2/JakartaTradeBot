@@ -34,8 +34,6 @@ public class TradeBot implements Serializable {
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
 	
 	private Double stopLoss = 10.0;
-
-	private String demaAlertTaskId;
      
      private boolean enableStopLoss = false;
      

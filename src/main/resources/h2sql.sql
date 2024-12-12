@@ -34,30 +34,10 @@ CREATE TABLE TRADE_BOT (
     delay INT,
     timeUnit INT,
     stopLoss DOUBLE,
-    demaAlertTaskId VARCHAR(255),
     enableStopLoss BOOLEAN,
     profitBase BOOLEAN,
     priceGridLimit DOUBLE
 );
-
-CREATE TABLE FUTURES_BOT (
-    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    symbol VARCHAR(255),
-    createdDate DATE,
-    taskId VARCHAR(255),
-    quantity DOUBLE,
-    description VARCHAR(255),
-    initialDelay INT,
-    delay INT,
-    timeUnit INT,
-    stopLoss DOUBLE,
-    takeProfit DOUBLE,
-    demaAlertTaskId VARCHAR(255),
-    futresDemaStrategy INT,
-    chartMode INT,
-    intervall VARCHAR(255)
-);
-
 
 CREATE TABLE ORDER_TRACKER (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -83,53 +63,20 @@ CREATE TABLE ERROR_TRACKER (
     FOREIGN KEY (tradebot_id) REFERENCES TRADE_BOT(id)
 );
 
-CREATE TABLE ALARM (
+CREATE TABLE FUTURES_BOT (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     symbol VARCHAR(255),
-    alarmId VARCHAR(255),
-    alarmPrice DECIMAL(14,8),
+    createdDate DATE,
+    taskId VARCHAR(255),
+    quantity DOUBLE,
+    description VARCHAR(255),
     initialDelay INT,
     delay INT,
     timeUnit INT,
-    description VARCHAR(255),
-    msgSent BOOLEAN,
+    stopLoss DOUBLE,
+    takeProfit DOUBLE,
+    futresStrategy INT,
+    environment INT,
     intervall VARCHAR(255),
-    firstDema INT,
-    secondDema INT,
-    thirdDema INT,
-    crosss BOOLEAN,
-    currentFirstDema DOUBLE,
-    currentSecondDema DOUBLE,
-    currentThirdDema DOUBLE,
-    crosssBig BOOLEAN,
-    lastClosingCandle DOUBLE,
-    minGap DOUBLE,
-    chartMode INT,
-    emaCrossStrategy INT,
-    alarmType INT,
-    enterLong BOOLEAN,
-    enterShort BOOLEAN,
-    goodForEntry BOOLEAN,
-    atr DOUBLE
-);
-
-CREATE TABLE MACD_ALARM (
-    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    symbol VARCHAR(255),
-    alarmId VARCHAR(255),
-    initialDelay INT,
-    delay INT,
-    timeUnit INT,
-    description VARCHAR(255),
-    intervall VARCHAR(255),
-    ema INT,
-    currentEMA DOUBLE,
-    macdCrosss BOOLEAN,
-    goodForEntry BOOLEAN,
-    currentMacdLine DOUBLE,
-    currentSignalLine DOUBLE,
-    lastClosingCandle DOUBLE,
-    minGap DOUBLE,
-    chartMode INT,
-    lastAtr DOUBLE
+    intervall2 VARCHAR(255)
 );

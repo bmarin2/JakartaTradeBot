@@ -301,9 +301,6 @@
                               <p:outputLabel for="input8" value="Stop Loss (%)"/>
                               <p:inputText id="input8" value="#{indexView.selectedTradeBot.stopLoss}"/>
 
-                              <p:outputLabel for="input9" value="Dema Alert Id"/>
-                              <p:inputText id="input9" value="#{indexView.selectedTradeBot.demaAlertTaskId}"/>
-
                               <p:outputLabel for="input10" value="Date Created"/>
                               <p:datePicker id="input10" value="#{indexView.selectedTradeBot.createdDate}" pattern="dd/MM/yyyy"/>
 
@@ -357,8 +354,6 @@
                               <h:outputText value="#{indexView.selectedTradeBot.taskId}"/>
                          </p:panelGrid>
                          <p:panelGrid columns="2" style="display:inline-block;margin-right:10px">
-                              <h:outputText value="Dema Alert Id"/>
-                              <h:outputText value="#{indexView.selectedTradeBot.demaAlertTaskId}"/>
                               <h:outputText value="Description"/>
                               <h:outputText value="#{indexView.selectedTradeBot.description}"/>
                               <h:outputText value="Created Date"/>

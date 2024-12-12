@@ -4,17 +4,13 @@ import com.binance.connector.futures.client.impl.UMFuturesClientImpl;
 import com.tradebot.binance.UMFuturesClientConfig;
 import com.tradebot.configuration.FuturesOrderParams;
 import com.tradebot.db.FuturesBotDB;
-import com.tradebot.enums.ChartMode;
+import com.tradebot.enums.Environment;
 import com.tradebot.enums.FutresStrategy;
 import com.tradebot.model.FuturesAccountBalance;
 import com.tradebot.model.FuturesBot;
 import com.tradebot.model.OrderSide;
-import com.tradebot.service.FuturesTaskMACDCross;
-import com.tradebot.service.FuturesTaskOneCross;
-import com.tradebot.service.FuturesTaskOneCrossBorder;
-import com.tradebot.service.FuturesTaskTwoCross;
-import com.tradebot.service.FuturesTaskTwoCrossTP;
 import com.tradebot.service.TaskService;
+import com.tradebot.service.futures.FuturesRSI2StrategyProd;
 import com.tradebot.service.futures.FuturesTaskStoRsiTP;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -84,8 +80,8 @@ public class FuturesView implements Serializable {
 		return FutresStrategy.values();
 	}
 	
-	public ChartMode[] getChartModes() {
-		return ChartMode.values();
+	public Environment[] getEnvironments() {
+		return Environment.values();
 	}
 
 	private void addMessage(String summary, String msg) {
@@ -189,23 +185,11 @@ public class FuturesView implements Serializable {
 			
 			Runnable task = null;
 			
-			if (bot.getFutresDemaStrategy() == FutresStrategy.ONE_CROSS) {
-				task = new FuturesTaskOneCross(bot);  
-
-			} else if (bot.getFutresDemaStrategy() == FutresStrategy.TWO_CROSS){
-				task = new FuturesTaskTwoCross(bot);
-
-			} else if (bot.getFutresDemaStrategy() == FutresStrategy.TWO_CROSS_TAKE_PROFIT){
-				task = new FuturesTaskTwoCrossTP(bot);
-
-			} else if (bot.getFutresDemaStrategy() == FutresStrategy.ONE_CROSS_BORDER){
-				task = new FuturesTaskOneCrossBorder(bot);
-
-			} else if (bot.getFutresDemaStrategy() == FutresStrategy.MACD_CROSS){
-				task = new FuturesTaskMACDCross(bot);
-
-			} else if (bot.getFutresDemaStrategy() == FutresStrategy.FUTURES_STOCH_RSI_TP){
+			if (bot.getFutresStrategy() == FutresStrategy.FUTURES_STOCH_RSI_TP){
 				task = new FuturesTaskStoRsiTP(bot);
+
+			} else if (bot.getFutresStrategy() == FutresStrategy.FUTURES_RSI2){
+				task = new FuturesRSI2StrategyProd(bot);
 			}
 
 			taskService.addTask(bot.getTaskId(),

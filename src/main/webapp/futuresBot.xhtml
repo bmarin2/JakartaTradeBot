@@ -116,6 +116,10 @@
 					<p:column sortBy="#{bot.intervall}" headerText="Interval">
 						<h:outputText value="#{bot.intervall}" />
 					</p:column>
+					
+					<p:column sortBy="#{bot.intervall2}" headerText="Interval2">
+						<h:outputText value="#{bot.intervall2}" />
+					</p:column>
 
 					<p:column sortBy="#{bot.delay}" headerText="Delay">
 						<h:outputText value="#{bot.delay}" />
@@ -132,17 +136,13 @@
 					<p:column sortBy="#{bot.takeProfit}" headerText="TP">
 						<h:outputText value="#{bot.takeProfit}" />
 					</p:column>
-
-					<p:column sortBy="#{bot.demaAlertTaskId}" headerText="Dema">
-						<h:outputText value="#{bot.demaAlertTaskId}" />
-					</p:column>
 					
-					<p:column sortBy="#{bot.futresDemaStrategy}" headerText="Strategy">
-						<h:outputText value="#{bot.futresDemaStrategy}" />
+					<p:column sortBy="#{bot.futresStrategy}" headerText="Strategy">
+						<h:outputText value="#{bot.futresStrategy}" />
 					</p:column>
 
-					<p:column sortBy="#{bot.chartMode}" headerText="Chart Mode">
-						<h:outputText value="#{bot.chartMode}" />
+					<p:column sortBy="#{bot.environment}" headerText="Environment">
+						<h:outputText value="#{bot.environment}" />
 					</p:column>
 
                          <p:column>
@@ -187,29 +187,29 @@
 						
 						<p:outputLabel for="input8" value="Interval"/>
 						<p:inputText id="input8" value="#{futuresView.selectedTradeBot.intervall}"/>
+						
+						<p:outputLabel for="input9" value="Interval2"/>
+						<p:inputText id="input9" value="#{futuresView.selectedTradeBot.intervall2}"/>
 
 						<p:outputLabel for="select2" value="Time Unit"/>
 						<p:selectOneMenu value="#{futuresView.selectedTradeBot.timeUnit}" id="select2" style="width:100%">
 							<f:selectItems value="#{futuresView.units}" var="unit" itemLabel="#{unit}" itemValue="#{unit}"/>
 						</p:selectOneMenu>
 
-						<p:outputLabel for="input9" value="Stop Loss for ATR (%)"/>
-						<p:inputText id="input9" value="#{futuresView.selectedTradeBot.stopLoss}"/>
+						<p:outputLabel for="input10" value="Stop Loss for ATR (%)"/>
+						<p:inputText id="input10" value="#{futuresView.selectedTradeBot.stopLoss}"/>
 						
-						<p:outputLabel for="input10" value="Take Profit for ATR (%)"/>
-						<p:inputText id="input10" value="#{futuresView.selectedTradeBot.takeProfit}"/>
-
-						<p:outputLabel for="input11" value="Dema TaskId"/>
-						<p:inputText id="input11" value="#{futuresView.selectedTradeBot.demaAlertTaskId}" />
+						<p:outputLabel for="input11" value="Take Profit for ATR (%)"/>
+						<p:inputText id="input11" value="#{futuresView.selectedTradeBot.takeProfit}"/>
 						
 						<p:outputLabel for="select3" value="Strategy"/>
-						<p:selectOneMenu value="#{futuresView.selectedTradeBot.futresDemaStrategy}" id="select3" style="width:100%">
+						<p:selectOneMenu value="#{futuresView.selectedTradeBot.futresStrategy}" id="select3" style="width:100%">
 							<f:selectItems value="#{futuresView.strategies}" var="strategy" itemLabel="#{strategy}" itemValue="#{strategy}"/>
 						</p:selectOneMenu>
 						
-						<p:outputLabel for="select4" value="Chart Mode"/>
-						<p:selectOneMenu value="#{futuresView.selectedTradeBot.chartMode}" id="select4" style="width:100%">
-							<f:selectItems value="#{futuresView.chartModes}" var="chartMode" itemLabel="#{chartMode}" itemValue="#{chartMode}"/>
+						<p:outputLabel for="select4" value="Environment"/>
+						<p:selectOneMenu value="#{futuresView.selectedTradeBot.environment}" id="select4" style="width:100%">
+							<f:selectItems value="#{futuresView.environments}" var="environment" itemLabel="#{environment}" itemValue="#{environment}"/>
 						</p:selectOneMenu>
 						
 					</p:panelGrid>

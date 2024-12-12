@@ -1,6 +1,6 @@
 package com.tradebot.model;
 
-import com.tradebot.enums.ChartMode;
+import com.tradebot.enums.Environment;
 import com.tradebot.enums.FutresStrategy;
 import com.tradebot.util.TaskCodeGeneratorService;
 import java.io.Serializable;
@@ -24,9 +24,9 @@ public class FuturesBot implements Serializable {
 	private TimeUnit timeUnit = TimeUnit.MINUTES;
 	private Double stopLoss = 0.5;
 	private Double takeProfit = 0.5;
-	private String demaAlertTaskId;
-	private FutresStrategy futresDemaStrategy = FutresStrategy.ONE_CROSS;
-	private ChartMode chartMode = ChartMode.FUTURES_SIGNED_TEST;
+	private FutresStrategy futresStrategy = FutresStrategy.FUTURES_RSI2;
+	private Environment environment = Environment.FUTURES_SIGNED_TEST;
 
-	private String intervall = "1m";
+	private String intervall = "5m";
+	private String intervall2 = "1h";
 }
