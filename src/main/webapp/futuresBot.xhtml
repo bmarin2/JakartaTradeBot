@@ -18,7 +18,7 @@
 		<script>
 			function toggleSwitchRunning(element, taskId) {
 				var isChecked = $(element).prop('checked');				
-				var task = $(element).parent().parent().parent().parent().find("td:eq(2)").text();
+				var task = $(element).parent().parent().parent().parent().find("td:eq(1)").text();
 				updateRunningState([{name: 'taskId', value: task}, {name: 'runState', value: isChecked}]);
 			};
 			
@@ -28,7 +28,7 @@
 				$(tbody).each(function(index) {
 				    $(this).find("td:nth-child(3)").each(function() {
 					     if (myList.includes($(this).text())) {
-							$(this).parent().find("td:nth-child(15)").find("div:first")
+							$(this).parent().find("td:nth-child(1)").find("div:first")
 									.addClass('ui-toggleswitch-checked');
 						}
 				    });
@@ -93,18 +93,26 @@
 				</div>
 				
 				<p:dataTable id="futureBotsTable" var="bot" value="#{futuresView.bots}" sortMode="single" style="margin-top:20px;">
+					<p:column headerText="Start/Stop">
+						<p:toggleSwitch onchange="toggleSwitchRunning(this)"/>
+					</p:column>
+					
+					<p:column sortBy="#{bot.taskId}" headerText="TaskId">
+						<h:outputText value="#{bot.taskId}" />
+					</p:column>
+					
 					<p:column sortBy="#{bot.symbol}" headerText="Symbol">
 						<h:outputText value="#{bot.symbol}" />
 					</p:column>
+
 					<p:column sortBy="#{bot.createdDate}" headerText="Created Date">
 						<h:outputText value="#{bot.createdDate}" />
 					</p:column>
-					<p:column sortBy="#{bot.taskId}" headerText="TaskId">
-						<h:outputText value="#{bot.taskId}" />
-					</p:column>					
+
 					<p:column sortBy="#{bot.quantity}" headerText="Quantity">
 						<h:outputText value="#{bot.quantity}" />
-					</p:column>					
+					</p:column>
+
 					<p:column sortBy="#{bot.description}" headerText="Description">
 						<h:outputText value="#{bot.description}" />
 					</p:column>
@@ -143,10 +151,6 @@
 
 					<p:column sortBy="#{bot.environment}" headerText="Environment">
 						<h:outputText value="#{bot.environment}" />
-					</p:column>
-
-                         <p:column>
-						<p:toggleSwitch onchange="toggleSwitchRunning(this)"/>
 					</p:column>
 
 					<p:column>
