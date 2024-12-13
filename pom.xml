@@ -60,7 +60,13 @@
 		   <artifactId>ta4j-core</artifactId>
 		   <version>0.17</version>
 	   </dependency>
-
+	   
+	   <dependency>
+		   <groupId>de.mkammerer</groupId>
+		   <artifactId>argon2-jvm</artifactId>
+		   <version>2.11</version>
+	   </dependency>
+	   
     </dependencies>
     
     <build>

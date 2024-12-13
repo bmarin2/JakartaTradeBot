@@ -80,3 +80,9 @@ CREATE TABLE FUTURES_BOT (
     intervall VARCHAR(255),
     intervall2 VARCHAR(255)
 );
+
+CREATE TABLE USER_ACCOUNT (
+    id BIGINT NOT NULL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE,
+    password VARCHAR(255)
+);

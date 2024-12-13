@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+     <h:head>
+		<title>Login</title>
+	</h:head>
+	
+	<h:body>		
+		<h:form>
+			<h:panelGrid columns="3" cellpadding="5" style="margin: 0 auto;">
+				
+				<h:inputText id="user" value="#{loginController.username}" />
+				<h:inputText type="password" id="pass" value="#{loginController.password}" />
+
+				<h:commandButton id="submit" value="Submit" action="#{loginController.authenticate}" />
+			</h:panelGrid>
+		</h:form>
+	</h:body>
+</html>

@@ -6,13 +6,7 @@
 	 xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
      <h:head>
 		<title>Backtest</title>
-
-		<style>
-		</style>
-
-		<script>
-          </script>
-
+	</h:head>
 		<h:body>
 			<ui:include src="template/header.xhtml" />
 
@@ -26,6 +20,5 @@
 				<p:poll id="pollId" widgetVar="pollw" interval="5" listener="#{backtestBean.fetchAuto}" autoStart="false"/>
 
 			</h:form>
-		</h:body>		
-	</h:head>
+		</h:body>	
 </html>

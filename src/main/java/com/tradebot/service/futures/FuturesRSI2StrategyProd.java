@@ -74,6 +74,7 @@ public class FuturesRSI2StrategyProd implements Runnable {
 	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
 	private Double entryPrice;
+	private int counter;
 	
 	private double currentAdx;
 	private double lastAdx;
@@ -121,7 +122,7 @@ public class FuturesRSI2StrategyProd implements Runnable {
 					try {
 
 						telegramBot.sendMessage("Stop Loss triggered " + futuresBot.getSymbol() + "\n"
-							   + "PNL: " + pnl);
+							   + "PNL: " + pnl + "\n" + "Last bar close time: " + series.getLastBar().getEndTime().format(formatter));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -143,7 +144,7 @@ public class FuturesRSI2StrategyProd implements Runnable {
 					try {
 
 						telegramBot.sendMessage("Take Profit triggered " + futuresBot.getSymbol() + "\n"
-							   + "PNL: " + pnl);
+							   + "PNL: " + pnl + "\n" + "Last bar close time: " + series.getLastBar().getEndTime().format(formatter));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -160,24 +161,28 @@ public class FuturesRSI2StrategyProd implements Runnable {
 		}
 		
 		fetchSeries();
-		updateValues();
-		updateValues2();
 		enterTrade();
 		
 	}
 	
 	private void fetchSeries() {
 		if (firstTime) {
-			fetchBarSeries(300, futuresBot.getIntervall(), series, lastTimestamp);
-			fetchBarSeries(300, futuresBot.getIntervall2(), series2, lastTimestamp2);
+			fetchBarSeries(300, futuresBot.getIntervall(), series);
+			fetchBarSeries(300, futuresBot.getIntervall2(), series2);
 			firstTime = false;
 		} else {
-			fetchBarSeries(1, futuresBot.getIntervall(), series, lastTimestamp);
-			fetchBarSeries(1, futuresBot.getIntervall2(), series2, lastTimestamp2);
+			fetchBarSeries(1, futuresBot.getIntervall(), series);
+			
+			if (counter == 10) {
+				fetchBarSeries(1, futuresBot.getIntervall2(), series2);
+				counter = 0;
+			} else {
+				counter++;
+			}			
 		}
 	}
 
-	private void fetchBarSeries(int limit, String interval, BarSeries barSeries, long lastTime) {
+	private void fetchBarSeries(int limit, String interval, BarSeries barSeries) {
 		LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
 		parameters.put("symbol", futuresBot.getSymbol());
 		parameters.put("interval", interval);
@@ -208,15 +213,32 @@ public class FuturesRSI2StrategyProd implements Runnable {
 			JSONArray array = jsonArray.getJSONArray(0);
 			long timestamp = array.getLong(6);
 
+			long lastTime = 0;
+
+			if (barSeries.getName().equals("mySeries")) {
+				lastTime = lastTimestamp;
+			} else if (barSeries.getName().equals("mySeries2")) {
+				lastTime = lastTimestamp2;
+			}
+
 			if (lastTime == timestamp) {
 				return;
 			} else {
-				lastTime = timestamp;
+				if (barSeries.getName().equals("mySeries")) {
+					lastTimestamp = timestamp;
+				} else if (barSeries.getName().equals("mySeries2")) {
+					lastTimestamp2 = timestamp;
+				}
 			}
 		} else {
 			JSONArray array2 = jsonArray.getJSONArray(jsonArray.length() - 1);
 			long timestamp2 = array2.getLong(6);
-			lastTime = timestamp2;
+
+			if (barSeries.getName().equals("mySeries")) {
+				lastTimestamp = timestamp2;
+			} else if (barSeries.getName().equals("mySeries2")) {
+				lastTimestamp2 = timestamp2;
+			}
 		}
 
 		for (int i = 0; i < jsonArray.length(); i++) {
@@ -244,6 +266,12 @@ public class FuturesRSI2StrategyProd implements Runnable {
 				);
 			}
 		}
+		
+		if (barSeries.getName().equals("mySeries")) {
+			updateValues();
+		} else if (barSeries.getName().equals("mySeries2")) {
+			updateValues2();
+		}		
 	}
 
 	private void updateValues() {
@@ -259,15 +287,14 @@ public class FuturesRSI2StrategyProd implements Runnable {
 		
 		RSIIndicator rsiIndicator2 = new RSIIndicator(closePriceIndicator2, 2);
 		currentRsi2 = rsiIndicator2.getValue(rsiIndicator2.getBarSeries().getEndIndex()).doubleValue();
-		
 	}
 	
 	private void enterTrade() {
-		if (currentPositionSide == PositionSide.NONE && currentRsi2 > 60 && currentRsi < 10 ) {
+		if (currentPositionSide == PositionSide.NONE && currentRsi2 > 65 && currentRsi < 10 ) {
 			
 			prepareLongOrder();
 
-		} else if (currentPositionSide == PositionSide.NONE && currentRsi2 < 40 && currentRsi > 90 ) {
+		} else if (currentPositionSide == PositionSide.NONE && currentRsi2 < 35 && currentRsi > 90 ) {
 			
 			prepareShortOrder();
 		}
@@ -275,7 +302,7 @@ public class FuturesRSI2StrategyProd implements Runnable {
 
 	private void prepareLongOrder() {
 		try {
-			telegramBot.sendMessage("Entering LONG trade " + getTime());
+			telegramBot.sendMessage("Entering LONG trade, last bar close time " + series.getLastBar().getEndTime().format(formatter));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -290,7 +317,7 @@ public class FuturesRSI2StrategyProd implements Runnable {
 
 	private void prepareShortOrder() {
 		try {
-			telegramBot.sendMessage("Entering SHORT trade " + getTime());
+			telegramBot.sendMessage("Entering SHORT trade, last bar close time " + series.getLastBar().getEndTime().format(formatter));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -346,14 +373,12 @@ public class FuturesRSI2StrategyProd implements Runnable {
 		String orderResult = "";
 		System.out.println("createding SL Order");
 		try {
-			System.out.println("start of try");
 			long timeStamp = System.currentTimeMillis();
 			orderResult = umFuturesClientImpl.account().newOrder(
 				   FuturesOrderParams.getStopLossParams(futuresBot.getSymbol(),
 						 orderSide, OrderSide.BOTH, futuresBot.getQuantity(),
 						 stopPrice, timeStamp)
 			);
-			System.out.println("end of try");
 		} catch (BinanceConnectorException e) {
 			sendTelegramMessage("BinanceConnectorException createStopLossOrder", e.getMessage());
 			e.printStackTrace();
