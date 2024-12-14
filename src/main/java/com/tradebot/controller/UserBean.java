@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.Serializable;
+import org.primefaces.context.PrimeRequestContext;
 
 @Named
 @SessionScoped
@@ -33,5 +34,12 @@ public class UserBean implements Serializable {
 
 		context.getExternalContext().redirect("login.xhtml");
 	}
-
+	
+	public void isSessionExpired() {
+		HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();		
+		boolean isExpired = request.getUserPrincipal() == null;
+		
+		PrimeRequestContext.getCurrentInstance().getCallbackParams()
+			   .put("returnedValue", isExpired);
+	}
 }

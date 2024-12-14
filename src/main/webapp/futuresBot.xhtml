@@ -36,12 +36,26 @@
 				});
 			}
 			;
+			
+			function handleSession(xhr,status,args) {
+				var temp = args.returnedValue;
+				console.log(temp);
+				if(typeof temp === "undefined") {
+					window.location.href = "#{request.contextPath}/login.xhtml";
+				}
+			};
 
 			$(document).ready(function () {
 				runningStates();
 			});
 
-          </script>
+			var sessionTimeout = 40 * 60 * 1000;
+
+			setInterval(function() {
+				sessionExpired();
+			}, sessionTimeout);
+		</script>
+		
 	</h:head>
 	<h:body>
 		<ui:include src="template/header.xhtml" />
@@ -52,12 +66,13 @@
 			<h:form>
 				<p:remoteCommand name="updateRunningState" action="#{futuresView.updateRunningState}" update="growl" />
 				<p:remoteCommand name="runningStates" action="#{futuresView.runningStates}" oncomplete="handleRunningStates(xhr,status,args)" />
+				<p:remoteCommand name="sessionExpired" action="#{userBean.isSessionExpired}" oncomplete="handleSession(xhr,status,args)"/>
 			</h:form>
 
 			<p:commandButton value="Create Bot" icon="pi pi-plus-circle" style="margin-bottom:15px;"
 						  oncomplete="PF('manageBot').show()" action="#{futuresView.newBot}" update="manageBotForm">
 				<p:resetInput target="manageBotForm:manage-bot" />
-			</p:commandButton>				
+			</p:commandButton>		
 
 			<p:commandButton value="Long" action="#{futuresView.createLongOrder}" style="margin-left:10px;"/>
 			<p:commandButton value="Short" action="#{futuresView.createShortOrder}" style="margin-left:10px;"/>
