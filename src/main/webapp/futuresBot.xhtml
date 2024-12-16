@@ -39,9 +39,8 @@
 			
 			function handleSession(xhr,status,args) {
 				var temp = args.returnedValue;
-				console.log(temp);
 				if(typeof temp === "undefined") {
-					window.location.href = "#{request.contextPath}/login.xhtml";
+					window.location.href = "#{request.contextPath}/login.xhtml?faces-redirect=true";
 				}
 			};
 
