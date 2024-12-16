@@ -9,11 +9,8 @@ import lombok.Data;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.indicators.ATRIndicator;
-import org.ta4j.core.indicators.AwesomeOscillatorIndicator;
-import org.ta4j.core.indicators.EMAIndicator;
+import org.ta4j.core.indicators.ChopIndicator;
 import org.ta4j.core.indicators.RSIIndicator;
-import org.ta4j.core.indicators.SMAIndicator;
-import org.ta4j.core.indicators.adx.ADXIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 
 @Data
@@ -58,6 +55,8 @@ public class FuturesRSI2Strategy {
 	private double currentRsi;
 	private double currentRsi2;
 	private double currentAw;
+	
+	private double currentChopIndicator;
 	
 	DecimalFormat df = new DecimalFormat("0.0000");
 
@@ -188,10 +187,13 @@ public class FuturesRSI2Strategy {
 		RSIIndicator rsiIndicator2 = new RSIIndicator(closePriceIndicator2, 2);
 		currentRsi2 = rsiIndicator2.getValue(rsiIndicator2.getBarSeries().getEndIndex()).doubleValue();
 		
+//		ChopIndicator chopIndicator = new ChopIndicator(series2, 20, 1);
+//		currentChopIndicator = chopIndicator.getValue(chopIndicator.getBarSeries().getEndIndex()).doubleValue();
+//		System.out.println("currentChopIndicator " + df.format(currentChopIndicator*100) + " " + currentBar2.getEndTime().format(formatter) );
 	}
 	
 	private void enterTrade() {
-		if (currentPositionSide == PositionSide.NONE && currentRsi2 > 60 && currentRsi < 10 ) {
+		if (currentPositionSide == PositionSide.NONE && currentRsi2 > 65 && currentRsi < 10 ) {
 
 			System.out.println("\n");
 			System.out.println("Entering LONG " + currentBar.getBeginTime().format(formatter));
@@ -200,7 +202,7 @@ public class FuturesRSI2Strategy {
 //			calculateSL(PositionSide.LONG, 2.4);
 			prepareOrder(PositionSide.LONG, 2.4, 4.1);
 
-		} else if (currentPositionSide == PositionSide.NONE && currentRsi2 < 40 && currentRsi > 90 ) {
+		} else if (currentPositionSide == PositionSide.NONE && currentRsi2 < 35 && currentRsi > 90 ) {
 
 			System.out.println("\n");
 			System.out.println("Entering SHORT " + currentBar.getBeginTime().format(formatter));
