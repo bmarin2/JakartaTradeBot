@@ -187,14 +187,14 @@ public class FuturesRSI2StrategyTest {
 	private void updateValues2() {
 		closePriceIndicator2 = new ClosePriceIndicator(series2);
 		
-		if (queue.size() == 15) {
-			queue.removeFirst();
-		}
-		
-		queue.addLast(currentBar2.getClosePrice().doubleValue());
-		
 		RSIIndicator rsiIndicator2 = new RSIIndicator(closePriceIndicator2, 2);
 		currentRsi2 = rsiIndicator2.getValue(rsiIndicator2.getBarSeries().getEndIndex()).doubleValue();
+
+//		if (queue.size() == 15) {
+//			queue.removeFirst();
+//		}
+//
+//		queue.addLast(currentBar2.getClosePrice().doubleValue());
 
 //		SMAIndicator sma20Tmp = new SMAIndicator(closePriceIndicator2, 20);
 //		double sma20 = sma20Tmp.getValue(sma20Tmp.getBarSeries().getEndIndex()).doubleValue();
