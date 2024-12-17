@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Queue;
 import lombok.Data;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
-import org.graalvm.compiler.nodeinfo.StructuralInput;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
