@@ -13,6 +13,7 @@ import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import java.util.Deque;
 import java.util.ArrayDeque;
+import org.ta4j.core.indicators.SMAIndicator;
 
 @Data
 public class FuturesRSI2StrategyTest {
@@ -190,42 +191,42 @@ public class FuturesRSI2StrategyTest {
 		RSIIndicator rsiIndicator2 = new RSIIndicator(closePriceIndicator2, 2);
 		currentRsi2 = rsiIndicator2.getValue(rsiIndicator2.getBarSeries().getEndIndex()).doubleValue();
 
-//		if (queue.size() == 15) {
-//			queue.removeFirst();
-//		}
-//
-//		queue.addLast(currentBar2.getClosePrice().doubleValue());
+		if (queue.size() == 15) {
+			queue.removeFirst();
+		}
 
-//		SMAIndicator sma20Tmp = new SMAIndicator(closePriceIndicator2, 20);
-//		double sma20 = sma20Tmp.getValue(sma20Tmp.getBarSeries().getEndIndex()).doubleValue();
-//		
-//		double atr2 = new ATRIndicator(series2, 500).getValue(series2.getEndIndex()).doubleValue();
-//		
-//		inRange = true;
-//
-//		if (queue.size() == 15) {
-//
-//			double upperBorder = sma20 + atr2;
-//			double lowerBorder = sma20 - atr2;
-//
-//			for (Double value : queue) {
-//				if (value > upperBorder || value < lowerBorder) {
-//					inRange = false;
-//				}
-//			}
-//
+		queue.addLast(currentBar2.getClosePrice().doubleValue());
+
+		SMAIndicator sma20Tmp = new SMAIndicator(closePriceIndicator2, 20);
+		double sma20 = sma20Tmp.getValue(sma20Tmp.getBarSeries().getEndIndex()).doubleValue();
+		
+		double atr2 = new ATRIndicator(series2, 500).getValue(series2.getEndIndex()).doubleValue();
+		
+		inRange = true;
+
+		if (queue.size() == 15) {
+
+			double upperBorder = (sma20 + atr2) * 1.5;
+			double lowerBorder = (sma20 - atr2) * 1.5;
+
+			for (Double value : queue) {
+				if (value > upperBorder || value < lowerBorder) {
+					inRange = false;
+				}
+			}
+
 //			if (inRange) {
 //				System.out.println("----");
 //				System.out.println("Range detected at " + currentBar2.getEndTime().format(formatter));
 //				System.out.println("ATR " + atr2);
 //				System.out.println("SMA " + sma20);
 //			}
-//		}
+		}
 
 	}
 	
 	private void enterTrade() {
-		if (currentPositionSide == PositionSide.NONE && currentRsi2 > 65 && currentRsi < 10) {
+		if (currentPositionSide == PositionSide.NONE && currentRsi2 > 65 && currentRsi < 10 && !inRange) {
 
 			System.out.println("\n");
 			System.out.println("Entering LONG " + currentBar.getBeginTime().format(formatter));
@@ -234,7 +235,7 @@ public class FuturesRSI2StrategyTest {
 //			calculateSL(PositionSide.LONG, 2.4);
 			prepareOrder(PositionSide.LONG, 2.4, 4.1);
 
-		} else if (currentPositionSide == PositionSide.NONE && currentRsi2 < 35 && currentRsi > 90) {
+		} else if (currentPositionSide == PositionSide.NONE && currentRsi2 < 35 && currentRsi > 90 && !inRange) {
 
 			System.out.println("\n");
 			System.out.println("Entering SHORT " + currentBar.getBeginTime().format(formatter));
